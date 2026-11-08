@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Status
 
-Phase 0 (protocol freeze) is done; contracts, boss and client are not built yet. `ROADMAP.md` is the build plan (task IDs `P-`, `C-`, `B-`, `W-`, `D-`, `E-`; decisions `D1`…`D19` in its §2). Do not invent commands: add each new build/test/lint command here once it exists and works.
+Phase 0 (protocol freeze) and the contracts (roadmap §5: C-01 … C-18, C-21) are done; boss and client are not built yet. Contract layering and gas numbers: `contracts/README.md`. `ROADMAP.md` is the build plan (task IDs `P-`, `C-`, `B-`, `W-`, `D-`, `E-`; decisions `D1`…`D19` in its §2). Do not invent commands: add each new build/test/lint command here once it exists and works.
 
 - `REORG Product and Technical Spec.md` — the product and technical spec (note the spaces in the filename; quote it in shell commands). Source of truth for product rules.
 - `docs/PROTOCOL.md` — **normative** protocol: commit–reveal, code derivation, normalization, answer hash, tiers, layoff/streak formulas, pay math, config keys, wire encoding, events. Where it is more precise than the spec (or applies a ROADMAP §2 decision), it wins.
@@ -15,10 +15,11 @@ Phase 0 (protocol freeze) is done; contracts, boss and client are not built yet.
 ### Commands
 
 - `npm install` — install the TS workspace (root + `packages/*`, `apps/*`).
-- `npm test` — vectors freshness check, then `tsc --noEmit` and vitest in every workspace.
+- `npm test` — vectors freshness check, `tsc --noEmit` and vitest in every workspace, then the Rust unit/vector tests (`npm run contracts:test`).
 - `npm run vectors` — regenerate `protocol/vectors.json` after changing the protocol, `gen_vectors.py` or `config.default.json`; `npm run vectors:check` fails if it is stale.
 - Single TS test: `npx vitest run -t "<test name>"` from `packages/core` (or `npx vitest run <file>`).
-- Rust (`contracts/`, not created yet): `cargo test`, `cargo test <name>`, `cargo near build`. Rust is not installed on the dev machine yet.
+- Rust (`contracts/` workspace; `scripts/contracts.sh` adds `~/.cargo/bin` to PATH, which the dev shell lacks): `npm run contracts:build` (`cargo near build non-reproducible-wasm --no-abi` in `token/` and `reorg/`), `npm run contracts:test`, `npm run contracts:sandbox` (build + near-sandbox integration and gas tests, ~4 min). Single Rust test: `cd contracts && cargo test -p reorg-core <name>` or `cargo test -p reorg-integration-tests --test sandbox <name>`.
+- **Rules live in `contracts/core` (`reorg-core`, no chain types); `contracts/reorg` and `contracts/token` are thin NEAR adapters.** Change a rule in core (and PROTOCOL.md + vectors), never in an adapter.
 
 **Spec precedence:** spec §15.3 (hackathon scope) overrides the "Must build" list in §11. In scope: NEP-141 token + one contract (tiers, `open_task`, `submit`, `finalize_task`, `claim_salary`, streaks, lazy layoffs), boss service with scheduler and *only* Decode the Memo + LLM flavor text, tower game stages 1–2, demo mode. Fire Drill, self-adjusting difficulty, `void_task`, bankruptcy/severance, jackpot, tower stages 3–5 and fee routing are stretch.
 

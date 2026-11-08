@@ -1,0 +1,16 @@
+[package]
+name = "reorg-integration-tests"
+description = "Sandbox tests for the REORG token and contract (roadmap C-17, C-18)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dev-dependencies]
+reorg-core = { workspace = true, features = ["soft-sha256"] }
+near-workspaces = "0.24"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+futures = "0.3"
+anyhow = "1"
+serde_json.workspace = true
+base64.workspace = true

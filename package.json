@@ -15,7 +15,10 @@
     "vectors": "python3 -I protocol/gen_vectors.py",
     "vectors:check": "python3 -I protocol/gen_vectors.py --check",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "test": "npm run vectors:check && npm run typecheck && npm test --workspaces --if-present"
+    "test": "npm run vectors:check && npm run typecheck && npm test --workspaces --if-present && npm run contracts:test",
+    "contracts:build": "sh scripts/contracts.sh build",
+    "contracts:test": "sh scripts/contracts.sh test",
+    "contracts:sandbox": "sh scripts/contracts.sh sandbox"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",

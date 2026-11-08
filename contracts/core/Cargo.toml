@@ -1,0 +1,22 @@
+[package]
+name = "reorg-core"
+description = "Chain-agnostic REORG rules: commit-reveal, answer hash, tiers, layoffs, pay math, state transitions"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[features]
+# Pure-Rust SHA-256 (`SoftSha256`) for hosts without a hashing host function, and for tests.
+soft-sha256 = ["dep:sha2"]
+
+[dependencies]
+serde.workspace = true
+borsh.workspace = true
+base64.workspace = true
+sha2 = { workspace = true, optional = true }
+
+[dev-dependencies]
+reorg-core = { path = ".", features = ["soft-sha256"] }
+serde_json.workspace = true
+sha2.workspace = true

@@ -204,9 +204,12 @@ If allowed, pay `pay(i)` and add it to `total_earned`. Otherwise move `pay(i)` t
 
 `reserve`, `income_accrued` and `outstanding` (allocated but unclaimed salaries) are internal books. Payouts never exceed them. Funds the contract holds outside the books (for example storage deposits) are not treasury.
 
-## 8. Stretch rules (not in v1, reserved)
+## 8. Stretch rules
 
-- `prove_pass(N)` (D17, P1): after the reveal and until task N+1 is finalized, a submitter whose hash verifies may prove their own pass. Their `pay(i)` moves from reserve to outstanding, and streak and `last_pass_day` update as in §6.4. The window closes when N+1 finalizes, because by then N+1's weights have already used the old streak.
+- `prove_pass(N)` (D17, **implemented**, roadmap C-21): after the reveal and until task N+1 is finalized (`last_finalized == N`), a submitter whose hash verifies may prove their own pass. Their `pay(i)` moves from reserve to outstanding (the call fails if the reserve can't cover it), `tier_payable` and `passed` grow, and the stored settlement's `to_reserve` shrinks by `pay(i)`, so `Σ tier_payable + to_reserve == income` still holds. Streak and `last_pass_day` update as in §6.4 unless the wallet already has a later `last_pass_day`. A reapply pass proven this way rehires (§6.6) and pays nothing. The window closes when N+1 finalizes, because by then N+1's weights have already used the old streak.
+
+The rules below are not in v1 (reserved).
+
 - `void_task` (P2): voided ids must be skipped in §6.3 and §6.4 (gaps and "N − 1" count only non-voided tasks). v1 has no voids.
 - Jackpot, bankruptcy and severance: `jackpot_bps` and `bankruptcy_empty_tasks` exist in config but are unused in v1.
 
@@ -289,3 +292,7 @@ There is no `laid_off` event: layoff is derived state (D7). Clients animate it w
 - The balance snapshot and `last_received_at` come from the custom token's `ft_holder_info(account_id) → {balance, last_received_at}` (D15, D16), read in the `submit → on_balance` callback.
 - `sha256` = `env::sha256`. HMAC is built on it (§4).
 - `u128` in JSON is `near_sdk::json_types::U128`, and 32-byte values are `Base64VecU8`.
+- `submit` and `claim_salary` are asynchronous. Their transaction value is the callback's outcome (`SubmitOutcome`, `ClaimOutcome` in `abi.ts`): a rejection after the balance read is a value, not a failed transaction, so the pending marker is always cleared.
+- NEAR allows 100 log lines per call, so the contract rejects a `max_passers_per_call` above `(100 − 3) / (1 + [1 ∈ streak_milestones])`.
+- Storage stake is paid from contract balance outside the books (§7.5). `submit` requires a free "storage float" of at least 0.05 NEAR (`get_storage_float`).
+- Rules are implemented once, chain-agnostically, in `contracts/core` (`reorg-core`); the NEAR contract is an adapter over it (`contracts/README.md`).

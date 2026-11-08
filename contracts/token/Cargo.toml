@@ -1,0 +1,17 @@
+[package]
+name = "reorg-token"
+description = "$REORG: NEP-141 token with a holder registry and last-received timestamps (D15, D16)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+near-sdk.workspace = true
+near-contract-standards.workspace = true
+
+[dev-dependencies]
+near-sdk = { workspace = true, features = ["unit-testing"] }

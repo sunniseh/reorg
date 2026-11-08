@@ -153,6 +153,8 @@ export interface InitArgs<C> {
   token: WalletId;
   boss: WalletId;
   total_supply: U128;
+  /** Defaults to the deploying account. */
+  owner?: WalletId | null;
 }
 
 export interface OpenTaskArgs {
@@ -182,30 +184,57 @@ export interface DepositIncomeArgs {
   tag: IncomeTag;
 }
 
+/** Both fields optional; `limit` is capped at 100 (200 for `ft_holders`). */
 export interface PageArgs {
-  from_index: number;
-  limit: number;
+  from_index?: number;
+  limit?: number;
 }
 
 export interface GetEventsArgs {
   since_seq: number;
-  limit: number;
+  limit?: number;
 }
 
-/** Method names on the REORG contract (C-04 … C-15). */
+/** Return value of `submit` (its balance callback). Rejections after the balance read are values, not failures. */
+export interface SubmitOutcome {
+  accepted: boolean;
+  reason: string | null;
+}
+
+/** Return value of `claim_salary`. `retry`: the balance read or the transfer failed; nothing changed. */
+export type ClaimOutcome =
+  | { status: "paid"; amount: U128 }
+  | { status: "forfeited"; amount: U128 }
+  | { status: "retry"; reason: string };
+
+export interface ContractInfo {
+  owner: WalletId;
+  boss: WalletId;
+  token: WalletId;
+  total_supply: U128;
+  current_task_id: TaskId;
+  last_finalized: TaskId;
+  event_seq: number;
+  employees: number;
+}
+
+/** Method names on the REORG contract (C-04 … C-15, C-21). */
 export const REORG_METHODS = {
   // calls
   openTask: "open_task",
   submit: "submit",
   finalizeTask: "finalize_task",
   claimSalary: "claim_salary",
+  provePass: "prove_pass",
   depositIncome: "deposit_income",
   refreshTotalSupply: "refresh_total_supply",
   updateConfig: "update_config",
   setBoss: "set_boss",
   setExcluded: "set_excluded",
+  setOwner: "set_owner",
   // views
   getConfig: "get_config",
+  getInfo: "get_info",
   getCurrentTaskId: "get_current_task_id",
   getTask: "get_task",
   getEmployee: "get_employee",
@@ -215,6 +244,7 @@ export const REORG_METHODS = {
   getClaimable: "get_claimable",
   getTreasury: "get_treasury",
   getEvents: "get_events",
+  getStorageFloat: "get_storage_float",
 } as const;
 
 /** Extension views on the token contract (C-01). */
