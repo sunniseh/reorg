@@ -143,20 +143,22 @@ Planned commands (add to CLAUDE.md when real): `npm run demo`, `npm test`, `npm 
 ## 6. Boss service (`apps/boss`, `packages/core`)
 
 ### 6.1 Puzzle library, chain-agnostic (P0)
-- [ ] **B-01** `core/crypto`: HMAC, code, answer hash, normalization; **passes `protocol/vectors.json`**.
-- [ ] **B-02** Ciphers with `encode`/`decode`: Caesar, Atbash, Vigenère, rail-fence. Difficulty levels 1–5 choose cipher, key, and memo length (auto-adjust is P2).
-- [ ] **B-03** `generatePuzzle(params, day_secret, wallet) → {display, hint, expectedAnswer}`; pure and deterministic.
-- [ ] **B-04** `selfCheck(params, day_secret)` on 64 synthetic wallets: **solve from the displayed puzzle + hint only** (enumerate every key the hint allows) and require exactly one candidate matching the code format, equal to the expected answer. Also: money-word blocklist, length ≤ 60-second budget. Failure → template generator for the day.
+- [x] **B-01** `core/crypto`: HMAC, code, answer hash, normalization; **passes `protocol/vectors.json`**. *Done: `packages/core/src/crypto.ts` (`@noble/hashes`), `test/crypto.test.ts`.*
+- [x] **B-02** *(done: `puzzle/ciphers.ts`; 10 ciphers, level policy in `LEVEL_CIPHERS`; the self-check runs the real solver, which parses only display + hint)* Ciphers with `encode`/`decode`: Caesar, Atbash, Vigenère (keyword in the hint), rail-fence, plus Morse, A1Z26, Base64/hex, keyboard-shift, reversed words. Difficulty levels 1–5 choose cipher, key, and memo length. Every family implements one `PuzzleFamily` interface (`generate`, `solve`) so later families (acrostic, redacted log, sequence, 4×4 Latin square, mini logic grid, unscramble; all stretch, §14) plug in without scheduler changes. Only the cipher families are P0 (spec §15.3). A task is auto-eligible only if code can generate it per wallet and prove exactly one answer; nothing needing curated assets, server timing or LLM-judged truth.
+- [x] **B-03** `generatePuzzle(params, day_secret, wallet) → {display, hint, expectedAnswer}`; pure and deterministic. *Done: `puzzle/decode-memo.ts`, `puzzle/families.ts`. Per-wallet randomness is `puzzle/rng.ts`, domain-separated from the answer HMAC.*
+- [x] **B-04** *(done: `puzzle/selfcheck.ts`, `test/puzzle.fuzz.test.ts`; look-ahead queue lands with the scheduler, B-08/B-09. The money check covers the hint and the memo vocabulary, not ciphertext, whose random letters can spell a word by coincidence.)* `selfCheck(params, day_secret)` on 64 synthetic wallets: **solve from the displayed puzzle + hint only** (enumerate every key the hint allows) and require exactly one candidate matching the code format, equal to the expected answer. Also: money-word blocklist, length ≤ 60-second budget. Failure → **level-1 Caesar fallback for the day** (always valid; a day is never skipped).
+  - **Fuzz test, written first, runs in `npm test`:** thousands of seeds × every family × levels 1–5 must pass `selfCheck`. Any non-unique answer, blocklist hit or over-budget solve fails the build.
+  - **Look-ahead queue:** the scheduler generates and self-checks the next 7 tasks ahead of time and surfaces a failure in `/healthz` days before it matters.
 
 ### 6.2 Flavor text
 - [ ] **B-05 (P0)** `FlavorLLM` interface; zod schema `{task_text, announcements[], tone_notes}` with length caps and the money-word check.
-- [ ] **B-06 (P0)** `TemplateFlavor`: ≥ 12 memos + announcement templates (layoff, rehire, payday, low reserve, streak) in the spec §8.3 voice. Default and fallback.
+- [ ] **B-06 (P0)** `TemplateFlavor`: memos built from a grammar (subject × department × verb × closing, thousands of combinations; ≥ 12 hand-checked seeds as tests) + announcement templates (layoff, rehire, payday, low reserve, streak) in the spec §8.3 voice. Default and fallback. Every generated memo passes the money-word check in the fuzz test.
 - [ ] **B-07 (P1)** `NearAiFlavor` with spec §8.4 inputs, JSON output, one retry, fallback on any failure; feed shows "written by: AI | template".
 
 ### 6.3 Scheduler (P0)
 - [ ] **B-08** SQLite state machine, one row per task, persisted **before** each side effect: `PICKED → GENERATED → CHECKED → OPENING → OPEN → CLOSED → FINALIZING → FINALIZED`. `day_secret` stored before `open_task`. Idempotent steps; resumes after restart.
 - [ ] **B-09** Cycle: pick → generate → self-check → secret → `open_task` → announce → wait for `closes_at` **plus a finality margin** → page through submissions → recompute passers → `finalize_task` in batches → results feed → layoff/rehire notices from status diffs.
-- [ ] **B-10** Config: `EPOCH_SECONDS`, `WINDOW_FRACTION`, warm-up mode (N tasks with ~10 s windows).
+- [ ] **B-10** Config: `EPOCH_SECONDS`, `WINDOW_FRACTION`, warm-up mode (N tasks with ~10 s windows). Picker: never the same family as yesterday, weekly rhythm once more than one family exists, and a fixed demo schedule so the six-step story (scripted wallet F) is reproducible. Level comes from a config schedule; the auto-adjust rule (>90% passed → +1, <50% → −1, clamped 1–5) is ~20 deterministic lines, pulled forward from P2 if M2 is green.
 - [ ] **B-11** RPC retry/backoff; a stuck finalize shows `STALLED` in `/healthz` and the feed; manual recovery documented (void is P2).
 
 ### 6.4 HTTP API (P0)
