@@ -1,0 +1,17 @@
+{
+  "name": "@reorg/core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Chain-agnostic REORG core: protocol types, config, events (later: crypto, puzzles, tower model)",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  }
+}

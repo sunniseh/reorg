@@ -1,0 +1,19 @@
+{
+  "tier_thresholds_bps": [300, 100, 25, 5],
+  "tier_bucket_bps": [3500, 3000, 2000, 1500],
+  "payroll_bps": 6000,
+  "reserve_bps": 3000,
+  "jackpot_bps": 1000,
+  "streak_step_bps": 1000,
+  "streak_max_steps": 5,
+  "streak_milestones": [3, 7, 14],
+  "layoff_after": 3,
+  "layoff_len": 7,
+  "antidump_bps": 9000,
+  "bankruptcy_empty_tasks": 3,
+  "operating_cost": "100000000000000000000000",
+  "reserve_low": "1000000000000000000000000",
+  "min_window_ns": "3600000000000",
+  "max_passers_per_call": 50,
+  "excluded_accounts": []
+}

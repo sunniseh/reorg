@@ -1,0 +1,328 @@
+# REORG — Build Roadmap
+
+Status: planning → build. Written 2026-11-08, revised the same day after review. **Solo build.** Hard deadline: repo public + submitted by **2026-11-14T23:59Z** (target: submit before **12:00Z on 11-14**).
+
+Source of truth for rules: `REORG Product and Technical Spec.md` (the "spec"). Scope for this window: **spec §15.3** (overrides §11), with the deviations recorded in §2 below. Where the spec is ambiguous or self-contradictory, §2 records the decision. Override any decision by editing that table *before* the affected task starts.
+
+Legend: **P0** = must ship (demo breaks without it) · **P1** = should ship · **P2** = stretch (§14). IDs (`C-03`, `B-07`…) are stable so commits can reference them. Commands shown are *planned*; move them into `CLAUDE.md` only once they exist and work.
+
+Visual design (art style, sprites, floor look, animation timing, HUD and mobile layout) comes from **separate app design docs** (owner: you, due **11-10 EOD**, see §7). This roadmap covers the data, plumbing, and behavior the visuals sit on; client work uses placeholder graphics until the docs land.
+
+---
+
+## 1. Definition of done
+
+A judge (human or screening agent) can run **one command** and, within ~5 minutes of boot, see this complete moment (spec §10 demo script, reduced to §15.3 scope):
+
+1. Tower renders the bot crowd (~18 employees across all four tiers + visitors in the lobby) on tier floors; vault + runway visible.
+2. Boss posts "Decode the Memo" (scheduler-driven, template or LLM flavor text); alarm fires.
+3. Wallets solve it (bots + the judge via a burner wallet); payroll is allocated; coins animate vault → desks; a claim succeeds on-chain.
+4. A wallet that has missed its 3rd task shows the layoff notice and walks out through the lobby.
+5. That wallet passes the next task (reapplication) and is rehired.
+6. Vault ledger shows income in, salaries out, operating cost, runway.
+
+Plus: a long-running **testnet** deployment with ~20 bot holders we create and a labeled growth preview (§8), public repo, LICENSE, README (screening-agent-friendly), demo video, X post (you), submission (you).
+
+**Non-negotiable invariants** (from CLAUDE.md, check every commit against these):
+- LLM only writes text. Pass/fail, pay, and layoffs are decided by code. LLM or puzzle failure → template fallback.
+- Boss service and contract compute HMAC/answer-hash **identically**; both tested against shared vectors (P-02).
+- No chain types leak into game rules, puzzle gen, scheduler logic, or renderer (adapter boundary, §3).
+- All parameters are config, never hardcoded. Keys only in env vars.
+- The crowd is labeled **SIMULATED** in the UI and the README; README has a real-vs-simulated table.
+
+---
+
+## 2. Decisions
+
+| # | Topic | Decision | Why |
+|---|-------|----------|-----|
+| D1 | **Pay denominator.** Spec §5.3 says "sum of weights of all *passers*", but its worked example sends a failed intern's 0.45 NEAR to the reserve, which only works if failed submitters stay in the denominator. | Denominator = sum of weights of **all non-reapply submitters in the tier**, accumulated in `on_balance` at submit time. A passer gets `bucket × w / submitted_w`; everything else in the bucket goes to the reserve. Non-submitters don't dilute. **Amend spec §5.3.** | Matches the example, needs no registry or loop, and makes each passer's pay independent of who else passed (this enables D17). Known limitation: a tier with one submitter takes its whole bucket. State it in the README. |
+| D2 | **Answer must be contract-recomputable.** | `h = HMAC-SHA256(day_secret, utf8(wallet))` (exactly as in CLAUDE.md). Answer = 8-letter pronounceable code: byte `2i` → consonant from `BDFGKLMNPRSTVZ` (mod 14), byte `2i+1` → vowel from `AEIOU` (mod 5), i = 0..3. The memo shows the code under a cipher. `answer_hash = sha256(norm(answer) ‖ 0x00 ‖ utf8(wallet))`. | The contract needs only sha256 plus a hand-rolled HMAC. `day_secret` is fresh per task, so no task id in the HMAC. One submission per wallet per task makes guessing (1 in 24M) pointless. |
+| D3 | **Signed login for puzzle fetch.** | **P2.** `GET /api/puzzle?wallet=` is unauthenticated. | The answer hash is bound to the submitting account, so another wallet's puzzle is useless. |
+| D4 | **Reapplication.** | A laid-off wallet may still `submit` (flagged `reapply`: no weight, no pay). If it passes, its pass resets the gap → it is active again; emit `rehired`. | No new task type. |
+| D5 | **Lazy layoff formula.** | Employee record: `joined_after` (= last finalized id at first submit) and `last_pass_day: Option<u64>`. `base = last_pass_day.unwrap_or(joined_after)`, `gap = last_finalized_id − base`. With `A = layoff_after` (3) and `L = layoff_len` (7): **laid off iff `gap ≥ A` and `(gap − A) mod (A + L) < L`**. So gaps 3–9 are laid off, 10–12 active-but-missing, 13–19 laid off again. Streak = 0 if `gap > 0`. | No per-employee writes at layoff time; the contract never loops. Repeat non-players stay laid off, which the first draft got wrong. No phantom "pass" on join. `void_task` (P2) must skip voided ids. |
+| D6 | **Streak multiplier.** | Fixed at submit time from the streak *before* this task: `10000 + 1000·min(streak, 5)` bps. | Matches the spec's "streak zero" example. It is stable because only one task is non-finalized at a time. |
+| D7 | **Layoff events.** | Layoff is derived state in views. The client animates it on a state change; the boss posts the notice. `announce_layoffs` (contract-verified with the D5 formula) is **P2**. | `laid_off` can't be emitted lazily. |
+| D8 | **Event feed.** | NEP-297 logs **plus** an on-chain ring buffer (last 512) read via `get_events(since_seq, limit)`. Includes `payroll_allocated` at finalize (drives the payday animation) and `salary_paid` per claim. | Polling a view is the lowest-risk indexer. Payday must not depend on who claims. |
+| D9 | **Jackpot.** | P2. Its 10% goes to the reserve; config key `jackpot_bps` exists. | §15.3. |
+| D10 | **Operating cost.** | P0-lite: at finalize, `operating_cost` moves reserve → boss operator; runway = reserve / operating_cost (in tasks). Bankruptcy/severance P2. | Demo step 6. |
+| D11 | **Networks and epochs.** | `npm run demo` = local **near-sandbox**, epoch **75 s** (50 s window). The testnet deployment runs continuously with an epoch picked from the gas budget (§8.4, start at 30 min). Same code, `NETWORK=` env var. | One-command local demo is a hard rule. A 240 s epoch can't show layoff and rehire inside 5 min. |
+| D12 | **Thresholds in basis points** of total supply (3% = 300, 0.05% = 5). | Yes. | Integer-only math. |
+| D13 | **Crowd: hybrid.** | **~20 real bot holders** on the local demo and on testnet: `c001…c020.<root>.testnet`, keys derived from `CROWD_SEED` env (never written to disk). Split: 2 Directors, 3 Managers, 5 Associates, 8 Interns, 2 visitors. Deterministic behavior profiles (§8.2). **100 accounts only in sandbox tests** (C-18 gas and batching, free). **Growth preview** on the hosted tower via client `SimSource`. Size is `CROWD_SIZE`; scaling testnet to 100 is a config change + more testnet NEAR (stretch, §14). All labeled SIMULATED. | 20 holders already show every mechanic (tier split, streaks, layoffs, anti-dump, rehire). 100 bots add no credibility (still simulated) but cost ~1 day, ~5× the testnet NEAR, and rate-limit trouble. |
+| D14 | **Tracks.** | `memecoins`, `games`, `business`; you decide at submission. | Spec §15.1. |
+| D15 | **Anti-recycling (new rule).** Without it, wallet A submits, sends its tokens to B, B submits, and both claim by passing the tokens back and forth, so the same tokens count twice. The 90% claim check doesn't catch it. | Our token records `last_received_at` per account. `on_balance` **rejects a submission if the wallet received tokens at or after the task's `opens_at`**. Mid-window buyers start from the next task. | Closes the double-count with one timestamp. Requires the custom token (D16). Note it in the README rules. |
+| D16 | **"No signup" means the tower shows all holders.** | Custom NEP-141 (standard-compliant + extra views): iterable holder set, `ft_holders(from, limit)`, `ft_holder_info(account) → {balance, last_received_at}`. The tower = token holders ⋈ employee records. Holders with no record show as **New hire** (tier from current balance; never "missing"). Config `excluded_accounts` (deployer, contract, LP/treasury, crowd root) are never employees and are hidden. | Spec demo step 1 says auto-listed. A tower built from submitters only was wrong. The deployer's leftover supply would otherwise show as a giant Director. |
+| D17 | **Boss censorship.** The boss could leave honest passers off the pass list. | **P1** `prove_pass(task_id)`: after reveal, until the next task finalizes, any submitter can prove their own answer. The contract checks it against the revealed secret and moves exactly their D1 share (`bucket × w / submitted_w`, which went to the reserve) back to claimable, then updates streak/last_pass_day. | Removes the trust gap cheaply. D1 makes the share computable in isolation. |
+| D18 | **Tower scale.** | Live data stays within spec stages 1–2 (≤ 50 employees), as §15.3 says. The **growth preview** (`SimSource`, labeled SIMULATED PREVIEW) shows stages 1–3 in P0: same rendering, more characters, with viewport culling (only visible floors draw), so layout must handle 150. **P2:** stage 4 color strips, stage 5 second tower, stage-3 extras (camera-follow, elevators). | No spec deviation for live data; the preview shows where the tower goes without pretending it's real. |
+| D19 | **Visuals come from your design docs.** | Roadmap tasks define data → state → event mapping. Art, layout feel and timing follow the design docs. Placeholders until 11-10 EOD. | Lets plumbing start now. |
+
+---
+
+## 3. Repo layout, stack, adapters
+
+```
+reorg/
+  LICENSE  README.md  ROADMAP.md  CLAUDE.md  HACKATHON.md  "REORG Product and Technical Spec.md"
+  docs/PROTOCOL.md            # normative: HMAC, code derivation, hashing, pay math, layoff formula, tier calc
+  docs/design/                # your app design docs (D19)
+  protocol/vectors.json       # shared test vectors, consumed by Rust AND TS tests
+  contracts/
+    token/                    # NEP-141 + holder registry + last_received_at (D15, D16)
+    reorg/                    # main contract
+  packages/
+    core/                     # CHAIN-AGNOSTIC TS: crypto, ciphers, puzzle gen, pay-math mirror, layoff/status calc, tower model + layout, types
+    chain-near/               # NEAR adapters (ChainAdapter, WalletAdapter, CrowdSigner): the only TS place importing NEAR libs
+  apps/
+    boss/                     # Node/TS boss service (Fastify + SQLite): scheduler, API, demo faucet
+    web/                      # Vite + TS + PixiJS tower client
+  scripts/                    # demo orchestration, deploy, crowd seeding/runner, e2e
+  .env.example
+```
+
+Stack (verify versions against docs.near.org before pinning):
+- Contracts: Rust, `near-sdk` 5.x, `near-contract-standards`, `cargo near build`; integration tests with `near-workspaces`.
+- TS: Node ≥ 20, `vitest`, `zod`, `better-sqlite3`, Fastify; web: Vite + PixiJS v8.
+- Chain access: current NEAR JS SDK (`near-api-js` or successor). Wallet connect via `@near-wallet-selector` or its successor (**check docs first**), behind `WalletAdapter`.
+- LLM: `FlavorLLM` interface. **Template implementation is the default** (no keys needed to run). NEAR AI Cloud implementation is P1 (confirm endpoint/auth at docs.near.ai; key via env).
+
+Adapter interfaces (declared in `packages/core`, implemented in `packages/chain-near`):
+- `ChainAdapter`: config, tasks, submissions, employees, holders, events, treasury reads; `openTask`, `finalizeTask`; `now()`.
+- `WalletAdapter`: `connect`, `accountId`, `submit`, `claimSalary`, `provePass`.
+- `CrowdSigner`: sign and send as crowd account *i* (keys derived from the seed); throttled.
+- `StateSource` (client): `LiveSource` and `SimSource`. The renderer consumes only `StateSource`.
+- Wallet identity in `core` is an opaque `string`.
+
+Planned commands (add to CLAUDE.md when real): `npm run demo`, `npm test`, `npm run e2e`, `cargo test` and `cargo near build` in each contract dir; single tests with `npx vitest run -t "<name>"` and `cargo test <name>`.
+
+---
+
+## 4. Phase 0 — Freeze the protocol (first ~2 h)
+
+- [x] **P-01** `git init`; `.gitignore` (node_modules, target, `.env*` except `.env.example`, `*.sqlite`, `*.submission.json`, keystores); `LICENSE` (MIT unless you choose otherwise); `.env.example` listing every variable with no values. *No push, no remote.*
+- [x] **P-02** `docs/PROTOCOL.md` + `protocol/vectors.json`: HMAC and code derivation (D2); answer normalization (trim, uppercase, `0→O`, `1→I`); `answer_hash` byte layout (raw 32 bytes, base64 in JSON — state it); tier calc (D12); D5 layoff/streak/status formulas including the "struggling" and "new hire" states; D6 multiplier; D1 pay math with exact integer order of operations (U256 intermediates, floor, dust → reserve). ≥ 10 crypto vectors plus layoff cases (gaps 0, 2, 3, 9, 10, 12, 13, 19, 20) and the spec §5.3 worked example.
+- [x] **P-03** ABI types in `packages/core`: view return shapes, event JSON schemas, config keys.
+- [x] **P-04** Config object: all spec §13 params + `min_window_ns`, `max_passers_per_call`, `operating_cost`, `jackpot_bps`, `excluded_accounts`, `antidump_bps`. No demo flags in contracts.
+
+**Exit:** the protocol lives in files, not in conversation.
+
+---
+
+## 5. Contracts (`contracts/`)
+
+### 5.1 Token (P0)
+- [ ] **C-01** NEP-141 + metadata + storage management (standard behavior) **plus**: `last_received_at` per account, updated on every inbound transfer and mint (D15); iterable holder set (add when balance > 0, remove at 0); views `ft_holder_info`, `ft_holders(from, limit)`, `ft_holders_count` (D16). Fixed supply (e.g. 1,000,000,000 × 10^18) minted to the deployer. Tests: standard transfer/transfer_call/storage behavior, registry add/remove, timestamp on receive.
+- [ ] **C-02** Distribution logic shared by sandbox and testnet seeding (§8.3): target % per crowd account per D13.
+
+### 5.2 REORG contract core (P0)
+- [ ] **C-03** State per spec §7.1 plus: `excluded_accounts`, `pending: LookupSet<(task_id, account)>`, per-task `tier_submitted_weight[4]` / `tier_passed_weight[4]` / allocation fields, employee `{joined_after, last_pass_day: Option, streak, total_earned, badges}`, event ring buffer, `total_supply`.
+- [ ] **C-04** `new(config, token_id, boss, total_supply)`; `refresh_total_supply()` (anyone; cross-contract) verifies or updates the cached value.
+- [ ] **C-05** `open_task(kind, commit_hash, closes_at)` (boss only): sequential ids; previous task must be Finalized; `closes_at − now ≥ min_window_ns`; emits `task_opened`.
+- [ ] **C-06** `submit(task_id, answer_hash)`: task Open, `now < closes_at`, caller not excluded, no existing submission **and no pending marker**. Insert the pending marker, then call `ft_holder_info(caller)` → `on_balance`.
+- [ ] **C-07** `on_balance` (`#[private]`): always remove the pending marker. Reject if the promise failed, the task is no longer Open (a late callback after finalize started), `last_received_at ≥ opens_at` (D15), or the balance is below the minimum tier. Otherwise compute tier, streak-before, laid-off status (D5) → `reapply` flag, and weight (D6). Store `{answer_hash, balance, tier, weight, time, reapply}`, add weight to `tier_submitted_weight[tier]` unless reapply, create the employee record on first submit, emit `submission_received`.
+- [ ] **C-08** `protocol.rs`: `hmac_sha256` (via `env::sha256`), `derive_code`, `answer_hash`; **passes `protocol/vectors.json`**.
+- [ ] **C-09** `finalize_task(task_id, day_secret, passers, last)` (boss only, after `closes_at`). First call: `sha256(day_secret) == commit_hash`, store the secret, status → Finalizing. Each passer: has a submission, not already passed, recomputed hash matches (**panic on mismatch**); mark passed, add weight to `tier_passed_weight` (non-reapply), update streak/`last_pass_day`, emit `rehired` / `streak_milestone` (3/7/14). At most `max_passers_per_call` per call. On `last = true`: allocate `income_accrued` (payroll 60% → tier buckets; per tier `payable = bucket × passed_w / submitted_w`, rest → reserve; empty tier → reserve; reserve 30%; jackpot 10% → reserve per D9), pay operating cost (D10), emit `payroll_allocated` + `task_finalized` (+ `reserve_low` if below threshold), status → Finalized.
+- [ ] **C-10** Pay math in U256: `bucket (~1e25 yocto) × weight (balance ~1e27 × 15000 bps)` ≈ 1e56 overflows u128. Floor division, dust → reserve. Property test: `Σ claimable + Δreserve == allocated` for random inputs.
+- [ ] **C-11** `claim_salary(task_id)`: passer, non-reapply, not claimed. Set claimed **before** the promise, call `ft_holder_info`. In the callback: balance ≥ `antidump_bps` of the snapshot → transfer NEAR and emit `salary_paid`; else forfeit to the reserve. Roll back the claimed flag if the transfer fails.
+- [ ] **C-12** `deposit_income()` payable (tag: `client_job | fee_share | seed`). **Accounting invariant:** payouts never exceed internal books; storage staking is funded separately and is not treasury. Tested.
+- [ ] **C-13** Views: `get_config`, `get_current_task_id`, `get_task`, `get_employee` (derived status/streak/tier/last-7 results), `list_employees(from, limit)`, `get_submission`, `list_submissions(task, from, limit)`, `get_claimable(task, account)`, `get_treasury` (+ runway), `get_events(since_seq, limit)`.
+- [ ] **C-14** Events (NEP-297 + ring): `task_opened`, `submission_received`, `task_finalized`, `payroll_allocated`, `salary_paid`, `streak_milestone`, `rehired`, `reserve_low`.
+- [ ] **C-15** Owner admin: `update_config`, `set_boss`, `set_excluded`. README discloses that the owner key exists.
+
+### 5.3 Contract tests (P0)
+- [ ] **C-16** Unit: tier boundaries (exactly 300 and 5 bps), multiplier cap, D5 table from vectors, pay rounding, ring buffer wrap.
+- [ ] **C-17** Integration (`near-workspaces` with the real token): happy path; wrong secret; wrong passer hash panics; double submit **in the same block** rejected; late callback after Finalizing rejected; excluded account rejected; **recycle attack (D15) rejected**; visitor rejected; anti-dump forfeit; double claim; reapply → rehired; spec §5.3 worked example (0.9 / 0.45 / 0.45, 0.45 → reserve).
+- [ ] **C-18** Gas, on sandbox with **100 test accounts**: `submit` + callback, `finalize_task` at 25/50/100 passers, `claim_salary`. Set `max_passers_per_call`; record burnt gas per tx for the §8.4 budget. This is where scale is proven; the demo crowd stays small.
+
+### 5.4 Later
+- [ ] **C-21 (P1)** `prove_pass(task_id)` (D17) + test where the boss omits an honest passer.
+- [ ] **C-19 (P2)** `announce_layoffs` (D7). **C-20 (P2)** `void_task`, jackpot, bankruptcy/severance, fee-split routing.
+
+---
+
+## 6. Boss service (`apps/boss`, `packages/core`)
+
+### 6.1 Puzzle library, chain-agnostic (P0)
+- [ ] **B-01** `core/crypto`: HMAC, code, answer hash, normalization; **passes `protocol/vectors.json`**.
+- [ ] **B-02** Ciphers with `encode`/`decode`: Caesar, Atbash, Vigenère, rail-fence. Difficulty levels 1–5 choose cipher, key, and memo length (auto-adjust is P2).
+- [ ] **B-03** `generatePuzzle(params, day_secret, wallet) → {display, hint, expectedAnswer}`; pure and deterministic.
+- [ ] **B-04** `selfCheck(params, day_secret)` on 64 synthetic wallets: **solve from the displayed puzzle + hint only** (enumerate every key the hint allows) and require exactly one candidate matching the code format, equal to the expected answer. Also: money-word blocklist, length ≤ 60-second budget. Failure → template generator for the day.
+
+### 6.2 Flavor text
+- [ ] **B-05 (P0)** `FlavorLLM` interface; zod schema `{task_text, announcements[], tone_notes}` with length caps and the money-word check.
+- [ ] **B-06 (P0)** `TemplateFlavor`: ≥ 12 memos + announcement templates (layoff, rehire, payday, low reserve, streak) in the spec §8.3 voice. Default and fallback.
+- [ ] **B-07 (P1)** `NearAiFlavor` with spec §8.4 inputs, JSON output, one retry, fallback on any failure; feed shows "written by: AI | template".
+
+### 6.3 Scheduler (P0)
+- [ ] **B-08** SQLite state machine, one row per task, persisted **before** each side effect: `PICKED → GENERATED → CHECKED → OPENING → OPEN → CLOSED → FINALIZING → FINALIZED`. `day_secret` stored before `open_task`. Idempotent steps; resumes after restart.
+- [ ] **B-09** Cycle: pick → generate → self-check → secret → `open_task` → announce → wait for `closes_at` **plus a finality margin** → page through submissions → recompute passers → `finalize_task` in batches → results feed → layoff/rehire notices from status diffs.
+- [ ] **B-10** Config: `EPOCH_SECONDS`, `WINDOW_FRACTION`, warm-up mode (N tasks with ~10 s windows).
+- [ ] **B-11** RPC retry/backoff; a stuck finalize shows `STALLED` in `/healthz` and the feed; manual recovery documented (void is P2).
+
+### 6.4 HTTP API (P0)
+- [ ] **B-12** `GET /api/task/current`, `GET /api/puzzle?wallet=`, `GET /api/feed` + SSE `/api/feed/stream`, `GET /api/reveal/:task_id` (only after finalize), `GET /healthz`; CORS limited to the web origin.
+- [ ] **B-13** Test: no secret or expected answers before finalize.
+- [ ] **B-14 (P2)** NEP-413 signed login + rate limits.
+
+### 6.5 Tests (P0)
+- [ ] **B-15** Cipher round-trip property tests; generator determinism; self-check rejects an ambiguous puzzle; bad LLM JSON → template.
+- [ ] **B-16** Kill and restart at every scheduler state: no double-open, secret never lost.
+
+---
+
+## 7. Tower client (`apps/web`)
+
+Rule: **read-only renderer.** State via `StateSource`; transactions via `WalletAdapter`; display rules (tier, status) come from `packages/core`, never re-implemented in the renderer.
+
+**Design-doc inputs needed by 11-10 EOD** (D19), so the visual tasks aren't blocked: art style and palette; character parts and how wallet-hash bytes map to them; floor and desk visuals per tier; lobby, vault and server room; the look and timing of the P0 animations (sit & work, pass/miss, payday coins, layoff walk-out, alarm, rehire); HUD layout; mobile layout; how SIMULATED labels look.
+
+### 7.1 Plumbing (P0, placeholder art)
+- [ ] **W-01** Vite + TS + Pixi scaffold; `StateSource`; `SimSource` (seeded synthetic employees for any stage).
+- [ ] **W-02** `core/tower`: join holders ⋈ employees, drop excluded, derive per-character status (new hire / idle / submitted / passed / missed / struggling / laid off / streak tier) via the D5 formulas; `layoutTower()` sorts by tier, then balance desc, then account id; capacity per floor 4/6/10/16; order penthouse → Director → Manager → Associate → Intern → lobby → basement. Golden snapshot tests up to 150 employees.
+- [ ] **W-03** Camera pan/zoom (mouse + touch) with **viewport culling**: only visible floors draw.
+- [ ] **W-04** `core/identity`: wallet hash → appearance parameters (deterministic, tested). The art comes later.
+- [ ] **W-06** HUD data: headcount by tier, reserve, runway, countdown.
+- [ ] **W-10** My Desk: fetch puzzle → answer input → `answer_hash` via core → `submit`; pending/confirmed/failed states; claim button when `get_claimable > 0`; anti-dump warning; "prove pass" button if P1 ships.
+- [ ] **W-11** Wallet connect + **burner "demo player"** (key in localStorage, funded by the faucet D-09); burner only when `VITE_DEMO=1`.
+- [ ] **W-12** `LiveSource`: paginated views (holders, employees, submissions), `get_events` polling, request coalescing to respect RPC rate limits, stale indicator.
+
+### 7.2 Visuals (P0, per design docs)
+- [ ] **W-05** Scene: tier floors, lobby (visitors outside the glass), vault (pile scales with reserve), server room, penthouse boss screen.
+- [ ] **W-07** Character states rendered from W-02 statuses; your character highlighted; click → card (wallet, title, % supply, streak, last 7 results, SIMULATED tag).
+- [ ] **W-08** Event director: queue from `get_events`; P0 animations: alarm (`task_opened`), sit & work, pass/miss (`task_finalized`), payday coins (`payroll_allocated`), layoff walk-out (status diff), rehire walk-in (`rehired`). Late joiners see current state; only events newer than load time animate.
+- [ ] **W-09** Penthouse feed panel; vault ledger panel (income by tag, salaries, operating cost, tx links).
+- [ ] **W-13** "Preview growth" toggle on the hosted and local tower: switches `StateSource` to `SimSource` for stages 1–3, with a persistent **SIMULATED PREVIEW** banner; toggling back returns to live state. Never mixes simulated and live characters on one screen.
+
+### 7.3 Later
+- [ ] **W-14 (P1)** Flame auras, sweat drops, polish. **W-15 (P2)** Elevators, camera-follow, stages 4–5, day/night, bankruptcy blackout.
+
+### 7.4 Tests (P0)
+- [ ] **W-16** vitest for tower model, layout, identity; a browser smoke test in e2e (renders, no console errors).
+- [ ] **W-17** 390 px viewport works; ≥ 50 fps with 150 employees on a laptop.
+
+---
+
+## 8. Crowd, demo mode, end-to-end
+
+### 8.1 One-command local demo (P0)
+- [ ] **D-01** `npm run demo`: start near-sandbox → deploy token + contract → seed the crowd (§8.3, sandbox) → start the boss (75 s epoch) → warm-up → crowd runner → income bot → serve web → print the URL. One process tree, clean Ctrl-C, idempotent re-run. **Boot target < 2 min** (`CROWD_SIZE` default 20).
+- [ ] **D-03** Warm-up: 3 tasks with ~10 s windows so streaks, history, and the near-layoff exist before anyone looks. README says the history is bot-generated on a local chain.
+- [ ] **D-04** `npm run e2e`: asserts all six §1 steps against contract state, payouts equal the core pay-math mirror, and treasury books balance to the yoctoNEAR.
+
+### 8.2 Crowd behavior (P0)
+- [ ] **D-02** `crowd-runner` (sandbox and testnet, using `CrowdSigner`). Profiles for the 20 (by index): 7 reliable (95% pass), 6 flaky (70%), 2 slackers (miss in runs, so layoffs happen naturally), 1 dumper (sells after submit → anti-dump forfeit shows in the ledger), 2 visitors (never eligible), plus scripted F. Spread profiles across tiers so every floor has a mix. Submissions are spread at random times across the window; claims follow finalize. Decisions are seeded by `(index, task_id)` so runs are reproducible.
+  - **Scripted wallet "F"** (an Intern) for the demo: passes warm-up task 1, misses tasks 2 and 3, misses live task 4 → laid off after that finalize; passes task 5 as reapplication → rehired. With a 75 s epoch the layoff lands at ~2.5 min and the rehire at ~3.8 min after warm-up.
+- [ ] **D-08** Simulated income bot: deposits `client_job`-tagged income every epoch (amount = config) so every finalize has payroll to allocate. Labeled simulated in the ledger and README.
+
+### 8.3 Testnet deployment and seeding (P0, you approve each run)
+- [ ] **D-05** `scripts/deploy-testnet.ts`: deploy token + contract under a root account **you** create; prints contract ids for the README.
+- [ ] **D-06** `scripts/crowd-seed.ts`: derive `CROWD_SIZE` (20) keypairs from `CROWD_SEED`; create `c001…c020.<root>.testnet`; fund each; `storage_deposit`; transfer tokens per D13. Resumable and idempotent; **`--dry-run` prints the total NEAR needed and every planned tx** before anything is signed.
+- [ ] **D-07** Run the crowd runner, boss, and income bot continuously against testnet (hosted, see D-10), throttled to RPC limits.
+- [ ] **D-09** Demo faucet in the boss service: creates a burner account and funds it with NEAR + enough $REORG for Intern. Sandbox: unrestricted. Testnet: capped pool, per-IP rate limit, only when demo mode is on.
+- [ ] **D-10 (P1)** Hosted boss + static web on testnet; keep up through **2026-11-18, ideally 11-25**.
+
+### 8.4 Testnet budget (fill in after C-18)
+- Per epoch ≈ `0.85·N` submit+callback txs + `~0.7·N` claims + 1 open + ⌈passers / max_per_call⌉ finalize calls.
+- Burnt gas at minimum gas price is roughly 0.001 NEAR per 10 Tgas. If a submit+callback burns ~15 Tgas and a claim ~15 Tgas, 20 holders cost ≈ 0.06–0.1 NEAR per epoch. At a 30 min epoch that is ≈ 3–5 testnet NEAR per day (×5 if scaled to 100). **Replace these estimates with C-18 measurements**, then pick the epoch.
+- Seed float: ≈ 1–2 NEAR per crowd account for storage + gas (~20–40 testnet NEAR), plus treasury and income-bot float. Faucets are rate-limited; check limits early (11-09) and ask in NEAR Discord/Telegram if you need more.
+- Salaries flow back to our own accounts, so the income bot can recycle them (tag `seed`; the README says so).
+
+### 8.5 Real vs simulated (goes into the README) — D-11
+| Part | Status |
+|------|--------|
+| Token, contract, commit–reveal, pass/fail, layoffs, anti-dump, salary payouts in NEAR | **Real** (on-chain) |
+| Treasury income | **Simulated**: deposited by our income bot (fee-split and client-job are real entry points with no outside payers yet) |
+| The ~20 holders | **Simulated**: real on-chain accounts we created, driven by bots |
+| Growth preview (stages 1–3) | **Simulated**: client-side data only, nothing on-chain |
+| Boss flavor text | Template by default; real LLM if `NEAR_AI_API_KEY` is set (P1) |
+
+---
+
+## 9. Docs & submission package
+
+- [ ] **E-01** README (skeleton on 11-08, finished 11-13): one-line pitch; problem; "do X → see Y" steps (local `npm run demo`, testnet link); NEAR's role (spec §15.2); architecture; trust model (the boss is trusted during the day; the reveal makes it auditable afterward; `prove_pass` if shipped); rules including D1 and D15; libraries; AI-generated code disclosure; known limitations; the §8.5 table; testnet contract ids.
+- [ ] **E-02** Run the README steps from a **fresh clone in a new directory**; fix whatever breaks.
+- [ ] **E-03** Link `docs/PROTOCOL.md` so a screener can verify commit–reveal in 5 minutes. Amend spec §5.3 (D1) and add D15 (anti-recycling) to spec §5.4.
+- [ ] **E-04** ~90 s video script: problem line → boss posts → solve → payday coins → layoff walk-out → ledger. **You record.**
+- [ ] **E-05** X post draft (spec §15.5; must say built at NEAR HACKATHON, tag @NEARProtocol and #NEARHackathon). **You post.**
+- [ ] **E-06** On 11-13, re-read the live `https://nearhackathon.com/HACKATHON.md` and diff it against the local copy.
+- [ ] **E-07** Before going public: scan the tree and git history for keys, seeds, `.env`, and personal data; no submission payload in the repo.
+- [ ] **E-08** Prepare the submission payload outside the repo; every field comes from you.
+
+---
+
+## 10. Solo schedule (UTC)
+
+Build a thin end-to-end path first (S-01), then deepen it. Each day ends with a check; if it fails, apply §11 before continuing.
+
+| Day | Focus | Tasks | End-of-day check |
+|-----|-------|-------|------------------|
+| **11-08 Sun** (rest of today) | Protocol + contract skeletons | P-01..P-04; C-01; C-03..C-08; B-01; README skeleton (E-01) | Vectors pass in Rust **and** TS |
+| **11-09 Mon** | Contract complete + walking skeleton | C-09..C-16. **S-01:** a script on sandbox deploys both contracts, seeds 5 accounts, opens a task, submits, finalizes, claims, reads events. Check testnet faucet limits (§8.4). | **M1:** S-01 green end to end |
+| **11-10 Tue** | Hardening + boss | C-17, C-18; B-02..B-06, B-08..B-13, B-15/16; D-02 + D-08 on sandbox with 20 holders. **You: design docs due.** | **M2:** 3 unattended cycles with 20 sandbox holders; payouts match the mirror; F gets laid off; C-18 gas numbers at 100 recorded |
+| **11-11 Wed** | Client plumbing + testnet | W-01..W-04, W-06, W-10..W-12, D-09. **You:** create the testnet root account; approve D-05 and the D-06 dry-run, then the real run. | **M3:** a full day played from the browser with a burner on sandbox; 20 holders seeded on testnet |
+| **11-12 Thu** | Visuals + demo | W-05, W-07..W-09, W-13, W-16/17; D-01, D-03, D-04; start D-07 on testnet | `npm run demo` from a clean clone shows all six steps. **Feature freeze.** |
+| **11-13 Fri** | Ship prep | E-01..E-03, E-06, E-07; D-10 hosting; C-21 / B-07 / W-14 only if everything above is green. **You:** record the video, make the repo public. | Fresh-clone run passes; repo public with LICENSE |
+| **11-14 Sat** | Submit | **You:** post on X, then confirm the payload; one submission **before 12:00Z** | 201 response |
+
+---
+
+## 11. Cut line (solo, decide at the checks)
+
+1. **M1 slips (11-09):** drop operating-cost transfer (show runway from config); C-21 and B-07 move to "only if time".
+2. **M2 slips (11-10):** drop the dumper profile; growth preview stays at stages 1–2 only.
+3. **M3 slips (11-11):** drop the hosted demo (D-10) and testnet runner (D-07) — local one-command is enough (Q-012); keep the testnet deploy only for explorer links. Reduce W-08 to the four spec animations.
+4. **11-12 slips:** placeholder art ships as-is (clean, labeled); spend the time on README + video instead.
+5. **Never cut:** commit–reveal verification, D5 layoffs, D15 anti-recycling, anti-dump claims, the one-command demo, README try-it steps, the real-vs-simulated table, LICENSE, the video.
+
+---
+
+## 12. Risks
+
+| ID | Risk | Mitigation |
+|----|------|------------|
+| R-01 | Rust ↔ TS hash drift | Shared vectors; both suites run in `npm test`. |
+| R-02 | `finalize_task` gas with 100 passers | C-18 measures; batches via `last`. |
+| R-03 | near-sandbox fails to install on a judge's machine | Documented prerequisites; hosted testnet demo as a second path; fresh-clone test (E-02). |
+| R-04 | Callback edge cases (failed balance read, late callback, same-block double submit) | Pending marker + status recheck (C-06/C-07); covered by C-17. |
+| R-05 | Contract balance below its books (storage staking) | Internal accounting; separate storage float; C-12 test. |
+| R-06 | LLM junk or no key | Templates are the default; LLM is P1. |
+| R-07 | Solo scope overload | Thin path first (S-01), daily checks, §11 cuts; LLM, prove_pass, and polish are scheduled last. |
+| R-08 | Nobody gets laid off in the demo | Scripted F + slacker profile + warm-up. |
+| R-09 | Boss loses the secret mid-task | Secret persisted before `open_task`; documented recovery; promote `void_task` if ahead of schedule. |
+| R-10 | Spec deviations confuse reviewers | D1/D15/D18 explained in the README; spec amended (E-03). |
+| R-11 | Wallet SDK churn | The burner path is primary; real wallet connect is secondary. |
+| R-12 | Public testnet RPC rate limits with 20 bots + client polling | Throttled `CrowdSigner`, spread submissions, coalesced client reads; use a provider with a key if needed (docs.near.org/api/rpc/providers). |
+| R-13 | Not enough testnet NEAR | Small crowd (D13), measure (C-18), dry-run budget (D-06), check faucets on 11-09, recycle salaries. |
+| R-16 | Judges read the growth preview as fake activity | Separate toggle, persistent SIMULATED PREVIEW banner, never mixed with live characters, listed in the §8.5 table. |
+| R-14 | Design docs arrive late | Plumbing doesn't depend on them; placeholder art is shippable (§11 step 4). |
+| R-15 | Deployer's leftover supply distorts the tower or payroll | `excluded_accounts` (D16), tested in C-17. |
+
+---
+
+## 13. Gates that need you
+
+Need your explicit go-ahead each time:
+- Making the repo public, adding a remote, `git push`, force-push.
+- Anything signed with **your** keys or on **testnet/mainnet**: deploys (D-05), crowd seeding (D-06: show the dry-run first), starting the long-running testnet crowd/income bots (D-07), funding the faucet pool. Never mainnet.
+- Posting on X.
+- The submission: print the full JSON payload, wait for your yes, send once; `requestId` generated once and reused on retries.
+- Providing: project name, lead name, email, team size (`1`), tracks, **mainnet** payout account, repo URL, demo post URL, description, consent to the verbatim notice. Nothing guessed.
+- License choice (MIT assumed) and any API keys (env vars only).
+
+Do **not** need a gate: transactions on the **local sandbox** with throwaway keys created by `npm run demo` or the tests.
+
+---
+
+## 14. Stretch backlog (only after the 11-12 check is green)
+
+1. `prove_pass` (C-21) · 2. NEAR AI flavor text (B-07) · 3. Flames/sweat polish (W-14) · 4. Scale the testnet crowd to 100 (`CROWD_SIZE=100`, ~5× testnet NEAR, no code change) · 5. `void_task` · 6. Employee-of-the-Day jackpot · 7. Fire Drill (label it server-verified) · 8. Self-adjusting difficulty · 9. Bankruptcy + severance · 10. Signed login · 11. Elevators, camera-follow, growth stages 4–5 · 12. `agents` track via real client jobs.
+
+---
+
+## 15. Portability checklist (every commit)
+
+- [ ] NEAR libraries are imported only in `packages/chain-near`, `contracts/`, and `scripts/`.
+- [ ] `packages/core` has no chain types; wallet = `string`.
+- [ ] The renderer imports only `StateSource` and `core`.
+- [ ] Thresholds, shares, and rules come from config.
+- [ ] `docs/PROTOCOL.md` defines the protocol without relying on any chain's host functions.

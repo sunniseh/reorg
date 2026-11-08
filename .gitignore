@@ -1,0 +1,35 @@
+# dependencies and build output
+node_modules/
+dist/
+target/
+coverage/
+*.tsbuildinfo
+.vite/
+
+# secrets: env files (except the template), keys, keystores
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.near-credentials/
+keystores/
+**/neardev/
+
+# local state
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+*.db
+.near-sandbox/
+sandbox-data/
+
+# submission payload contains personal data; never commit it
+*.submission.json
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.log
+__pycache__/

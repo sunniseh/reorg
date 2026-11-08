@@ -1,0 +1,1331 @@
+{
+  "version": 1,
+  "generated_by": "protocol/gen_vectors.py",
+  "spec": "docs/PROTOCOL.md",
+  "constants": {
+    "bps_denominator": 10000,
+    "code_consonants": "BDFGKLMNPRSTVZ",
+    "code_vowels": "AEIOU",
+    "code_length": 8,
+    "day_secret_bytes": 32,
+    "ascii_whitespace": [
+      32,
+      9,
+      10,
+      13,
+      11,
+      12
+    ]
+  },
+  "config": {
+    "tier_thresholds_bps": [
+      300,
+      100,
+      25,
+      5
+    ],
+    "tier_bucket_bps": [
+      3500,
+      3000,
+      2000,
+      1500
+    ],
+    "payroll_bps": 6000,
+    "reserve_bps": 3000,
+    "jackpot_bps": 1000,
+    "streak_step_bps": 1000,
+    "streak_max_steps": 5,
+    "streak_milestones": [
+      3,
+      7,
+      14
+    ],
+    "layoff_after": 3,
+    "layoff_len": 7,
+    "antidump_bps": 9000,
+    "bankruptcy_empty_tasks": 3,
+    "operating_cost": "100000000000000000000000",
+    "reserve_low": "1000000000000000000000000",
+    "min_window_ns": "3600000000000",
+    "max_passers_per_call": 50,
+    "excluded_accounts": []
+  },
+  "hmac_sha256": [
+    {
+      "name": "rfc4231-case1",
+      "key_hex": "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
+      "msg_hex": "4869205468657265",
+      "hmac_hex": "b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7"
+    },
+    {
+      "name": "rfc4231-case2",
+      "key_hex": "4a656665",
+      "msg_hex": "7768617420646f2079612077616e7420666f72206e6f7468696e673f",
+      "hmac_hex": "5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843"
+    },
+    {
+      "name": "rfc4231-case3",
+      "key_hex": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "msg_hex": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "hmac_hex": "773ea91e36800e46854db8ebd09181a72959098b3ef8c122d9635514ced565fe"
+    }
+  ],
+  "crypto": [
+    {
+      "name": "zero-secret/alice.testnet",
+      "day_secret_hex": "0000000000000000000000000000000000000000000000000000000000000000",
+      "day_secret_b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "commit_hash_hex": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925",
+      "commit_hash_b64": "Zmh6rfhivXdsj8GLjp+OIAiXFIVu4jOzkCpZHQ1fKSU=",
+      "wallet": "alice.testnet",
+      "hmac_hex": "9923a9b0bd1a4b40546efbfbe8c9aae92005d059f0d9c538d13022779648d29e",
+      "code": "ZADENELU",
+      "answer_hash_hex": "93804dca5d5a3acb86b6ec78f14cb646d309cf1d4991ae084ed21406bdcf4908",
+      "answer_hash_b64": "k4BNyl1aOsuGtux48Uy2RtMJzx1Jka4ITtIUBr3PSQg="
+    },
+    {
+      "name": "zero-secret/0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+      "day_secret_hex": "0000000000000000000000000000000000000000000000000000000000000000",
+      "day_secret_b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "commit_hash_hex": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925",
+      "commit_hash_b64": "Zmh6rfhivXdsj8GLjp+OIAiXFIVu4jOzkCpZHQ1fKSU=",
+      "wallet": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+      "hmac_hex": "1e422b37b675e8a86d1d9cb4ae7fc6f30c9bd06db3c876284f346b82cb553afc",
+      "code": "FEDABIPO",
+      "answer_hash_hex": "c85fd00163b705ceb9d19bc522779f195913dbe726586737dde8399b1d54195c",
+      "answer_hash_b64": "yF/QAWO3Bc650ZvFInefGVkT2+cmWGc33eg5mx1UGVw="
+    },
+    {
+      "name": "ff-secret/98793cd91a3f870fb126f66285808c7e094afcfc4eda8a970f6648cdf0dbd6de",
+      "day_secret_hex": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "day_secret_b64": "//////////////////////////////////////////8=",
+      "commit_hash_hex": "af9613760f72635fbdb44a5a0a63c39f12af30f950a6ee5c971be188e89c4051",
+      "commit_hash_b64": "r5YTdg9yY1+9tEpaCmPDnxKvMPlQpu5clxvhiOicQFE=",
+      "wallet": "98793cd91a3f870fb126f66285808c7e094afcfc4eda8a970f6648cdf0dbd6de",
+      "hmac_hex": "1c16d477dd3deec7cec2dde11c46db1f6bae09623548995832fc9c30b483054d",
+      "code": "BIFUTEBU",
+      "answer_hash_hex": "e7095635d54a8dc75a5150b01f1d8e0ec8fe4314f0c3aa66986d41239c79f91c",
+      "answer_hash_b64": "5wlWNdVKjcdaUVCwHx2ODsj+QxTww6pmmG1BI5x5+Rw="
+    },
+    {
+      "name": "ff-secret/a-very-long-account-name-used-to-check-utf8-message-lengths.near",
+      "day_secret_hex": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "day_secret_b64": "//////////////////////////////////////////8=",
+      "commit_hash_hex": "af9613760f72635fbdb44a5a0a63c39f12af30f950a6ee5c971be188e89c4051",
+      "commit_hash_b64": "r5YTdg9yY1+9tEpaCmPDnxKvMPlQpu5clxvhiOicQFE=",
+      "wallet": "a-very-long-account-name-used-to-check-utf8-message-lengths.near",
+      "hmac_hex": "9fe2ad76bf3e0a121c4ad7c8d34bd4d8198b1b058bda572f82582a882942ae00",
+      "code": "LELORISO",
+      "answer_hash_hex": "f1d8c29db7bda792ddbb2aeaab16a11a6d7b6b24303099037e9b012c508c6af1",
+      "answer_hash_b64": "8djCnbe9p5LduyrqqxahGm17ayQwMJkDfpsBLFCMavE="
+    },
+    {
+      "name": "counting-secret/bob.near",
+      "day_secret_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "day_secret_b64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+      "commit_hash_hex": "630dcd2966c4336691125448bbb25b4ff412a49c732db2c8abc1b8581bd710dd",
+      "commit_hash_b64": "Yw3NKWbEM2aRElRIu7JbT/QSpJxzLbLIq8G4WBvXEN0=",
+      "wallet": "bob.near",
+      "hmac_hex": "4a3762342d40452c1a1ed5dbed0d779a591d0f4922cb926d10453e82a5f6340a",
+      "code": "KABIGUZU",
+      "answer_hash_hex": "91556a15880fa88023f34f97e20b14f8dd18011e799fc73a005aa181cf50dabf",
+      "answer_hash_b64": "kVVqFYgPqIAj80+X4gsU+N0YAR55n8c6AFqhgc9Q2r8="
+    },
+    {
+      "name": "counting-secret/c001.reorg.testnet",
+      "day_secret_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "day_secret_b64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+      "commit_hash_hex": "630dcd2966c4336691125448bbb25b4ff412a49c732db2c8abc1b8581bd710dd",
+      "commit_hash_b64": "Yw3NKWbEM2aRElRIu7JbT/QSpJxzLbLIq8G4WBvXEN0=",
+      "wallet": "c001.reorg.testnet",
+      "hmac_hex": "acf5841fd44869612da7a2be70a7fab017fc7e6cb6247267fd04975742070972",
+      "code": "KAMEFINI",
+      "answer_hash_hex": "4920ed31cd065ccfd96674fd79d931434c42cdbaedc12d3f9e4db5578736117a",
+      "answer_hash_b64": "SSDtMc0GXM/ZZnT9edkxQ0xCzbrtwS0/nk21V4c2EXo="
+    },
+    {
+      "name": "derived-secret-1/alice.testnet",
+      "day_secret_hex": "bb5476e867ff1ebe49e0f1d2f43fc2b609bb8151e11b621dbed226d61198ea0a",
+      "day_secret_b64": "u1R26Gf/Hr5J4PHS9D/Ctgm7gVHhG2IdvtIm1hGY6go=",
+      "commit_hash_hex": "d069904128a24f82a82e6fdc16c249c9f6568a1e8b9b53da2fd10a605f83605e",
+      "commit_hash_b64": "0GmQQSiiT4KoLm/cFsJJyfZWih6Lm1PaL9EKYF+DYF4=",
+      "wallet": "alice.testnet",
+      "hmac_hex": "dea258e0a7942d8bf875631f7c92974684b45f5521e2f010c1adbd7651e5b059",
+      "code": "VIKUZOGU",
+      "answer_hash_hex": "5ddcf369c184b5df5254d8d0e37c1bc695031eb3c844fa67d1dc3c3b314d5b1d",
+      "answer_hash_b64": "XdzzacGEtd9SVNjQ43wbxpUDHrPIRPpn0dw8OzFNWx0="
+    },
+    {
+      "name": "derived-secret-1/0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+      "day_secret_hex": "bb5476e867ff1ebe49e0f1d2f43fc2b609bb8151e11b621dbed226d61198ea0a",
+      "day_secret_b64": "u1R26Gf/Hr5J4PHS9D/Ctgm7gVHhG2IdvtIm1hGY6go=",
+      "commit_hash_hex": "d069904128a24f82a82e6fdc16c249c9f6568a1e8b9b53da2fd10a605f83605e",
+      "commit_hash_b64": "0GmQQSiiT4KoLm/cFsJJyfZWih6Lm1PaL9EKYF+DYF4=",
+      "wallet": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+      "hmac_hex": "03e5d160c028cfa7fe93793bbd9eebbd34c286cc77bc81efab333cf4214d21fa",
+      "code": "GUZESATI",
+      "answer_hash_hex": "985cd43f91fcbb36bd8b01e65f0b5917a2c0a32ba5c1aefda7b46b06bb00b0f0",
+      "answer_hash_b64": "mFzUP5H8uza9iwHmXwtZF6LAoyulwa79p7RrBrsAsPA="
+    },
+    {
+      "name": "derived-secret-2/98793cd91a3f870fb126f66285808c7e094afcfc4eda8a970f6648cdf0dbd6de",
+      "day_secret_hex": "5a87d3689801cb6e904524b01dec6681de04e9b135fd5043fc540cd0fbacb8e2",
+      "day_secret_b64": "WofTaJgBy26QRSSwHexmgd4E6bE1/VBD/FQM0PusuOI=",
+      "commit_hash_hex": "f23376799a5903dfda6b20698fda071d0a3590c21c57c65663e5b5ca05b49698",
+      "commit_hash_b64": "8jN2eZpZA9/aayBpj9oHHQo1kMIcV8ZWY+W1ygW0lpg=",
+      "wallet": "98793cd91a3f870fb126f66285808c7e094afcfc4eda8a970f6648cdf0dbd6de",
+      "hmac_hex": "985d103734de92f2e5eb04c2d89f2115ff6acc37a7653a85014c4040f3b382d7",
+      "code": "VOFASIMI",
+      "answer_hash_hex": "04586f4dffda57cada112b039dbdcbb81b7194a41a900bbbb4f8362a111b950b",
+      "answer_hash_b64": "BFhvTf/aV8raESsDnb3LuBtxlKQakAu7tPg2KhEblQs="
+    },
+    {
+      "name": "derived-secret-2/a-very-long-account-name-used-to-check-utf8-message-lengths.near",
+      "day_secret_hex": "5a87d3689801cb6e904524b01dec6681de04e9b135fd5043fc540cd0fbacb8e2",
+      "day_secret_b64": "WofTaJgBy26QRSSwHexmgd4E6bE1/VBD/FQM0PusuOI=",
+      "commit_hash_hex": "f23376799a5903dfda6b20698fda071d0a3590c21c57c65663e5b5ca05b49698",
+      "commit_hash_b64": "8jN2eZpZA9/aayBpj9oHHQo1kMIcV8ZWY+W1ygW0lpg=",
+      "wallet": "a-very-long-account-name-used-to-check-utf8-message-lengths.near",
+      "hmac_hex": "b7d1cb0b25c12d3865a4a9db0b467481ce8d35539e5e2980df07718cfdcf410c",
+      "code": "DUNEROGE",
+      "answer_hash_hex": "59eb3df4f615ef78323b0584b55a265f15214027d926e1c569e3171c982dcf51",
+      "answer_hash_b64": "Wes99PYV73gyOwWEtVomXxUhQCfZJuHFaeMXHJgtz1E="
+    },
+    {
+      "name": "derived-secret-3/bob.near",
+      "day_secret_hex": "54e9d8b6b7af837df7c1904b91632b6f1f65bca63ea0f97a6eaa465444678a87",
+      "day_secret_b64": "VOnYtrevg333wZBLkWMrbx9lvKY+oPl6bqpGVERnioc=",
+      "commit_hash_hex": "e1bc0beb08bd0e8a8d180a7fe2171865976c00e29fbe2faaac1a351b95817fb1",
+      "commit_hash_b64": "4bwL6wi9DoqNGAp/4hcYZZdsAOKfvi+qrBo1G5WBf7E=",
+      "wallet": "bob.near",
+      "hmac_hex": "a8ba41f4e22910c27ebd20c8505d1690c6250184833cb4b878e6995000bc0791",
+      "code": "BERUFEFU",
+      "answer_hash_hex": "33b1957e038ab415bce3a44b7cd7c971f7f1b4a02655b0a4a080a2688d348509",
+      "answer_hash_b64": "M7GVfgOKtBW846RLfNfJcffxtKAmVbCkoICiaI00hQk="
+    },
+    {
+      "name": "derived-secret-3/c001.reorg.testnet",
+      "day_secret_hex": "54e9d8b6b7af837df7c1904b91632b6f1f65bca63ea0f97a6eaa465444678a87",
+      "day_secret_b64": "VOnYtrevg333wZBLkWMrbx9lvKY+oPl6bqpGVERnioc=",
+      "commit_hash_hex": "e1bc0beb08bd0e8a8d180a7fe2171865976c00e29fbe2faaac1a351b95817fb1",
+      "commit_hash_b64": "4bwL6wi9DoqNGAp/4hcYZZdsAOKfvi+qrBo1G5WBf7E=",
+      "wallet": "c001.reorg.testnet",
+      "hmac_hex": "eb0020b55c1af64ac25a0387fc408a1054bbca46dfbc416e3ff796cab21ce252",
+      "code": "TAKEPEPU",
+      "answer_hash_hex": "aacb981df559874a31bb58dc548f4abae6eb46c679cec0dde0b4e332c8819afd",
+      "answer_hash_b64": "qsuYHfVZh0oxu1jcVI9KuubrRsZ5zsDd4LTjMsiBmv0="
+    }
+  ],
+  "wallet_binding": [
+    {
+      "answer": "BADOKIGU",
+      "wallet": "alice.testnet",
+      "answer_hash_hex": "3eeb94c2bd10f1c4379cd8ca5eedc53f825cba6e137ac93523ec1776bfba1e24"
+    },
+    {
+      "answer": "BADOKIGU",
+      "wallet": "bob.testnet",
+      "answer_hash_hex": "7c62208a1cea185d587d4f193c41b42e7f5cda24efa02517c804c032995cae3b"
+    }
+  ],
+  "normalization": [
+    {
+      "input": "BADOKIGU",
+      "output": "BADOKIGU",
+      "note": "already canonical"
+    },
+    {
+      "input": "badokigu",
+      "output": "BADOKIGU",
+      "note": "lowercase"
+    },
+    {
+      "input": "  BaDoKiGu \n",
+      "output": "BADOKIGU",
+      "note": "mixed case with ASCII whitespace"
+    },
+    {
+      "input": "\t zuvoPeFi\r\n",
+      "output": "ZUVOPEFI",
+      "note": "tab, CR, LF"
+    },
+    {
+      "input": "BAD0K1GU",
+      "output": "BADOKIGU",
+      "note": "digit 0 -> O, 1 -> I"
+    },
+    {
+      "input": "b0d1k1gu",
+      "output": "BODIKIGU",
+      "note": "digits and lowercase"
+    },
+    {
+      "input": "bado kigu",
+      "output": "BADO KIGU",
+      "note": "internal space is kept (will not match)"
+    },
+    {
+      "input": " BADO",
+      "output": " BADO",
+      "note": "non-ASCII whitespace is not trimmed"
+    },
+    {
+      "input": "ßado",
+      "output": "ßADO",
+      "note": "non-ASCII letters are not case-mapped"
+    },
+    {
+      "input": "",
+      "output": "",
+      "note": "empty"
+    }
+  ],
+  "tier": {
+    "thresholds_bps": [
+      300,
+      100,
+      25,
+      5
+    ],
+    "cases": [
+      {
+        "balance": "1000000000000000000000000000",
+        "total_supply": "1000000000000000000000000000",
+        "tier": 0,
+        "tier_name": "director",
+        "note": "whole supply"
+      },
+      {
+        "balance": "30000000000000000000000000",
+        "total_supply": "1000000000000000000000000000",
+        "tier": 0,
+        "tier_name": "director",
+        "note": "exactly 3%"
+      },
+      {
+        "balance": "29999999999999999999999999",
+        "total_supply": "1000000000000000000000000000",
+        "tier": 1,
+        "tier_name": "manager",
+        "note": "3% minus one unit"
+      },
+      {
+        "balance": "10000000000000000000000000",
+        "total_supply": "1000000000000000000000000000",
+        "tier": 1,
+        "tier_name": "manager",
+        "note": "exactly 1%"
+      },
+      {
+        "balance": "9999999999999999999999999",
+        "total_supply": "1000000000000000000000000000",
+        "tier": 2,
+        "tier_name": "associate",
+        "note": "1% minus one unit"
+      },
+      {
+        "balance": "2500000000000000000000000",
+        "total_supply": "1000000000000000000000000000",
+        "tier": 2,
+        "tier_name": "associate",
+        "note": "exactly 0.25%"
+      },
+      {
+        "balance": "2499999999999999999999999",
+        "total_supply": "1000000000000000000000000000",
+        "tier": 3,
+        "tier_name": "intern",
+        "note": "0.25% minus one unit"
+      },
+      {
+        "balance": "500000000000000000000000",
+        "total_supply": "1000000000000000000000000000",
+        "tier": 3,
+        "tier_name": "intern",
+        "note": "exactly 0.05%"
+      },
+      {
+        "balance": "499999999999999999999999",
+        "total_supply": "1000000000000000000000000000",
+        "tier": null,
+        "tier_name": "visitor",
+        "note": "0.05% minus one unit (visitor)"
+      },
+      {
+        "balance": "0",
+        "total_supply": "1000000000000000000000000000",
+        "tier": null,
+        "tier_name": "visitor",
+        "note": "zero"
+      },
+      {
+        "balance": "30000000000000000000000000",
+        "total_supply": "1000000000000000000000000001",
+        "tier": 1,
+        "tier_name": "manager",
+        "note": "supply S+1: 3% boundary rounds up"
+      },
+      {
+        "balance": "30000000000000000000000001",
+        "total_supply": "1000000000000000000000000001",
+        "tier": 0,
+        "tier_name": "director",
+        "note": "supply S+1: first Director balance"
+      }
+    ]
+  },
+  "multiplier": [
+    {
+      "streak_before": 0,
+      "multiplier_bps": 10000
+    },
+    {
+      "streak_before": 1,
+      "multiplier_bps": 11000
+    },
+    {
+      "streak_before": 2,
+      "multiplier_bps": 12000
+    },
+    {
+      "streak_before": 3,
+      "multiplier_bps": 13000
+    },
+    {
+      "streak_before": 4,
+      "multiplier_bps": 14000
+    },
+    {
+      "streak_before": 5,
+      "multiplier_bps": 15000
+    },
+    {
+      "streak_before": 6,
+      "multiplier_bps": 15000
+    },
+    {
+      "streak_before": 7,
+      "multiplier_bps": 15000
+    },
+    {
+      "streak_before": 8,
+      "multiplier_bps": 15000
+    }
+  ],
+  "layoff": [
+    {
+      "layoff_after": 3,
+      "layoff_len": 7,
+      "gap": 0,
+      "status": "active",
+      "laid_off": false,
+      "layoff_tasks_left": 0,
+      "misses_in_row": 0
+    },
+    {
+      "layoff_after": 3,
+      "layoff_len": 7,
+      "gap": 1,
+      "status": "struggling",
+      "laid_off": false,
+      "layoff_tasks_left": 0,
+      "misses_in_row": 1
+    },
+    {
+      "layoff_after": 3,
+      "layoff_len": 7,
+      "gap": 2,
+      "status": "struggling",
+      "laid_off": false,
+      "layoff_tasks_left": 0,
+      "misses_in_row": 2
+    },
+    {
+      "layoff_after": 3,
+      "layoff_len": 7,
+      "gap": 3,
+      "status": "laid_off",
+      "laid_off": true,
+      "layoff_tasks_left": 7,
+      "misses_in_row": 0
+    },
+    {
+      "layoff_after": 3,
+      "layoff_len": 7,
+      "gap": 4,
+      "status": "laid_off",
+      "laid_off": true,
+      "layoff_tasks_left": 6,
+      "misses_in_row": 0
+    },
+    {
+      "layoff_after": 3,
+      "layoff_len": 7,
+      "gap": 9,
+      "status": "laid_off",
+      "laid_off": true,
+      "layoff_tasks_left": 1,
+      "misses_in_row": 0
+    },
+    {
+      "layoff_after": 3,
+      "layoff_len": 7,
+      "gap": 10,
+      "status": "active",
+      "laid_off": false,
+      "layoff_tasks_left": 0,
+      "misses_in_row": 0
+    },
+    {
+      "layoff_after": 3,
+      "layoff_len": 7,
+      "gap": 11,
+      "status": "struggling",
+      "laid_off": false,
+      "layoff_tasks_left": 0,
+      "misses_in_row": 1
+    },
+    {
+      "layoff_after": 3,
+      "layoff_len": 7,
+      "gap": 12,
+      "status": "struggling",
+      "laid_off": false,
+      "layoff_tasks_left": 0,
+      "misses_in_row": 2
+    },
+    {
+      "layoff_after": 3,
+      "layoff_len": 7,
+      "gap": 13,
+      "status": "laid_off",
+      "laid_off": true,
+      "layoff_tasks_left": 7,
+      "misses_in_row": 0
+    },
+    {
+      "layoff_after": 3,
+      "layoff_len": 7,
+      "gap": 19,
+      "status": "laid_off",
+      "laid_off": true,
+      "layoff_tasks_left": 1,
+      "misses_in_row": 0
+    },
+    {
+      "layoff_after": 3,
+      "layoff_len": 7,
+      "gap": 20,
+      "status": "active",
+      "laid_off": false,
+      "layoff_tasks_left": 0,
+      "misses_in_row": 0
+    },
+    {
+      "layoff_after": 3,
+      "layoff_len": 7,
+      "gap": 22,
+      "status": "struggling",
+      "laid_off": false,
+      "layoff_tasks_left": 0,
+      "misses_in_row": 2
+    },
+    {
+      "layoff_after": 3,
+      "layoff_len": 7,
+      "gap": 23,
+      "status": "laid_off",
+      "laid_off": true,
+      "layoff_tasks_left": 7,
+      "misses_in_row": 0
+    },
+    {
+      "layoff_after": 3,
+      "layoff_len": 0,
+      "gap": 0,
+      "status": "active",
+      "laid_off": false,
+      "layoff_tasks_left": 0,
+      "misses_in_row": 0
+    },
+    {
+      "layoff_after": 3,
+      "layoff_len": 0,
+      "gap": 2,
+      "status": "struggling",
+      "laid_off": false,
+      "layoff_tasks_left": 0,
+      "misses_in_row": 2
+    },
+    {
+      "layoff_after": 3,
+      "layoff_len": 0,
+      "gap": 3,
+      "status": "active",
+      "laid_off": false,
+      "layoff_tasks_left": 0,
+      "misses_in_row": 0
+    },
+    {
+      "layoff_after": 3,
+      "layoff_len": 0,
+      "gap": 7,
+      "status": "struggling",
+      "laid_off": false,
+      "layoff_tasks_left": 0,
+      "misses_in_row": 1
+    }
+  ],
+  "status": [
+    {
+      "note": "joined during task 5, task 5 not yet finalized",
+      "last_finalized": 4,
+      "joined_after": 4,
+      "last_pass_day": null,
+      "stored_streak": 0,
+      "gap": 0,
+      "status": "active",
+      "laid_off": false,
+      "layoff_tasks_left": 0,
+      "misses_in_row": 0,
+      "effective_streak": 0
+    },
+    {
+      "note": "joined during task 5, missed it",
+      "last_finalized": 5,
+      "joined_after": 4,
+      "last_pass_day": null,
+      "stored_streak": 0,
+      "gap": 1,
+      "status": "struggling",
+      "laid_off": false,
+      "layoff_tasks_left": 0,
+      "misses_in_row": 1,
+      "effective_streak": 0
+    },
+    {
+      "note": "joined during task 5, missed 5, 6, 7",
+      "last_finalized": 7,
+      "joined_after": 4,
+      "last_pass_day": null,
+      "stored_streak": 0,
+      "gap": 3,
+      "status": "laid_off",
+      "laid_off": true,
+      "layoff_tasks_left": 7,
+      "misses_in_row": 0,
+      "effective_streak": 0
+    },
+    {
+      "note": "passed the last finalized task: streak counts",
+      "last_finalized": 9,
+      "joined_after": 2,
+      "last_pass_day": 9,
+      "stored_streak": 4,
+      "gap": 0,
+      "status": "active",
+      "laid_off": false,
+      "layoff_tasks_left": 0,
+      "misses_in_row": 0,
+      "effective_streak": 4
+    },
+    {
+      "note": "passed task 9, task 10 finalized without them: streak lost",
+      "last_finalized": 10,
+      "joined_after": 2,
+      "last_pass_day": 9,
+      "stored_streak": 4,
+      "gap": 1,
+      "status": "struggling",
+      "laid_off": false,
+      "layoff_tasks_left": 0,
+      "misses_in_row": 1,
+      "effective_streak": 0
+    },
+    {
+      "note": "passer of task 10 while task 10 is still finalizing",
+      "last_finalized": 9,
+      "joined_after": 2,
+      "last_pass_day": 10,
+      "stored_streak": 5,
+      "gap": 0,
+      "status": "active",
+      "laid_off": false,
+      "layoff_tasks_left": 0,
+      "misses_in_row": 0,
+      "effective_streak": 5
+    },
+    {
+      "note": "streak above multiplier cap",
+      "last_finalized": 30,
+      "joined_after": 0,
+      "last_pass_day": 30,
+      "stored_streak": 12,
+      "gap": 0,
+      "status": "active",
+      "laid_off": false,
+      "layoff_tasks_left": 0,
+      "misses_in_row": 0,
+      "effective_streak": 12
+    },
+    {
+      "note": "joined at genesis, never passed, 3 tasks finalized",
+      "last_finalized": 3,
+      "joined_after": 0,
+      "last_pass_day": null,
+      "stored_streak": 0,
+      "gap": 3,
+      "status": "laid_off",
+      "laid_off": true,
+      "layoff_tasks_left": 7,
+      "misses_in_row": 0,
+      "effective_streak": 0
+    },
+    {
+      "note": "laid off, last task of the layoff",
+      "last_finalized": 12,
+      "joined_after": 0,
+      "last_pass_day": 3,
+      "stored_streak": 1,
+      "gap": 9,
+      "status": "laid_off",
+      "laid_off": true,
+      "layoff_tasks_left": 1,
+      "misses_in_row": 0,
+      "effective_streak": 0
+    },
+    {
+      "note": "layoff over, no new miss yet",
+      "last_finalized": 13,
+      "joined_after": 0,
+      "last_pass_day": 3,
+      "stored_streak": 1,
+      "gap": 10,
+      "status": "active",
+      "laid_off": false,
+      "layoff_tasks_left": 0,
+      "misses_in_row": 0,
+      "effective_streak": 0
+    },
+    {
+      "note": "second layoff",
+      "last_finalized": 16,
+      "joined_after": 0,
+      "last_pass_day": 3,
+      "stored_streak": 1,
+      "gap": 13,
+      "status": "laid_off",
+      "laid_off": true,
+      "layoff_tasks_left": 7,
+      "misses_in_row": 0,
+      "effective_streak": 0
+    }
+  ],
+  "streak_update": [
+    {
+      "task_id": 10,
+      "last_pass_day": 9,
+      "stored_streak": 4,
+      "new_streak": 5,
+      "milestone": false,
+      "note": "consecutive pass"
+    },
+    {
+      "task_id": 10,
+      "last_pass_day": 7,
+      "stored_streak": 4,
+      "new_streak": 1,
+      "milestone": false,
+      "note": "after a miss the streak restarts at 1"
+    },
+    {
+      "task_id": 10,
+      "last_pass_day": null,
+      "stored_streak": 0,
+      "new_streak": 1,
+      "milestone": false,
+      "note": "first ever pass"
+    },
+    {
+      "task_id": 10,
+      "last_pass_day": 9,
+      "stored_streak": 13,
+      "new_streak": 14,
+      "milestone": true,
+      "note": "milestone 14 reached"
+    },
+    {
+      "task_id": 10,
+      "last_pass_day": 9,
+      "stored_streak": 1,
+      "new_streak": 2,
+      "milestone": false,
+      "note": "rehire-style pass right after a pass"
+    }
+  ],
+  "antidump": [
+    {
+      "snapshot_balance": "1000000000000000000000000",
+      "current_balance": "1000000000000000000000000",
+      "antidump_bps": 9000,
+      "claim_allowed": true,
+      "note": "unchanged"
+    },
+    {
+      "snapshot_balance": "1000000000000000000000000",
+      "current_balance": "900000000000000000000000",
+      "antidump_bps": 9000,
+      "claim_allowed": true,
+      "note": "exactly 90%"
+    },
+    {
+      "snapshot_balance": "1000000000000000000000000",
+      "current_balance": "899999999999999999999999",
+      "antidump_bps": 9000,
+      "claim_allowed": false,
+      "note": "90% minus one unit: forfeit"
+    },
+    {
+      "snapshot_balance": "1000000000000000000000000",
+      "current_balance": "2000000000000000000000000",
+      "antidump_bps": 9000,
+      "claim_allowed": true,
+      "note": "bought more"
+    },
+    {
+      "snapshot_balance": "1000000000000000000000000",
+      "current_balance": "0",
+      "antidump_bps": 9000,
+      "claim_allowed": false,
+      "note": "sold everything: forfeit"
+    }
+  ],
+  "recycle": [
+    {
+      "opens_at": "1700000000000000000",
+      "last_received_at": null,
+      "submission_allowed": true,
+      "note": "no receive recorded (defensive; the token sets it on mint)"
+    },
+    {
+      "opens_at": "1700000000000000000",
+      "last_received_at": "1699999999999999999",
+      "submission_allowed": true,
+      "note": "received 1 ns before the task opened"
+    },
+    {
+      "opens_at": "1700000000000000000",
+      "last_received_at": "1700000000000000000",
+      "submission_allowed": false,
+      "note": "received exactly at opens_at: rejected"
+    },
+    {
+      "opens_at": "1700000000000000000",
+      "last_received_at": "1700000005000000000",
+      "submission_allowed": false,
+      "note": "received mid-window: rejected"
+    }
+  ],
+  "pay": [
+    {
+      "name": "spec-5.3-all-pass",
+      "note": "Spec §5.3: 20 NEAR income, Intern bucket 1.8 NEAR, three interns 100k/50k/50k at streak 0 all pass -> 0.9/0.45/0.45 NEAR. (They are Interns if total supply is 1e8 tokens.)",
+      "config": {
+        "payroll_bps": 6000,
+        "reserve_bps": 3000,
+        "jackpot_bps": 1000,
+        "tier_bucket_bps": [
+          3500,
+          3000,
+          2000,
+          1500
+        ],
+        "operating_cost": "0",
+        "reserve_low": "0"
+      },
+      "submissions": [
+        {
+          "account_id": "intern-a.testnet",
+          "tier": 3,
+          "balance": "100000000000000000000000",
+          "streak_before": 0,
+          "multiplier_bps": 10000,
+          "weight": "1000000000000000000000000000",
+          "passed": true,
+          "reapply": false
+        },
+        {
+          "account_id": "intern-b.testnet",
+          "tier": 3,
+          "balance": "50000000000000000000000",
+          "streak_before": 0,
+          "multiplier_bps": 10000,
+          "weight": "500000000000000000000000000",
+          "passed": true,
+          "reapply": false
+        },
+        {
+          "account_id": "intern-c.testnet",
+          "tier": 3,
+          "balance": "50000000000000000000000",
+          "streak_before": 0,
+          "multiplier_bps": 10000,
+          "weight": "500000000000000000000000000",
+          "passed": true,
+          "reapply": false
+        }
+      ],
+      "expected": {
+        "income": "20000000000000000000000000",
+        "payroll": "12000000000000000000000000",
+        "jackpot": "2000000000000000000000000",
+        "reserve_share": "6000000000000000000000000",
+        "buckets": [
+          "4200000000000000000000000",
+          "3600000000000000000000000",
+          "2400000000000000000000000",
+          "1800000000000000000000000"
+        ],
+        "payroll_dust": "0",
+        "tier_submitted_weight": [
+          "0",
+          "0",
+          "0",
+          "2000000000000000000000000000"
+        ],
+        "tier_passed_weight": [
+          "0",
+          "0",
+          "0",
+          "2000000000000000000000000000"
+        ],
+        "tier_payable": [
+          "0",
+          "0",
+          "0",
+          "1800000000000000000000000"
+        ],
+        "to_reserve": "18200000000000000000000000",
+        "pays": [
+          {
+            "account_id": "intern-a.testnet",
+            "pay": "900000000000000000000000"
+          },
+          {
+            "account_id": "intern-b.testnet",
+            "pay": "450000000000000000000000"
+          },
+          {
+            "account_id": "intern-c.testnet",
+            "pay": "450000000000000000000000"
+          }
+        ],
+        "reserve_before": "0",
+        "operating_cost_paid": "0",
+        "reserve_after": "18200000000000000000000000",
+        "runway_tasks": null,
+        "reserve_low": false
+      }
+    },
+    {
+      "name": "spec-5.3-second-fails",
+      "note": "Spec §5.3 under D1: the second intern submits and fails; their 0.45 NEAR goes to the reserve and the others' pay is unchanged.",
+      "config": {
+        "payroll_bps": 6000,
+        "reserve_bps": 3000,
+        "jackpot_bps": 1000,
+        "tier_bucket_bps": [
+          3500,
+          3000,
+          2000,
+          1500
+        ],
+        "operating_cost": "0",
+        "reserve_low": "0"
+      },
+      "submissions": [
+        {
+          "account_id": "intern-a.testnet",
+          "tier": 3,
+          "balance": "100000000000000000000000",
+          "streak_before": 0,
+          "multiplier_bps": 10000,
+          "weight": "1000000000000000000000000000",
+          "passed": true,
+          "reapply": false
+        },
+        {
+          "account_id": "intern-b.testnet",
+          "tier": 3,
+          "balance": "50000000000000000000000",
+          "streak_before": 0,
+          "multiplier_bps": 10000,
+          "weight": "500000000000000000000000000",
+          "passed": false,
+          "reapply": false
+        },
+        {
+          "account_id": "intern-c.testnet",
+          "tier": 3,
+          "balance": "50000000000000000000000",
+          "streak_before": 0,
+          "multiplier_bps": 10000,
+          "weight": "500000000000000000000000000",
+          "passed": true,
+          "reapply": false
+        }
+      ],
+      "expected": {
+        "income": "20000000000000000000000000",
+        "payroll": "12000000000000000000000000",
+        "jackpot": "2000000000000000000000000",
+        "reserve_share": "6000000000000000000000000",
+        "buckets": [
+          "4200000000000000000000000",
+          "3600000000000000000000000",
+          "2400000000000000000000000",
+          "1800000000000000000000000"
+        ],
+        "payroll_dust": "0",
+        "tier_submitted_weight": [
+          "0",
+          "0",
+          "0",
+          "2000000000000000000000000000"
+        ],
+        "tier_passed_weight": [
+          "0",
+          "0",
+          "0",
+          "1500000000000000000000000000"
+        ],
+        "tier_payable": [
+          "0",
+          "0",
+          "0",
+          "1350000000000000000000000"
+        ],
+        "to_reserve": "18650000000000000000000000",
+        "pays": [
+          {
+            "account_id": "intern-a.testnet",
+            "pay": "900000000000000000000000"
+          },
+          {
+            "account_id": "intern-b.testnet",
+            "pay": "0"
+          },
+          {
+            "account_id": "intern-c.testnet",
+            "pay": "450000000000000000000000"
+          }
+        ],
+        "reserve_before": "0",
+        "operating_cost_paid": "0",
+        "reserve_after": "18650000000000000000000000",
+        "runway_tasks": null,
+        "reserve_low": false
+      }
+    },
+    {
+      "name": "rounding-mixed",
+      "note": "Odd income, mixed streaks, a reapply submission (no weight, no pay), a tier with submitters but no passers, an empty tier, operating cost and reserve_low.",
+      "config": {
+        "payroll_bps": 6000,
+        "reserve_bps": 3000,
+        "jackpot_bps": 1000,
+        "tier_bucket_bps": [
+          3500,
+          3000,
+          2000,
+          1500
+        ],
+        "operating_cost": "100000000000000000000000",
+        "reserve_low": "1000000000000000000000000"
+      },
+      "submissions": [
+        {
+          "account_id": "d1.testnet",
+          "tier": 0,
+          "balance": "40000001000000000000000003",
+          "streak_before": 2,
+          "multiplier_bps": 12000,
+          "weight": "480000012000000000000000036000",
+          "passed": true,
+          "reapply": false
+        },
+        {
+          "account_id": "d2.testnet",
+          "tier": 0,
+          "balance": "33333333000000000000000000",
+          "streak_before": 7,
+          "multiplier_bps": 15000,
+          "weight": "499999995000000000000000000000",
+          "passed": true,
+          "reapply": false
+        },
+        {
+          "account_id": "d3.testnet",
+          "tier": 0,
+          "balance": "30000000000000000000000000",
+          "streak_before": 0,
+          "multiplier_bps": 10000,
+          "weight": "300000000000000000000000000000",
+          "passed": false,
+          "reapply": false
+        },
+        {
+          "account_id": "m1.testnet",
+          "tier": 1,
+          "balance": "11000000000000000000000000",
+          "streak_before": 1,
+          "multiplier_bps": 11000,
+          "weight": "121000000000000000000000000000",
+          "passed": false,
+          "reapply": false
+        },
+        {
+          "account_id": "i1.testnet",
+          "tier": 3,
+          "balance": "600000000000000000000000",
+          "streak_before": 0,
+          "multiplier_bps": 10000,
+          "weight": "6000000000000000000000000000",
+          "passed": true,
+          "reapply": true
+        },
+        {
+          "account_id": "i2.testnet",
+          "tier": 3,
+          "balance": "700000000000000000000001",
+          "streak_before": 3,
+          "multiplier_bps": 13000,
+          "weight": "9100000000000000000000013000",
+          "passed": true,
+          "reapply": false
+        }
+      ],
+      "expected": {
+        "income": "10000000000000000000000007",
+        "payroll": "6000000000000000000000004",
+        "jackpot": "1000000000000000000000000",
+        "reserve_share": "3000000000000000000000003",
+        "buckets": [
+          "2100000000000000000000001",
+          "1800000000000000000000001",
+          "1200000000000000000000000",
+          "900000000000000000000000"
+        ],
+        "payroll_dust": "2",
+        "tier_submitted_weight": [
+          "1280000007000000000000000036000",
+          "121000000000000000000000000000",
+          "0",
+          "9100000000000000000000013000"
+        ],
+        "tier_passed_weight": [
+          "980000007000000000000000036000",
+          "0",
+          "0",
+          "9100000000000000000000013000"
+        ],
+        "tier_payable": [
+          "1607812502691650375905037",
+          "0",
+          "0",
+          "900000000000000000000000"
+        ],
+        "to_reserve": "7492187497308349624094970",
+        "pays": [
+          {
+            "account_id": "d1.testnet",
+            "pay": "787500015380859290885926"
+          },
+          {
+            "account_id": "d2.testnet",
+            "pay": "820312487310791085019111"
+          },
+          {
+            "account_id": "d3.testnet",
+            "pay": "0"
+          },
+          {
+            "account_id": "m1.testnet",
+            "pay": "0"
+          },
+          {
+            "account_id": "i1.testnet",
+            "pay": "0"
+          },
+          {
+            "account_id": "i2.testnet",
+            "pay": "900000000000000000000000"
+          }
+        ],
+        "reserve_before": "333333333333333333333333",
+        "operating_cost_paid": "100000000000000000000000",
+        "reserve_after": "7725520830641682957428303",
+        "runway_tasks": 77,
+        "reserve_low": false
+      }
+    },
+    {
+      "name": "zero-income",
+      "note": "No income: every pay is 0 and the operating cost is capped by the reserve.",
+      "config": {
+        "payroll_bps": 6000,
+        "reserve_bps": 3000,
+        "jackpot_bps": 1000,
+        "tier_bucket_bps": [
+          3500,
+          3000,
+          2000,
+          1500
+        ],
+        "operating_cost": "100000000000000000000000",
+        "reserve_low": "1000000000000000000000000"
+      },
+      "submissions": [
+        {
+          "account_id": "d1.testnet",
+          "tier": 0,
+          "balance": "40000000000000000000000000",
+          "streak_before": 0,
+          "multiplier_bps": 10000,
+          "weight": "400000000000000000000000000000",
+          "passed": true,
+          "reapply": false
+        }
+      ],
+      "expected": {
+        "income": "0",
+        "payroll": "0",
+        "jackpot": "0",
+        "reserve_share": "0",
+        "buckets": [
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "payroll_dust": "0",
+        "tier_submitted_weight": [
+          "400000000000000000000000000000",
+          "0",
+          "0",
+          "0"
+        ],
+        "tier_passed_weight": [
+          "400000000000000000000000000000",
+          "0",
+          "0",
+          "0"
+        ],
+        "tier_payable": [
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "to_reserve": "0",
+        "pays": [
+          {
+            "account_id": "d1.testnet",
+            "pay": "0"
+          }
+        ],
+        "reserve_before": "50000000000000000000000",
+        "operating_cost_paid": "50000000000000000000000",
+        "reserve_after": "0",
+        "runway_tasks": 0,
+        "reserve_low": true
+      }
+    },
+    {
+      "name": "u256-overflow",
+      "note": "1M NEAR income and a 90%-of-supply holder at max streak: bucket x weight exceeds 2^128, so implementations need 256-bit intermediates.",
+      "config": {
+        "payroll_bps": 6000,
+        "reserve_bps": 3000,
+        "jackpot_bps": 1000,
+        "tier_bucket_bps": [
+          3500,
+          3000,
+          2000,
+          1500
+        ],
+        "operating_cost": "100000000000000000000000",
+        "reserve_low": "1000000000000000000000000"
+      },
+      "submissions": [
+        {
+          "account_id": "whale.testnet",
+          "tier": 0,
+          "balance": "900000000000000000000000000",
+          "streak_before": 9,
+          "multiplier_bps": 15000,
+          "weight": "13500000000000000000000000000000",
+          "passed": true,
+          "reapply": false
+        },
+        {
+          "account_id": "d2.testnet",
+          "tier": 0,
+          "balance": "99999999999999999999999999",
+          "streak_before": 0,
+          "multiplier_bps": 10000,
+          "weight": "999999999999999999999999990000",
+          "passed": true,
+          "reapply": false
+        }
+      ],
+      "expected": {
+        "income": "1000000000000000000000000000000",
+        "payroll": "600000000000000000000000000000",
+        "jackpot": "100000000000000000000000000000",
+        "reserve_share": "300000000000000000000000000000",
+        "buckets": [
+          "210000000000000000000000000000",
+          "180000000000000000000000000000",
+          "120000000000000000000000000000",
+          "90000000000000000000000000000"
+        ],
+        "payroll_dust": "0",
+        "tier_submitted_weight": [
+          "14499999999999999999999999990000",
+          "0",
+          "0",
+          "0"
+        ],
+        "tier_passed_weight": [
+          "14499999999999999999999999990000",
+          "0",
+          "0",
+          "0"
+        ],
+        "tier_payable": [
+          "209999999999999999999999999999",
+          "0",
+          "0",
+          "0"
+        ],
+        "to_reserve": "790000000000000000000000000001",
+        "pays": [
+          {
+            "account_id": "whale.testnet",
+            "pay": "195517241379310344827586207031"
+          },
+          {
+            "account_id": "d2.testnet",
+            "pay": "14482758620689655172413792968"
+          }
+        ],
+        "reserve_before": "5000000000000000000000000",
+        "operating_cost_paid": "100000000000000000000000",
+        "reserve_after": "790004900000000000000000000001",
+        "runway_tasks": 7900049,
+        "reserve_low": false
+      }
+    }
+  ]
+}
