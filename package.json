@@ -18,7 +18,9 @@
     "test": "npm run vectors:check && npm run typecheck && npm test --workspaces --if-present && npm run contracts:test",
     "contracts:build": "sh scripts/contracts.sh build",
     "contracts:test": "sh scripts/contracts.sh test",
-    "contracts:sandbox": "sh scripts/contracts.sh sandbox"
+    "contracts:sandbox": "sh scripts/contracts.sh sandbox",
+    "brand": "node brand/build.mjs",
+    "art": "node art/build.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",

@@ -6,7 +6,7 @@ Source of truth for rules: `REORG Product and Technical Spec.md` (the "spec"). S
 
 Legend: **P0** = must ship (demo breaks without it) · **P1** = should ship · **P2** = stretch (§14). IDs (`C-03`, `B-07`…) are stable so commits can reference them. Commands shown are *planned*; move them into `CLAUDE.md` only once they exist and work.
 
-Visual design (art style, sprites, floor look, animation timing, HUD and mobile layout) comes from **separate app design docs** (owner: you, due **11-10 EOD**, see §7). This roadmap covers the data, plumbing, and behavior the visuals sit on; client work uses placeholder graphics until the docs land.
+Visual design (art style, sprites, floor look, animation timing, HUD and mobile layout) comes from **`docs/design/REORG Design Spec.md`** (delivered 11-08; it labels each item P0 / P1 / Later). This roadmap covers the data, plumbing, and behavior the visuals sit on.
 
 ---
 
@@ -54,7 +54,8 @@ Plus: a long-running **testnet** deployment with ~20 bot holders we create and a
 | D16 | **"No signup" means the tower shows all holders.** | Custom NEP-141 (standard-compliant + extra views): iterable holder set, `ft_holders(from, limit)`, `ft_holder_info(account) → {balance, last_received_at}`. The tower = token holders ⋈ employee records. Holders with no record show as **New hire** (tier from current balance; never "missing"). Config `excluded_accounts` (deployer, contract, LP/treasury, crowd root) are never employees and are hidden. | Spec demo step 1 says auto-listed. A tower built from submitters only was wrong. The deployer's leftover supply would otherwise show as a giant Director. |
 | D17 | **Boss censorship.** The boss could leave honest passers off the pass list. | **P1** `prove_pass(task_id)`: after reveal, until the next task finalizes, any submitter can prove their own answer. The contract checks it against the revealed secret and moves exactly their D1 share (`bucket × w / submitted_w`, which went to the reserve) back to claimable, then updates streak/last_pass_day. | Removes the trust gap cheaply. D1 makes the share computable in isolation. |
 | D18 | **Tower scale.** | Live data stays within spec stages 1–2 (≤ 50 employees), as §15.3 says. The **growth preview** (`SimSource`, labeled SIMULATED PREVIEW) shows stages 1–3 in P0: same rendering, more characters, with viewport culling (only visible floors draw), so layout must handle 150. **P2:** stage 4 color strips, stage 5 second tower, stage-3 extras (camera-follow, elevators). | No spec deviation for live data; the preview shows where the tower goes without pretending it's real. |
-| D19 | **Visuals come from your design docs.** | Roadmap tasks define data → state → event mapping. Art, layout feel and timing follow the design docs. Placeholders until 11-10 EOD. | Lets plumbing start now. |
+| D19 | **Visuals come from the design spec** (`docs/design/REORG Design Spec.md`, v1.1). | Roadmap tasks define data → state → event mapping. Art, layout, copy and timing follow the design spec. Tower in a PixiJS canvas; side panel, feed, card, dialogs and banners in DOM. | Pixi keeps the path to stages 4–5 open; DOM keeps the panel accessible. |
+| D20 | **The tower has no memory.** Spec §9.3 says floors are never removed during a day, and the first design draft had a 3-day downgrade hysteresis. Both need past holder counts, which the chain doesn't store, so a fresh client and a long-running one would draw different towers. | Tower state and floor count are pure functions of current state (design §4, §12.3). Every tier always has at least one floor. **Amend spec §9.3.** | Every client renders the same tower (CLAUDE.md). Boundary flicker is accepted at hackathon scale. |
 
 ---
 
@@ -64,7 +65,7 @@ Plus: a long-running **testnet** deployment with ~20 bot holders we create and a
 reorg/
   LICENSE  README.md  ROADMAP.md  CLAUDE.md  HACKATHON.md  "REORG Product and Technical Spec.md"
   docs/PROTOCOL.md            # normative: HMAC, code derivation, hashing, pay math, layoff formula, tier calc
-  docs/design/                # your app design docs (D19)
+  docs/design/                # "REORG Design Spec.md" (D19)
   protocol/vectors.json       # shared test vectors, consumed by Rust AND TS tests
   contracts/
     token/                    # NEP-141 + holder registry + last_received_at (D15, D16)
@@ -173,31 +174,33 @@ Planned commands (add to CLAUDE.md when real): `npm run demo`, `npm test`, `npm 
 
 Rule: **read-only renderer.** State via `StateSource`; transactions via `WalletAdapter`; display rules (tier, status) come from `packages/core`, never re-implemented in the renderer.
 
-**Design-doc inputs needed by 11-10 EOD** (D19), so the visual tasks aren't blocked: art style and palette; character parts and how wallet-hash bytes map to them; floor and desk visuals per tier; lobby, vault and server room; the look and timing of the P0 animations (sit & work, pass/miss, payday coins, layoff walk-out, alarm, rehire); HUD layout; mobile layout; how SIMULATED labels look.
+**Design inputs** (D19) are in `docs/design/REORG Design Spec.md`: palette and tokens (§6), character parts and the wallet-hash → body color mapping (§5), floors and desks (§4), lobby, vault and server room (§4), P0 animation triggers and timing (§14), the player's primary button (§3.1), copy and rejection messages (§13.2), mobile layout (§10), SIMULATED labels (§12.4–§12.5).
 
 ### 7.1 Plumbing (P0, placeholder art)
 - [ ] **W-01** Vite + TS + Pixi scaffold; `StateSource`; `SimSource` (seeded synthetic employees for any stage).
-- [ ] **W-02** `core/tower`: join holders ⋈ employees, drop excluded, derive per-character status (new hire / idle / submitted / passed / missed / struggling / laid off / streak tier) via the D5 formulas; `layoutTower()` sorts by tier, then balance desc, then account id; capacity per floor 4/6/10/16; order penthouse → Director → Manager → Associate → Intern → lobby → basement. Golden snapshot tests up to 150 employees.
-- [ ] **W-03** Camera pan/zoom (mouse + touch) with **viewport culling**: only visible floors draw.
-- [ ] **W-04** `core/identity`: wallet hash → appearance parameters (deterministic, tested). The art comes later.
+- [ ] **W-02** `core/tower`: join holders ⋈ employees, drop excluded, derive per-character status (new hire / idle / submitted / passed / missed / struggling / laid off / streak tier) via the D5 formulas; `layoutTower()` sorts by tier, then balance desc, then account id; capacity per floor 4/6/10/16, every tier at least one floor; order penthouse → Director → Manager → Associate → Intern → lobby → basement; tower state (design §12) from the current employee count, no hysteresis (D20). Golden snapshot tests up to 150 employees.
+- [ ] **W-03** Camera pan/zoom (mouse + touch) with **viewport culling**: only visible floors draw. Phones: tap a floor to zoom until desks are ≥ 44 px (design §10).
+- [ ] **W-04** `core/identity`: wallet hash → appearance parameters (deterministic, tested). Body color index = `sha256(utf8(wallet))[0] mod 8` (design §5–§6); hair/accessories P1.
 - [ ] **W-06** HUD data: headcount by tier, reserve, runway, countdown.
-- [ ] **W-10** My Desk: fetch puzzle → answer input → `answer_hash` via core → `submit`; pending/confirmed/failed states; claim button when `get_claimable > 0`; anti-dump warning; "prove pass" button if P1 ships.
+- [ ] **W-10** My Desk: fetch puzzle → answer input → `answer_hash` via core → `submit`; pending/confirmed/failed states; claim button when `get_claimable > 0`; anti-dump warning; "prove pass" button if P1 ships. Primary-button order per design §3.1 (never send a claim that would forfeit); rejection copy keyed by the contract's reason string (design §13.2).
 - [ ] **W-11** Wallet connect + **burner "demo player"** (key in localStorage, funded by the faucet D-09); burner only when `VITE_DEMO=1`.
 - [ ] **W-12** `LiveSource`: paginated views (holders, employees, submissions), `get_events` polling, request coalescing to respect RPC rate limits, stale indicator.
 
 ### 7.2 Visuals (P0, per design docs)
 - [ ] **W-05** Scene: tier floors, lobby (visitors outside the glass), vault (pile scales with reserve), server room, penthouse boss screen.
-- [ ] **W-07** Character states rendered from W-02 statuses; your character highlighted; click → card (wallet, title, % supply, streak, last 7 results, SIMULATED tag).
-- [ ] **W-08** Event director: queue from `get_events`; P0 animations: alarm (`task_opened`), sit & work, pass/miss (`task_finalized`), payday coins (`payroll_allocated`), layoff walk-out (status diff), rehire walk-in (`rehired`). Late joiners see current state; only events newer than load time animate.
+- [ ] **W-07** Character states rendered from W-02 statuses (design §5: new hire, active, struggling, laid off, visitor + overlays); your character highlighted; click → card (wallet, title, % supply, streak, last 7 results, SIMULATED tag); lobby crowd sign (design §12.5).
+- [ ] **W-08** Event director: queue from `get_events`; P0 animations: alarm (`task_opened`), sit & work, submitted (`submission_received`), pass/miss (`task_finalized`), payday coins (`payroll_allocated`), layoff walk-out (status diff), rehire walk-in (`rehired`), streak number (`streak_milestone`), low reserve (`reserve_low`). Hold task N's events until its `task_finalized`, then play the finalize choreography (design §14.3.1). Late joiners see current state; only events newer than load time animate.
 - [ ] **W-09** Penthouse feed panel; vault ledger panel (income by tag, salaries, operating cost, tx links).
 - [ ] **W-13** "Preview growth" toggle on the hosted and local tower: switches `StateSource` to `SimSource` for stages 1–3, with a persistent **SIMULATED PREVIEW** banner; toggling back returns to live state. Never mixes simulated and live characters on one screen.
 
 ### 7.3 Later
-- [ ] **W-14 (P1)** Flame auras, sweat drops, polish. **W-15 (P2)** Elevators, camera-follow, stages 4–5, day/night, bankruptcy blackout.
+- [ ] **W-14 (P1)** Flame auras, sweat drops, boss faces, hair/accessories, polish. **W-15 (P2)** Elevators, camera jump-to-desk, building exteriors, construction sequence, stages 4–5, day/night, bankruptcy blackout.
+- [ ] **W-18 (P1)** Employee list view (DOM, tower order): the keyboard and screen-reader path to every card (design §11).
+- [ ] **W-19 (P1)** Component gallery: every DOM component and Pixi object in every state at 360/820/1100 px (design §15.4).
 
 ### 7.4 Tests (P0)
 - [ ] **W-16** vitest for tower model, layout, identity; a browser smoke test in e2e (renders, no console errors).
-- [ ] **W-17** 390 px viewport works; ≥ 50 fps with 150 employees on a laptop.
+- [ ] **W-17** 390 px viewport works; ≥ 50 fps with 150 employees on a laptop (design §14.4); `prefers-reduced-motion` honored (design §14.5).
 
 ---
 
@@ -243,7 +246,7 @@ Rule: **read-only renderer.** State via `StateSource`; transactions via `WalletA
 
 - [ ] **E-01** README (skeleton on 11-08, finished 11-13): one-line pitch; problem; "do X → see Y" steps (local `npm run demo`, testnet link); NEAR's role (spec §15.2); architecture; trust model (the boss is trusted during the day; the reveal makes it auditable afterward; `prove_pass` if shipped); rules including D1 and D15; libraries; AI-generated code disclosure; known limitations; the §8.5 table; testnet contract ids.
 - [ ] **E-02** Run the README steps from a **fresh clone in a new directory**; fix whatever breaks.
-- [ ] **E-03** Link `docs/PROTOCOL.md` so a screener can verify commit–reveal in 5 minutes. Amend spec §5.3 (D1) and add D15 (anti-recycling) to spec §5.4.
+- [ ] **E-03** Link `docs/PROTOCOL.md` so a screener can verify commit–reveal in 5 minutes. Amend spec §5.3 (D1), add D15 (anti-recycling) to spec §5.4, and amend spec §9.3 (D20: floors can be removed mid-day).
 - [ ] **E-04** ~90 s video script: problem line → boss posts → solve → payday coins → layoff walk-out → ledger. **You record.**
 - [ ] **E-05** X post draft (spec §15.5; must say built at NEAR HACKATHON, tag @NEARProtocol and #NEARHackathon). **You post.**
 - [ ] **E-06** On 11-13, re-read the live `https://nearhackathon.com/HACKATHON.md` and diff it against the local copy.
@@ -260,7 +263,7 @@ Build a thin end-to-end path first (S-01), then deepen it. Each day ends with a 
 |-----|-------|-------|------------------|
 | **11-08 Sun** (rest of today) | Protocol + contract skeletons | P-01..P-04; C-01; C-03..C-08; B-01; README skeleton (E-01) | Vectors pass in Rust **and** TS |
 | **11-09 Mon** | Contract complete + walking skeleton | C-09..C-16. **S-01:** a script on sandbox deploys both contracts, seeds 5 accounts, opens a task, submits, finalizes, claims, reads events. Check testnet faucet limits (§8.4). | **M1:** S-01 green end to end |
-| **11-10 Tue** | Hardening + boss | C-17, C-18; B-02..B-06, B-08..B-13, B-15/16; D-02 + D-08 on sandbox with 20 holders. **You: design docs due.** | **M2:** 3 unattended cycles with 20 sandbox holders; payouts match the mirror; F gets laid off; C-18 gas numbers at 100 recorded |
+| **11-10 Tue** | Hardening + boss | C-17, C-18; B-02..B-06, B-08..B-13, B-15/16; D-02 + D-08 on sandbox with 20 holders. (Design spec delivered 11-08.) | **M2:** 3 unattended cycles with 20 sandbox holders; payouts match the mirror; F gets laid off; C-18 gas numbers at 100 recorded |
 | **11-11 Wed** | Client plumbing + testnet | W-01..W-04, W-06, W-10..W-12, D-09. **You:** create the testnet root account; approve D-05 and the D-06 dry-run, then the real run. | **M3:** a full day played from the browser with a burner on sandbox; 20 holders seeded on testnet |
 | **11-12 Thu** | Visuals + demo | W-05, W-07..W-09, W-13, W-16/17; D-01, D-03, D-04; start D-07 on testnet | `npm run demo` from a clean clone shows all six steps. **Feature freeze.** |
 | **11-13 Fri** | Ship prep | E-01..E-03, E-06, E-07; D-10 hosting; C-21 / B-07 / W-14 only if everything above is green. **You:** record the video, make the repo public. | Fresh-clone run passes; repo public with LICENSE |
@@ -296,7 +299,7 @@ Build a thin end-to-end path first (S-01), then deepen it. Each day ends with a 
 | R-12 | Public testnet RPC rate limits with 20 bots + client polling | Throttled `CrowdSigner`, spread submissions, coalesced client reads; use a provider with a key if needed (docs.near.org/api/rpc/providers). |
 | R-13 | Not enough testnet NEAR | Small crowd (D13), measure (C-18), dry-run budget (D-06), check faucets on 11-09, recycle salaries. |
 | R-16 | Judges read the growth preview as fake activity | Separate toggle, persistent SIMULATED PREVIEW banner, never mixed with live characters, listed in the §8.5 table. |
-| R-14 | Design docs arrive late | Plumbing doesn't depend on them; placeholder art is shippable (§11 step 4). |
+| R-14 | Design spec scope exceeds the window | It labels every item P0 / P1 / Later; only P0 is scheduled; placeholder art is shippable (§11 step 4). |
 | R-15 | Deployer's leftover supply distorts the tower or payroll | `excluded_accounts` (D16), tested in C-17. |
 
 ---
