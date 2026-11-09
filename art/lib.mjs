@@ -8,9 +8,12 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 
 export function hexToRgb(hex) {
-  const n = parseInt(hex.slice(1), 16);
+  const n = parseInt(hex.slice(1, 7), 16);
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
+
+/** Alpha 0-255 of "#rrggbb" (opaque) or "#rrggbbaa". */
+export const hexAlpha = (hex) => (hex.length === 9 ? parseInt(hex.slice(7, 9), 16) : 255);
 
 export function rgbToHex([r, g, b]) {
   return "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
@@ -86,7 +89,8 @@ export function gridToSvg(grid, x = 0, y = 0, px = 1, { mirror = false } = {}) {
       if (!col) { i++; continue; }
       let j = i + 1;
       while (j < w && r[j] === col) j++;
-      out.push(`<rect x="${x + i * px}" y="${y + ry * px}" width="${(j - i) * px}" height="${px}" fill="${col}"/>`);
+      const fill = col.length === 9 ? `${col.slice(0, 7)}" fill-opacity="${(hexAlpha(col) / 255).toFixed(3)}` : col;
+      out.push(`<rect x="${x + i * px}" y="${y + ry * px}" width="${(j - i) * px}" height="${px}" fill="${fill}"/>`);
       i = j;
     }
   });
@@ -103,6 +107,7 @@ export function gridToPaths(grid, x = 0, y = 0) {
       if (!col) { i++; continue; }
       let j = i + 1;
       while (j < row.length && row[j] === col) j++;
+      if (col.length === 9) throw new Error("gridToPaths: translucent pixels are not supported");
       byColor.set(col, (byColor.get(col) ?? "") + `M${x + i} ${y + ry}h${j - i}v1h-${j - i}z`);
       i = j;
     }

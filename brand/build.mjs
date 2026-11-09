@@ -11,8 +11,9 @@
 import { mkdirSync, writeFileSync, readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { C, SPRITE } from "../art/palette.mjs";
-import { bake, deskCellSvg, CELL } from "../art/sprites.mjs";
+import { C } from "../art/palette.mjs";
+import { bake } from "../art/sprites.mjs";
+import { buildingSvg, sampleModel } from "../art/scene.mjs";
 import { gridToSvg, gridToPaths, svgsToPngs } from "../art/lib.mjs";
 
 const OUT = dirname(fileURLToPath(import.meta.url));
@@ -93,80 +94,8 @@ function tokenIconSvg() {
 }
 
 // ---------------------------------------------------------------------------
-// Tower illustration: penthouse with the boss, tier floors of desks, lobby,
-// vault. Illustrative, not live state. Drawn in sprite pixels at scale px.
-
-const B = C.body;
-const H = SPRITE.hair;
-const seat = (i, style = "short", extra = {}) => ({ kind: "sit", shirt: B[i], hair: H[(i * 5) % 6], style, ...extra });
-const work = (i, style = "short", extra = {}) => ({ kind: "type", shirt: B[i], hair: H[(i * 5 + 2) % 6], style, ...extra });
-
-const TOWER = [
-  { tint: C.floor.directors, desks: [seat(3, "short"), work(6, "long", { paper: true })] },
-  { tint: C.floor.managers, desks: [work(0, "bun", { paper: true }), seat(5, "curly"), work(2, "none")] },
-  { tint: C.floor.associates, desks: [seat(4, "long"), { kind: "laidoff" }, work(7, "short", { sweat: true }), seat(1, "bun")] },
-  { tint: C.floor.interns, desks: [work(2, "curly"), seat(6, "short"), { kind: "empty" }, work(3, "long", { paper: true }), seat(0, "none")] },
-];
-
-function towerSvg(x, y, wSprite, px) {
-  const W = wSprite * px;
-  let out = "";
-  let cy = y;
-  // rooftop sign
-  const signW = 150, signH = 30;
-  out += `<rect x="${x + W / 2 - signW / 2}" y="${cy}" width="${signW}" height="${signH}" fill="${C.accent}"/>`;
-  out += `<text x="${x + W / 2}" y="${cy + 21}" text-anchor="middle" font-family="${FONT}" font-weight="700" font-size="18" fill="${C.bg}">REORG INC.</text>`;
-  out += `<rect x="${x + W / 2 - signW / 2 + 16}" y="${cy + signH}" width="5" height="14" fill="${C.ink}"/>`;
-  out += `<rect x="${x + W / 2 + signW / 2 - 21}" y="${cy + signH}" width="5" height="14" fill="${C.ink}"/>`;
-  cy += signH + 14;
-  const top = cy;
-  // penthouse
-  const phH = 36 * px;
-  out += `<rect x="${x}" y="${cy}" width="${W}" height="${phH}" fill="${C.floor.penthouse}"/>`;
-  const boss = bake("boss.smug");
-  out += gridToSvg(boss, x + W / 2 - (boss[0].length * px) / 2, cy + phH - boss.length * px, px);
-  cy += phH;
-  // tier floors
-  for (const f of TOWER) {
-    const cellW = Math.floor(wSprite / f.desks.length);
-    const fh = CELL.h * px;
-    out += `<rect x="${x}" y="${cy}" width="${W}" height="${fh}" fill="${f.tint}"/>`;
-    const used = cellW * f.desks.length;
-    f.desks.forEach((d, i) => {
-      out += deskCellSvg(d, x + ((wSprite - used) / 2 + i * cellW) * px, cy, px, cellW, { floorTint: f.tint });
-    });
-    out += `<rect x="${x}" y="${cy - 1}" width="${W}" height="2" fill="${C.ink}" opacity="0.35"/>`;
-    cy += fh;
-  }
-  // lobby with a visitor
-  const lobbyH = 30 * px;
-  out += `<rect x="${x}" y="${cy}" width="${W}" height="${lobbyH}" fill="${C.floor.lobby}"/>`;
-  const v = bake("emp.visitor");
-  out += gridToSvg(v, x + 14 * px, cy + lobbyH - v.length * px - px, px);
-  const doorW = 22 * px;
-  out += `<rect x="${x + W / 2 - doorW / 2}" y="${cy + 4 * px}" width="${doorW}" height="${lobbyH - 4 * px}" fill="${C.bg}" stroke="${C.ink}" stroke-width="2"/>`;
-  cy += lobbyH;
-  // vault
-  const vaultH = 50;
-  out += `<rect x="${x}" y="${cy}" width="${W}" height="${vaultH}" fill="${C.floor.basement}"/>`;
-  out += `<text x="${x + 18}" y="${cy + 22}" font-family="${FONT}" font-size="13" font-weight="600" fill="${C.muted}">Reserve</text>`;
-  out += `<rect x="${x + 18}" y="${cy + 31}" width="${W - 36}" height="10" fill="${C.line}"/>`;
-  out += `<rect x="${x + 18}" y="${cy + 31}" width="${(W - 36) * 0.62}" height="10" fill="${C.coin}"/>`;
-  cy += vaultH;
-  out += `<rect x="${x}" y="${top}" width="${W}" height="${cy - top}" rx="6" fill="none" stroke="${C.ink}" stroke-width="2"/>`;
-  return { svg: out, h: cy - y, bossY: top + phH - boss.length * px };
-}
-
-// Speech bubble from the boss, in voice. The tail points right, at (tipX, tipY).
-function bubble(tipX, tipY, text) {
-  const padX = 14, h = 38, tail = 12;
-  const w = text.length * 8.1 + padX * 2;
-  const x = tipX - tail - w, y = tipY - h / 2;
-  return (
-    `<path fill="${C.ink}" d="M${x} ${y}H${x + w}V${tipY - 6}L${tipX} ${tipY}L${x + w} ${tipY + 6}V${y + h}H${x}Z"/>` +
-    `<text x="${x + padX}" y="${y + h / 2 + 5.5}" font-family="${FONT}" font-size="15" font-weight="500" fill="${C.bg}">${text}</text>`
-  );
-}
+// Social images show the building from the game (art/scene.mjs): the payday
+// sample moment, illustrative, not live state.
 
 function ogCard() {
   const W = 1200, H = 630;
@@ -179,39 +108,25 @@ function ogCard() {
   out += `<text x="70" y="${ty + 46}" font-family="${FONT}" font-size="34" font-weight="700" fill="${C.ink}" letter-spacing="-0.4">Survive the reorg.</text>`;
   out += `<text x="70" y="${ty + 108}" font-family="${FONT}" font-size="22" fill="${C.muted}">A memecoin where the token is a job. One task a day.</text>`;
   out += `<text x="70" y="${ty + 140}" font-family="${FONT}" font-size="22" fill="${C.muted}">Pass and get paid. Miss three and you are laid off.</text>`;
-  const px = 2, wSprite = 190, tx = W - 40 - wSprite * px;
-  const t = towerSvg(tx, 16, wSprite, px);
-  out += t.svg;
-  out += bubble(tx + (wSprite * px) / 2 - 24, t.bossY + 14, "Synergy is up. Again.");
+  const b = buildingSvg(sampleModel("office"), { px: 1, margin: 14, plaques: false });
+  out += `<g transform="translate(${W - 44 - b.w} ${(H - b.h) / 2})">${b.svg}</g>`;
   return svgDoc(W, H, out, { crisp: false });
 }
 
 function xBanner() {
   const W = 1500, H = 500;
   let out = `<rect width="${W}" height="${H}" fill="${C.bg}"/>`;
-  const px = 3, cellW = 40, cellH = CELL.h * px;
-  const rows = [C.floor.managers, C.floor.associates, C.floor.interns];
-  const kinds = (i, r) => {
-    if ((i + r * 3) % 9 === 4) return { kind: "empty" };
-    if ((i + r * 5) % 11 === 7) return { kind: "laidoff" };
-    const b = (i * 3 + r * 5) % 8;
-    const style = ["short", "long", "bun", "curly", "none"][(i * 7 + r) % 5];
-    return (i + r) % 3 === 0 ? seat(b, style) : work(b, style, { paper: (i + r) % 4 === 1 });
-  };
-  const n = Math.ceil(W / (cellW * px));
-  const y0 = H - rows.length * cellH - 10;
-  rows.forEach((tint, r) => {
-    const y = y0 + r * cellH;
-    out += `<rect x="0" y="${y}" width="${W}" height="${cellH}" fill="${tint}"/>`;
-    for (let i = 0; i < n; i++) out += deskCellSvg(kinds(i, r), i * cellW * px, y, px, cellW, { floorTint: tint });
-    out += `<rect x="0" y="${y - 1}" width="${W}" height="2" fill="${C.ink}" opacity="0.35"/>`;
-  });
-  // Penthouse strip with the boss and the wordmark.
+  // The four tier floors of the building at 2x, cropped from the full scene.
+  const px = 2, margin = 0;
+  const b = buildingSvg(sampleModel("office"), { px, margin });
+  const top = b.bands["directors:0"] * px, bottom = b.bands.lobby * px;
+  const cw = b.w, ch = bottom - top;
+  out += `<svg x="${W - cw - 40}" y="${(H - ch) / 2}" width="${cw}" height="${ch}" viewBox="0 ${top} ${cw} ${ch}">${b.svg}</svg>`;
   const wm = wordmarkGroup();
-  const sc = 0.62;
-  out += `<g transform="translate(${W / 2 - (wm.w * sc) / 2 + 40} ${(y0 - wm.h * sc) / 2 - 4}) scale(${sc})">${wm.svg}</g>`;
-  const boss = bake("boss.smug");
-  out += gridToSvg(boss, W / 2 - (wm.w * sc) / 2 - 18 * px - 10, y0 - boss.length * px, px);
+  const sc = 0.72;
+  out += `<g transform="translate(70 110) scale(${sc})">${wm.svg}</g>`;
+  out += `<text x="70" y="${110 + wm.h * sc + 56}" font-family="${FONT}" font-size="30" font-weight="700" fill="${C.ink}">Hold the token. Get hired.</text>`;
+  out += `<text x="70" y="${110 + wm.h * sc + 96}" font-family="${FONT}" font-size="30" font-weight="700" fill="${C.ink}">Survive the reorg.</text>`;
   return svgDoc(W, H, out, { crisp: true });
 }
 

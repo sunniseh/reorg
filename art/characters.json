@@ -1,9 +1,89 @@
 {
   "frames": {
+    "bay": {
+      "frame": {
+        "x": 374,
+        "y": 72,
+        "w": 40,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 40,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 40,
+        "h": 48
+      }
+    },
+    "bldg.slab": {
+      "frame": {
+        "x": 247,
+        "y": 317,
+        "w": 4,
+        "h": 4
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "sourceSize": {
+        "w": 4,
+        "h": 4
+      }
+    },
+    "boss.point": {
+      "frame": {
+        "x": 308,
+        "y": 172,
+        "w": 18,
+        "h": 28
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 18,
+        "h": 28
+      },
+      "sourceSize": {
+        "w": 18,
+        "h": 28
+      }
+    },
+    "boss.sip": {
+      "frame": {
+        "x": 328,
+        "y": 172,
+        "w": 18,
+        "h": 28
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 18,
+        "h": 28
+      },
+      "sourceSize": {
+        "w": 18,
+        "h": 28
+      }
+    },
     "boss.smile": {
       "frame": {
-        "x": 2,
-        "y": 2,
+        "x": 348,
+        "y": 172,
         "w": 18,
         "h": 28
       },
@@ -22,8 +102,28 @@
     },
     "boss.smug": {
       "frame": {
-        "x": 22,
-        "y": 2,
+        "x": 368,
+        "y": 172,
+        "w": 18,
+        "h": 28
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 18,
+        "h": 28
+      },
+      "sourceSize": {
+        "w": 18,
+        "h": 28
+      }
+    },
+    "boss.stand.side": {
+      "frame": {
+        "x": 388,
+        "y": 172,
         "w": 18,
         "h": 28
       },
@@ -42,8 +142,8 @@
     },
     "boss.twitchy": {
       "frame": {
-        "x": 42,
-        "y": 2,
+        "x": 408,
+        "y": 172,
         "w": 18,
         "h": 28
       },
@@ -60,10 +160,470 @@
         "h": 28
       }
     },
-    "emp.carry.0": {
+    "boss.walk.0": {
+      "frame": {
+        "x": 428,
+        "y": 172,
+        "w": 18,
+        "h": 28
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 18,
+        "h": 28
+      },
+      "sourceSize": {
+        "w": 18,
+        "h": 28
+      }
+    },
+    "boss.walk.1": {
+      "frame": {
+        "x": 448,
+        "y": 172,
+        "w": 18,
+        "h": 28
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 18,
+        "h": 28
+      },
+      "sourceSize": {
+        "w": 18,
+        "h": 28
+      }
+    },
+    "boss.walk.2": {
+      "frame": {
+        "x": 468,
+        "y": 172,
+        "w": 18,
+        "h": 28
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 18,
+        "h": 28
+      },
+      "sourceSize": {
+        "w": 18,
+        "h": 28
+      }
+    },
+    "boss.walk.3": {
+      "frame": {
+        "x": 488,
+        "y": 172,
+        "w": 18,
+        "h": 28
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 18,
+        "h": 28
+      },
+      "sourceSize": {
+        "w": 18,
+        "h": 28
+      }
+    },
+    "core.cab": {
+      "frame": {
+        "x": 2,
+        "y": 172,
+        "w": 18,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 18,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 18,
+        "h": 32
+      }
+    },
+    "core.cab.door.0": {
+      "frame": {
+        "x": 22,
+        "y": 172,
+        "w": 18,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 18,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 18,
+        "h": 32
+      }
+    },
+    "core.cab.door.1": {
+      "frame": {
+        "x": 42,
+        "y": 172,
+        "w": 18,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 18,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 18,
+        "h": 32
+      }
+    },
+    "core.cab.door.2": {
+      "frame": {
+        "x": 62,
+        "y": 172,
+        "w": 18,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 18,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 18,
+        "h": 32
+      }
+    },
+    "core.indicator.down": {
+      "frame": {
+        "x": 162,
+        "y": 317,
+        "w": 9,
+        "h": 5
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 9,
+        "h": 5
+      },
+      "sourceSize": {
+        "w": 9,
+        "h": 5
+      }
+    },
+    "core.indicator.off": {
+      "frame": {
+        "x": 173,
+        "y": 317,
+        "w": 9,
+        "h": 5
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 9,
+        "h": 5
+      },
+      "sourceSize": {
+        "w": 9,
+        "h": 5
+      }
+    },
+    "core.indicator.up": {
+      "frame": {
+        "x": 184,
+        "y": 317,
+        "w": 9,
+        "h": 5
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 9,
+        "h": 5
+      },
+      "sourceSize": {
+        "w": 9,
+        "h": 5
+      }
+    },
+    "core.shaft": {
       "frame": {
         "x": 62,
         "y": 2,
+        "w": 20,
+        "h": 52
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 20,
+        "h": 52
+      },
+      "sourceSize": {
+        "w": 20,
+        "h": 52
+      }
+    },
+    "core.shaft.top": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 20,
+        "h": 68
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 20,
+        "h": 68
+      },
+      "sourceSize": {
+        "w": 20,
+        "h": 68
+      }
+    },
+    "core.stairs": {
+      "frame": {
+        "x": 84,
+        "y": 2,
+        "w": 20,
+        "h": 52
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 20,
+        "h": 52
+      },
+      "sourceSize": {
+        "w": 20,
+        "h": 52
+      }
+    },
+    "core.stairs.top": {
+      "frame": {
+        "x": 24,
+        "y": 2,
+        "w": 20,
+        "h": 68
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 20,
+        "h": 68
+      },
+      "sourceSize": {
+        "w": 20,
+        "h": 68
+      }
+    },
+    "core.tube": {
+      "frame": {
+        "x": 106,
+        "y": 2,
+        "w": 4,
+        "h": 52
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 52
+      },
+      "sourceSize": {
+        "w": 4,
+        "h": 52
+      }
+    },
+    "core.tube.cap": {
+      "frame": {
+        "x": 276,
+        "y": 317,
+        "w": 6,
+        "h": 3
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 3
+      },
+      "sourceSize": {
+        "w": 6,
+        "h": 3
+      }
+    },
+    "core.tube.foot": {
+      "frame": {
+        "x": 430,
+        "y": 264,
+        "w": 14,
+        "h": 18
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 14,
+        "h": 18
+      },
+      "sourceSize": {
+        "w": 14,
+        "h": 18
+      }
+    },
+    "core.tube.outlet": {
+      "frame": {
+        "x": 20,
+        "y": 317,
+        "w": 6,
+        "h": 6
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 6
+      },
+      "sourceSize": {
+        "w": 6,
+        "h": 6
+      }
+    },
+    "emp.bench.0": {
+      "frame": {
+        "x": 200,
+        "y": 236,
+        "w": 16,
+        "h": 25
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 25
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 25
+      }
+    },
+    "emp.bench.0#shirt": {
+      "frame": {
+        "x": 218,
+        "y": 236,
+        "w": 16,
+        "h": 25
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 25
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 25
+      }
+    },
+    "emp.bench.1": {
+      "frame": {
+        "x": 236,
+        "y": 236,
+        "w": 16,
+        "h": 25
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 25
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 25
+      }
+    },
+    "emp.bench.1#shirt": {
+      "frame": {
+        "x": 254,
+        "y": 236,
+        "w": 16,
+        "h": 25
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 25
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 25
+      }
+    },
+    "emp.carry.0": {
+      "frame": {
+        "x": 18,
+        "y": 206,
         "w": 16,
         "h": 26
       },
@@ -82,8 +642,8 @@
     },
     "emp.carry.0#shirt": {
       "frame": {
-        "x": 80,
-        "y": 2,
+        "x": 36,
+        "y": 206,
         "w": 16,
         "h": 26
       },
@@ -102,8 +662,8 @@
     },
     "emp.carry.1": {
       "frame": {
-        "x": 98,
-        "y": 2,
+        "x": 54,
+        "y": 206,
         "w": 16,
         "h": 26
       },
@@ -122,8 +682,488 @@
     },
     "emp.carry.1#shirt": {
       "frame": {
-        "x": 116,
-        "y": 2,
+        "x": 72,
+        "y": 206,
+        "w": 16,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 26
+      }
+    },
+    "emp.carry.2": {
+      "frame": {
+        "x": 90,
+        "y": 206,
+        "w": 16,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 26
+      }
+    },
+    "emp.carry.2#shirt": {
+      "frame": {
+        "x": 108,
+        "y": 206,
+        "w": 16,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 26
+      }
+    },
+    "emp.carry.3": {
+      "frame": {
+        "x": 126,
+        "y": 206,
+        "w": 16,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 26
+      }
+    },
+    "emp.carry.3#shirt": {
+      "frame": {
+        "x": 144,
+        "y": 206,
+        "w": 16,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 26
+      }
+    },
+    "emp.chat.0": {
+      "frame": {
+        "x": 162,
+        "y": 206,
+        "w": 16,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 26
+      }
+    },
+    "emp.chat.0#shirt": {
+      "frame": {
+        "x": 180,
+        "y": 206,
+        "w": 16,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 26
+      }
+    },
+    "emp.chat.1": {
+      "frame": {
+        "x": 198,
+        "y": 206,
+        "w": 16,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 26
+      }
+    },
+    "emp.chat.1#shirt": {
+      "frame": {
+        "x": 216,
+        "y": 206,
+        "w": 16,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 26
+      }
+    },
+    "emp.cheer.0": {
+      "frame": {
+        "x": 483,
+        "y": 236,
+        "w": 16,
+        "h": 20
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 20
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 20
+      }
+    },
+    "emp.cheer.0#shirt": {
+      "frame": {
+        "x": 2,
+        "y": 264,
+        "w": 16,
+        "h": 20
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 20
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 20
+      }
+    },
+    "emp.cheer.1": {
+      "frame": {
+        "x": 20,
+        "y": 264,
+        "w": 16,
+        "h": 20
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 20
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 20
+      }
+    },
+    "emp.cheer.1#shirt": {
+      "frame": {
+        "x": 38,
+        "y": 264,
+        "w": 16,
+        "h": 20
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 20
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 20
+      }
+    },
+    "emp.climb.0": {
+      "frame": {
+        "x": 234,
+        "y": 206,
+        "w": 16,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 26
+      }
+    },
+    "emp.climb.0#shirt": {
+      "frame": {
+        "x": 252,
+        "y": 206,
+        "w": 16,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 26
+      }
+    },
+    "emp.climb.1": {
+      "frame": {
+        "x": 270,
+        "y": 206,
+        "w": 16,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 26
+      }
+    },
+    "emp.climb.1#shirt": {
+      "frame": {
+        "x": 288,
+        "y": 206,
+        "w": 16,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 26
+      }
+    },
+    "emp.climb.2": {
+      "frame": {
+        "x": 306,
+        "y": 206,
+        "w": 16,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 26
+      }
+    },
+    "emp.climb.2#shirt": {
+      "frame": {
+        "x": 324,
+        "y": 206,
+        "w": 16,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 26
+      }
+    },
+    "emp.climb.3": {
+      "frame": {
+        "x": 342,
+        "y": 206,
+        "w": 16,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 26
+      }
+    },
+    "emp.climb.3#shirt": {
+      "frame": {
+        "x": 360,
+        "y": 206,
+        "w": 16,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 26
+      }
+    },
+    "emp.drink.0": {
+      "frame": {
+        "x": 378,
+        "y": 206,
+        "w": 16,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 26
+      }
+    },
+    "emp.drink.0#shirt": {
+      "frame": {
+        "x": 396,
+        "y": 206,
+        "w": 16,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 26
+      }
+    },
+    "emp.drink.1": {
+      "frame": {
+        "x": 414,
+        "y": 206,
+        "w": 16,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 26
+      }
+    },
+    "emp.drink.1#shirt": {
+      "frame": {
+        "x": 432,
+        "y": 206,
         "w": 16,
         "h": 26
       },
@@ -143,7 +1183,7 @@
     "emp.sit.front": {
       "frame": {
         "x": 56,
-        "y": 32,
+        "y": 264,
         "w": 16,
         "h": 20
       },
@@ -163,7 +1203,327 @@
     "emp.sit.front#shirt": {
       "frame": {
         "x": 74,
-        "y": 32,
+        "y": 264,
+        "w": 16,
+        "h": 20
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 20
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 20
+      }
+    },
+    "emp.sit.land": {
+      "frame": {
+        "x": 92,
+        "y": 264,
+        "w": 16,
+        "h": 20
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 20
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 20
+      }
+    },
+    "emp.sit.land#shirt": {
+      "frame": {
+        "x": 110,
+        "y": 264,
+        "w": 16,
+        "h": 20
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 20
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 20
+      }
+    },
+    "emp.sit.side": {
+      "frame": {
+        "x": 128,
+        "y": 264,
+        "w": 16,
+        "h": 20
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 20
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 20
+      }
+    },
+    "emp.sit.side#shirt": {
+      "frame": {
+        "x": 146,
+        "y": 264,
+        "w": 16,
+        "h": 20
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 20
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 20
+      }
+    },
+    "emp.slump.0": {
+      "frame": {
+        "x": 164,
+        "y": 264,
+        "w": 16,
+        "h": 20
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 20
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 20
+      }
+    },
+    "emp.slump.0#shirt": {
+      "frame": {
+        "x": 182,
+        "y": 264,
+        "w": 16,
+        "h": 20
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 20
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 20
+      }
+    },
+    "emp.slump.1": {
+      "frame": {
+        "x": 200,
+        "y": 264,
+        "w": 16,
+        "h": 20
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 20
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 20
+      }
+    },
+    "emp.slump.1#shirt": {
+      "frame": {
+        "x": 218,
+        "y": 264,
+        "w": 16,
+        "h": 20
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 20
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 20
+      }
+    },
+    "emp.stand.front": {
+      "frame": {
+        "x": 450,
+        "y": 206,
+        "w": 16,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 26
+      }
+    },
+    "emp.stand.front#shirt": {
+      "frame": {
+        "x": 468,
+        "y": 206,
+        "w": 16,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 26
+      }
+    },
+    "emp.stand.side": {
+      "frame": {
+        "x": 486,
+        "y": 206,
+        "w": 16,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 26
+      }
+    },
+    "emp.stand.side#shirt": {
+      "frame": {
+        "x": 2,
+        "y": 236,
+        "w": 16,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 26
+      }
+    },
+    "emp.stretch.0": {
+      "frame": {
+        "x": 236,
+        "y": 264,
+        "w": 16,
+        "h": 20
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 20
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 20
+      }
+    },
+    "emp.stretch.0#shirt": {
+      "frame": {
+        "x": 254,
+        "y": 264,
+        "w": 16,
+        "h": 20
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 20
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 20
+      }
+    },
+    "emp.stretch.1": {
+      "frame": {
+        "x": 272,
+        "y": 264,
+        "w": 16,
+        "h": 20
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 20
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 20
+      }
+    },
+    "emp.stretch.1#shirt": {
+      "frame": {
+        "x": 290,
+        "y": 264,
         "w": 16,
         "h": 20
       },
@@ -182,8 +1542,8 @@
     },
     "emp.type.0": {
       "frame": {
-        "x": 92,
-        "y": 32,
+        "x": 308,
+        "y": 264,
         "w": 16,
         "h": 20
       },
@@ -202,8 +1562,8 @@
     },
     "emp.type.0#shirt": {
       "frame": {
-        "x": 110,
-        "y": 32,
+        "x": 326,
+        "y": 264,
         "w": 16,
         "h": 20
       },
@@ -222,8 +1582,8 @@
     },
     "emp.type.1": {
       "frame": {
-        "x": 128,
-        "y": 32,
+        "x": 344,
+        "y": 264,
         "w": 16,
         "h": 20
       },
@@ -242,8 +1602,8 @@
     },
     "emp.type.1#shirt": {
       "frame": {
-        "x": 146,
-        "y": 32,
+        "x": 362,
+        "y": 264,
         "w": 16,
         "h": 20
       },
@@ -262,8 +1622,28 @@
     },
     "emp.visitor": {
       "frame": {
-        "x": 134,
-        "y": 2,
+        "x": 20,
+        "y": 236,
+        "w": 16,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 26
+      }
+    },
+    "emp.visitor.1": {
+      "frame": {
+        "x": 38,
+        "y": 236,
         "w": 16,
         "h": 26
       },
@@ -282,8 +1662,8 @@
     },
     "emp.walk.0": {
       "frame": {
-        "x": 152,
-        "y": 2,
+        "x": 56,
+        "y": 236,
         "w": 16,
         "h": 26
       },
@@ -302,8 +1682,8 @@
     },
     "emp.walk.0#shirt": {
       "frame": {
-        "x": 170,
-        "y": 2,
+        "x": 74,
+        "y": 236,
         "w": 16,
         "h": 26
       },
@@ -322,8 +1702,8 @@
     },
     "emp.walk.1": {
       "frame": {
-        "x": 188,
-        "y": 2,
+        "x": 92,
+        "y": 236,
         "w": 16,
         "h": 26
       },
@@ -342,8 +1722,8 @@
     },
     "emp.walk.1#shirt": {
       "frame": {
-        "x": 206,
-        "y": 2,
+        "x": 110,
+        "y": 236,
         "w": 16,
         "h": 26
       },
@@ -362,8 +1742,8 @@
     },
     "emp.walk.2": {
       "frame": {
-        "x": 224,
-        "y": 2,
+        "x": 128,
+        "y": 236,
         "w": 16,
         "h": 26
       },
@@ -382,8 +1762,8 @@
     },
     "emp.walk.2#shirt": {
       "frame": {
-        "x": 2,
-        "y": 32,
+        "x": 146,
+        "y": 236,
         "w": 16,
         "h": 26
       },
@@ -402,8 +1782,8 @@
     },
     "emp.walk.3": {
       "frame": {
-        "x": 20,
-        "y": 32,
+        "x": 164,
+        "y": 236,
         "w": 16,
         "h": 26
       },
@@ -422,8 +1802,8 @@
     },
     "emp.walk.3#shirt": {
       "frame": {
-        "x": 38,
-        "y": 32,
+        "x": 182,
+        "y": 236,
         "w": 16,
         "h": 26
       },
@@ -440,10 +1820,190 @@
         "h": 26
       }
     },
+    "furn.plant.floor": {
+      "frame": {
+        "x": 494,
+        "y": 264,
+        "w": 8,
+        "h": 18
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 8,
+        "h": 18
+      },
+      "sourceSize": {
+        "w": 8,
+        "h": 18
+      }
+    },
+    "fx.dot.miss": {
+      "frame": {
+        "x": 437,
+        "y": 305,
+        "w": 7,
+        "h": 7
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 7,
+        "h": 7
+      },
+      "sourceSize": {
+        "w": 7,
+        "h": 7
+      }
+    },
+    "fx.dot.pass": {
+      "frame": {
+        "x": 446,
+        "y": 305,
+        "w": 7,
+        "h": 7
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 7,
+        "h": 7
+      },
+      "sourceSize": {
+        "w": 7,
+        "h": 7
+      }
+    },
+    "fx.flame.1.0": {
+      "frame": {
+        "x": 28,
+        "y": 317,
+        "w": 6,
+        "h": 6
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 6
+      },
+      "sourceSize": {
+        "w": 6,
+        "h": 6
+      }
+    },
+    "fx.flame.1.1": {
+      "frame": {
+        "x": 36,
+        "y": 317,
+        "w": 6,
+        "h": 6
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 6
+      },
+      "sourceSize": {
+        "w": 6,
+        "h": 6
+      }
+    },
+    "fx.flame.2.0": {
+      "frame": {
+        "x": 417,
+        "y": 305,
+        "w": 8,
+        "h": 7
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 8,
+        "h": 7
+      },
+      "sourceSize": {
+        "w": 8,
+        "h": 7
+      }
+    },
+    "fx.flame.2.1": {
+      "frame": {
+        "x": 427,
+        "y": 305,
+        "w": 8,
+        "h": 7
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 8,
+        "h": 7
+      },
+      "sourceSize": {
+        "w": 8,
+        "h": 7
+      }
+    },
+    "fx.flame.3.0": {
+      "frame": {
+        "x": 323,
+        "y": 305,
+        "w": 10,
+        "h": 8
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 10,
+        "h": 8
+      },
+      "sourceSize": {
+        "w": 10,
+        "h": 8
+      }
+    },
+    "fx.flame.3.1": {
+      "frame": {
+        "x": 335,
+        "y": 305,
+        "w": 10,
+        "h": 8
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 10,
+        "h": 8
+      },
+      "sourceSize": {
+        "w": 10,
+        "h": 8
+      }
+    },
     "fx.sweat": {
       "frame": {
-        "x": 187,
-        "y": 60,
+        "x": 271,
+        "y": 317,
         "w": 3,
         "h": 4
       },
@@ -462,8 +2022,8 @@
     },
     "hair.bun.front": {
       "frame": {
-        "x": 84,
-        "y": 60,
+        "x": 381,
+        "y": 305,
         "w": 16,
         "h": 7
       },
@@ -482,8 +2042,8 @@
     },
     "hair.bun.side": {
       "frame": {
-        "x": 30,
-        "y": 60,
+        "x": 269,
+        "y": 305,
         "w": 16,
         "h": 8
       },
@@ -502,8 +2062,8 @@
     },
     "hair.curly.front": {
       "frame": {
-        "x": 48,
-        "y": 60,
+        "x": 287,
+        "y": 305,
         "w": 16,
         "h": 8
       },
@@ -522,8 +2082,8 @@
     },
     "hair.curly.side": {
       "frame": {
-        "x": 66,
-        "y": 60,
+        "x": 305,
+        "y": 305,
         "w": 16,
         "h": 8
       },
@@ -542,8 +2102,8 @@
     },
     "hair.long.front": {
       "frame": {
-        "x": 194,
-        "y": 32,
+        "x": 450,
+        "y": 286,
         "w": 16,
         "h": 11
       },
@@ -562,8 +2122,8 @@
     },
     "hair.long.side": {
       "frame": {
-        "x": 212,
-        "y": 32,
+        "x": 468,
+        "y": 286,
         "w": 16,
         "h": 11
       },
@@ -582,8 +2142,8 @@
     },
     "hair.short.front": {
       "frame": {
-        "x": 162,
-        "y": 60,
+        "x": 144,
+        "y": 317,
         "w": 16,
         "h": 5
       },
@@ -602,8 +2162,8 @@
     },
     "hair.short.side": {
       "frame": {
-        "x": 102,
-        "y": 60,
+        "x": 399,
+        "y": 305,
         "w": 16,
         "h": 7
       },
@@ -618,12 +2178,332 @@
       "sourceSize": {
         "w": 16,
         "h": 7
+      }
+    },
+    "lobby.cafe": {
+      "frame": {
+        "x": 270,
+        "y": 172,
+        "w": 36,
+        "h": 30
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 36,
+        "h": 30
+      },
+      "sourceSize": {
+        "w": 36,
+        "h": 30
+      }
+    },
+    "lobby.door.glass.0": {
+      "frame": {
+        "x": 416,
+        "y": 72,
+        "w": 40,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 40,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 40,
+        "h": 48
+      }
+    },
+    "lobby.door.glass.1": {
+      "frame": {
+        "x": 458,
+        "y": 72,
+        "w": 40,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 40,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 40,
+        "h": 48
+      }
+    },
+    "lobby.door.glass.2": {
+      "frame": {
+        "x": 2,
+        "y": 122,
+        "w": 40,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 40,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 40,
+        "h": 48
+      }
+    },
+    "lobby.door.hr": {
+      "frame": {
+        "x": 464,
+        "y": 122,
+        "w": 20,
+        "h": 36
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 20,
+        "h": 36
+      },
+      "sourceSize": {
+        "w": 20,
+        "h": 36
+      }
+    },
+    "lobby.logo": {
+      "frame": {
+        "x": 127,
+        "y": 286,
+        "w": 59,
+        "h": 15
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 59,
+        "h": 15
+      },
+      "sourceSize": {
+        "w": 59,
+        "h": 15
+      }
+    },
+    "lobby.plant": {
+      "frame": {
+        "x": 2,
+        "y": 206,
+        "w": 14,
+        "h": 28
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 14,
+        "h": 28
+      },
+      "sourceSize": {
+        "w": 14,
+        "h": 28
+      }
+    },
+    "lobby.reception": {
+      "frame": {
+        "x": 421,
+        "y": 236,
+        "w": 60,
+        "h": 20
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 60,
+        "h": 20
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 20
+      }
+    },
+    "lobby.rollup.0": {
+      "frame": {
+        "x": 44,
+        "y": 122,
+        "w": 40,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 40,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 40,
+        "h": 48
+      }
+    },
+    "lobby.rollup.1": {
+      "frame": {
+        "x": 86,
+        "y": 122,
+        "w": 40,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 40,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 40,
+        "h": 48
+      }
+    },
+    "lobby.rollup.2": {
+      "frame": {
+        "x": 128,
+        "y": 122,
+        "w": 40,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 40,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 40,
+        "h": 48
+      }
+    },
+    "lobby.stool": {
+      "frame": {
+        "x": 347,
+        "y": 305,
+        "w": 6,
+        "h": 8
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 8
+      },
+      "sourceSize": {
+        "w": 6,
+        "h": 8
+      }
+    },
+    "lobby.table": {
+      "frame": {
+        "x": 338,
+        "y": 286,
+        "w": 14,
+        "h": 14
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 14,
+        "h": 14
+      },
+      "sourceSize": {
+        "w": 14,
+        "h": 14
+      }
+    },
+    "pent.desk": {
+      "frame": {
+        "x": 2,
+        "y": 286,
+        "w": 56,
+        "h": 17
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 56,
+        "h": 17
+      },
+      "sourceSize": {
+        "w": 56,
+        "h": 17
+      }
+    },
+    "pent.orgchart": {
+      "frame": {
+        "x": 290,
+        "y": 236,
+        "w": 32,
+        "h": 22
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 22
+      },
+      "sourceSize": {
+        "w": 32,
+        "h": 22
+      }
+    },
+    "pent.shelf": {
+      "frame": {
+        "x": 368,
+        "y": 122,
+        "w": 24,
+        "h": 42
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 42
+      },
+      "sourceSize": {
+        "w": 24,
+        "h": 42
       }
     },
     "prop.box": {
       "frame": {
-        "x": 120,
-        "y": 60,
+        "x": 463,
+        "y": 305,
         "w": 8,
         "h": 6
       },
@@ -640,10 +2520,70 @@
         "h": 6
       }
     },
+    "prop.box.full": {
+      "frame": {
+        "x": 100,
+        "y": 305,
+        "w": 10,
+        "h": 9
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 10,
+        "h": 9
+      },
+      "sourceSize": {
+        "w": 10,
+        "h": 9
+      }
+    },
+    "prop.chair.exec.front": {
+      "frame": {
+        "x": 354,
+        "y": 286,
+        "w": 18,
+        "h": 12
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 18,
+        "h": 12
+      },
+      "sourceSize": {
+        "w": 18,
+        "h": 12
+      }
+    },
+    "prop.chair.exec.side": {
+      "frame": {
+        "x": 392,
+        "y": 286,
+        "w": 6,
+        "h": 12
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 12
+      },
+      "sourceSize": {
+        "w": 6,
+        "h": 12
+      }
+    },
     "prop.chair.front": {
       "frame": {
-        "x": 2,
-        "y": 60,
+        "x": 80,
+        "y": 305,
         "w": 18,
         "h": 9
       },
@@ -662,8 +2602,8 @@
     },
     "prop.chair.side": {
       "frame": {
-        "x": 22,
-        "y": 60,
+        "x": 211,
+        "y": 305,
         "w": 6,
         "h": 9
       },
@@ -682,8 +2622,8 @@
     },
     "prop.coin.0": {
       "frame": {
-        "x": 130,
-        "y": 60,
+        "x": 44,
+        "y": 317,
         "w": 6,
         "h": 6
       },
@@ -702,8 +2642,8 @@
     },
     "prop.coin.1": {
       "frame": {
-        "x": 138,
-        "y": 60,
+        "x": 52,
+        "y": 317,
         "w": 6,
         "h": 6
       },
@@ -722,8 +2662,8 @@
     },
     "prop.coin.2": {
       "frame": {
-        "x": 146,
-        "y": 60,
+        "x": 60,
+        "y": 317,
         "w": 6,
         "h": 6
       },
@@ -742,8 +2682,8 @@
     },
     "prop.coin.3": {
       "frame": {
-        "x": 154,
-        "y": 60,
+        "x": 68,
+        "y": 317,
         "w": 6,
         "h": 6
       },
@@ -760,30 +2700,90 @@
         "h": 6
       }
     },
-    "prop.desk": {
+    "prop.coin.land": {
       "frame": {
-        "x": 164,
-        "y": 32,
-        "w": 28,
-        "h": 12
+        "x": 237,
+        "y": 317,
+        "w": 8,
+        "h": 4
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 28,
-        "h": 12
+        "w": 8,
+        "h": 4
       },
       "sourceSize": {
-        "w": 28,
-        "h": 12
+        "w": 8,
+        "h": 4
+      }
+    },
+    "prop.laptop.flash": {
+      "frame": {
+        "x": 213,
+        "y": 317,
+        "w": 6,
+        "h": 5
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 5
+      },
+      "sourceSize": {
+        "w": 6,
+        "h": 5
+      }
+    },
+    "prop.laptop.off": {
+      "frame": {
+        "x": 221,
+        "y": 317,
+        "w": 6,
+        "h": 5
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 5
+      },
+      "sourceSize": {
+        "w": 6,
+        "h": 5
+      }
+    },
+    "prop.laptop.on": {
+      "frame": {
+        "x": 229,
+        "y": 317,
+        "w": 6,
+        "h": 5
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 5
+      },
+      "sourceSize": {
+        "w": 6,
+        "h": 5
       }
     },
     "prop.monitor.flash": {
       "frame": {
-        "x": 230,
-        "y": 32,
+        "x": 56,
+        "y": 305,
         "w": 6,
         "h": 10
       },
@@ -802,8 +2802,8 @@
     },
     "prop.monitor.off": {
       "frame": {
-        "x": 238,
-        "y": 32,
+        "x": 64,
+        "y": 305,
         "w": 6,
         "h": 10
       },
@@ -822,8 +2822,8 @@
     },
     "prop.monitor.on": {
       "frame": {
-        "x": 246,
-        "y": 32,
+        "x": 72,
+        "y": 305,
         "w": 6,
         "h": 10
       },
@@ -842,10 +2842,170 @@
     },
     "prop.paper": {
       "frame": {
-        "x": 180,
-        "y": 60,
+        "x": 455,
+        "y": 305,
+        "w": 6,
+        "h": 7
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 7
+      },
+      "sourceSize": {
+        "w": 6,
+        "h": 7
+      }
+    },
+    "prop.plant": {
+      "frame": {
+        "x": 355,
+        "y": 305,
+        "w": 6,
+        "h": 8
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 8
+      },
+      "sourceSize": {
+        "w": 6,
+        "h": 8
+      }
+    },
+    "prop.sheets.1": {
+      "frame": {
+        "x": 473,
+        "y": 305,
+        "w": 7,
+        "h": 6
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 7,
+        "h": 6
+      },
+      "sourceSize": {
+        "w": 7,
+        "h": 6
+      }
+    },
+    "prop.sheets.2": {
+      "frame": {
+        "x": 482,
+        "y": 305,
+        "w": 7,
+        "h": 6
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 7,
+        "h": 6
+      },
+      "sourceSize": {
+        "w": 7,
+        "h": 6
+      }
+    },
+    "prop.sheets.3": {
+      "frame": {
+        "x": 491,
+        "y": 305,
+        "w": 7,
+        "h": 6
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 7,
+        "h": 6
+      },
+      "sourceSize": {
+        "w": 7,
+        "h": 6
+      }
+    },
+    "prop.sheets.4": {
+      "frame": {
+        "x": 500,
+        "y": 305,
+        "w": 7,
+        "h": 6
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 7,
+        "h": 6
+      },
+      "sourceSize": {
+        "w": 7,
+        "h": 6
+      }
+    },
+    "prop.sheets.5": {
+      "frame": {
+        "x": 2,
+        "y": 317,
+        "w": 7,
+        "h": 6
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 7,
+        "h": 6
+      },
+      "sourceSize": {
+        "w": 7,
+        "h": 6
+      }
+    },
+    "prop.sheets.6": {
+      "frame": {
+        "x": 11,
+        "y": 317,
+        "w": 7,
+        "h": 6
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 7,
+        "h": 6
+      },
+      "sourceSize": {
+        "w": 7,
+        "h": 6
+      }
+    },
+    "prop.tape": {
+      "frame": {
+        "x": 284,
+        "y": 317,
         "w": 5,
-        "h": 5
+        "h": 3
       },
       "rotated": false,
       "trimmed": false,
@@ -853,11 +3013,1351 @@
         "x": 0,
         "y": 0,
         "w": 5,
-        "h": 5
+        "h": 3
       },
       "sourceSize": {
         "w": 5,
+        "h": 3
+      }
+    },
+    "roof.machine": {
+      "frame": {
+        "x": 284,
+        "y": 286,
+        "w": 28,
+        "h": 14
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 28,
+        "h": 14
+      },
+      "sourceSize": {
+        "w": 28,
+        "h": 14
+      }
+    },
+    "roof.tank": {
+      "frame": {
+        "x": 486,
+        "y": 122,
+        "w": 22,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 22,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 22,
+        "h": 32
+      }
+    },
+    "room.associates.back": {
+      "frame": {
+        "x": 170,
+        "y": 122,
+        "w": 36,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 36,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 36,
+        "h": 48
+      }
+    },
+    "room.associates.empty": {
+      "frame": {
+        "x": 208,
+        "y": 122,
+        "w": 36,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 36,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 36,
+        "h": 48
+      }
+    },
+    "room.associates.front": {
+      "frame": {
+        "x": 246,
+        "y": 122,
+        "w": 36,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 36,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 36,
+        "h": 48
+      }
+    },
+    "room.directors.back": {
+      "frame": {
+        "x": 242,
+        "y": 2,
+        "w": 72,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 72,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 72,
+        "h": 48
+      }
+    },
+    "room.directors.empty": {
+      "frame": {
+        "x": 316,
+        "y": 2,
+        "w": 72,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 72,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 72,
+        "h": 48
+      }
+    },
+    "room.directors.front": {
+      "frame": {
+        "x": 390,
+        "y": 2,
+        "w": 72,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 72,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 72,
+        "h": 48
+      }
+    },
+    "room.directors.wall": {
+      "frame": {
+        "x": 362,
+        "y": 122,
+        "w": 4,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 4,
+        "h": 48
+      }
+    },
+    "room.interns.back": {
+      "frame": {
+        "x": 284,
+        "y": 122,
+        "w": 24,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 24,
+        "h": 48
+      }
+    },
+    "room.interns.empty": {
+      "frame": {
+        "x": 310,
+        "y": 122,
+        "w": 24,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 24,
+        "h": 48
+      }
+    },
+    "room.interns.front": {
+      "frame": {
+        "x": 336,
+        "y": 122,
+        "w": 24,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 24,
+        "h": 48
+      }
+    },
+    "room.managers.back": {
+      "frame": {
+        "x": 224,
+        "y": 72,
+        "w": 48,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 48,
+        "h": 48
+      }
+    },
+    "room.managers.empty": {
+      "frame": {
+        "x": 274,
+        "y": 72,
+        "w": 48,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 48,
+        "h": 48
+      }
+    },
+    "room.managers.front": {
+      "frame": {
+        "x": 324,
+        "y": 72,
+        "w": 48,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 48,
+        "h": 48
+      }
+    },
+    "server.rack": {
+      "frame": {
+        "x": 394,
+        "y": 122,
+        "w": 14,
+        "h": 40
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 14,
+        "h": 40
+      },
+      "sourceSize": {
+        "w": 14,
+        "h": 40
+      }
+    },
+    "server.rack.stalled": {
+      "frame": {
+        "x": 410,
+        "y": 122,
+        "w": 14,
+        "h": 40
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 14,
+        "h": 40
+      },
+      "sourceSize": {
+        "w": 14,
+        "h": 40
+      }
+    },
+    "shell.garage.front": {
+      "frame": {
+        "x": 2,
+        "y": 72,
+        "w": 72,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 72,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 72,
+        "h": 48
+      }
+    },
+    "shell.garage.parapet": {
+      "frame": {
+        "x": 76,
+        "y": 317,
+        "w": 4,
+        "h": 6
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 6
+      },
+      "sourceSize": {
+        "w": 4,
+        "h": 6
+      }
+    },
+    "shell.garage.slab": {
+      "frame": {
+        "x": 253,
+        "y": 317,
+        "w": 4,
+        "h": 4
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "sourceSize": {
+        "w": 4,
+        "h": 4
+      }
+    },
+    "shell.garage.wall": {
+      "frame": {
+        "x": 363,
+        "y": 305,
+        "w": 4,
+        "h": 8
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 8
+      },
+      "sourceSize": {
+        "w": 4,
+        "h": 8
+      }
+    },
+    "shell.garage.window": {
+      "frame": {
+        "x": 272,
+        "y": 236,
+        "w": 4,
+        "h": 24
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 24
+      },
+      "sourceSize": {
+        "w": 4,
+        "h": 24
+      }
+    },
+    "shell.office.front": {
+      "frame": {
+        "x": 76,
+        "y": 72,
+        "w": 72,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 72,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 72,
+        "h": 48
+      }
+    },
+    "shell.office.parapet": {
+      "frame": {
+        "x": 82,
+        "y": 317,
+        "w": 4,
+        "h": 6
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 6
+      },
+      "sourceSize": {
+        "w": 4,
+        "h": 6
+      }
+    },
+    "shell.office.slab": {
+      "frame": {
+        "x": 259,
+        "y": 317,
+        "w": 4,
+        "h": 4
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "sourceSize": {
+        "w": 4,
+        "h": 4
+      }
+    },
+    "shell.office.wall": {
+      "frame": {
+        "x": 369,
+        "y": 305,
+        "w": 4,
+        "h": 8
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 8
+      },
+      "sourceSize": {
+        "w": 4,
+        "h": 8
+      }
+    },
+    "shell.office.window": {
+      "frame": {
+        "x": 278,
+        "y": 236,
+        "w": 4,
+        "h": 24
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 24
+      },
+      "sourceSize": {
+        "w": 4,
+        "h": 24
+      }
+    },
+    "shell.tower.front": {
+      "frame": {
+        "x": 150,
+        "y": 72,
+        "w": 72,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 72,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 72,
+        "h": 48
+      }
+    },
+    "shell.tower.parapet": {
+      "frame": {
+        "x": 88,
+        "y": 317,
+        "w": 4,
+        "h": 6
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 6
+      },
+      "sourceSize": {
+        "w": 4,
+        "h": 6
+      }
+    },
+    "shell.tower.slab": {
+      "frame": {
+        "x": 265,
+        "y": 317,
+        "w": 4,
+        "h": 4
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "sourceSize": {
+        "w": 4,
+        "h": 4
+      }
+    },
+    "shell.tower.wall": {
+      "frame": {
+        "x": 375,
+        "y": 305,
+        "w": 4,
+        "h": 8
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 8
+      },
+      "sourceSize": {
+        "w": 4,
+        "h": 8
+      }
+    },
+    "shell.tower.window": {
+      "frame": {
+        "x": 284,
+        "y": 236,
+        "w": 4,
+        "h": 24
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 24
+      },
+      "sourceSize": {
+        "w": 4,
+        "h": 24
+      }
+    },
+    "sign.garage": {
+      "frame": {
+        "x": 86,
+        "y": 286,
+        "w": 39,
+        "h": 16
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 39,
+        "h": 16
+      },
+      "sourceSize": {
+        "w": 39,
+        "h": 16
+      }
+    },
+    "sign.office": {
+      "frame": {
+        "x": 357,
+        "y": 236,
+        "w": 62,
+        "h": 20
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 62,
+        "h": 20
+      },
+      "sourceSize": {
+        "w": 62,
+        "h": 20
+      }
+    },
+    "sign.tower": {
+      "frame": {
+        "x": 198,
+        "y": 172,
+        "w": 70,
+        "h": 30
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 70,
+        "h": 30
+      },
+      "sourceSize": {
+        "w": 70,
+        "h": 30
+      }
+    },
+    "sky.skyline": {
+      "frame": {
+        "x": 112,
+        "y": 2,
+        "w": 128,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 48
+      }
+    },
+    "street.bench": {
+      "frame": {
+        "x": 2,
+        "y": 305,
+        "w": 52,
+        "h": 10
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 52,
+        "h": 10
+      },
+      "sourceSize": {
+        "w": 52,
+        "h": 10
+      }
+    },
+    "street.lamp": {
+      "frame": {
+        "x": 46,
+        "y": 2,
+        "w": 14,
+        "h": 64
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 14,
+        "h": 64
+      },
+      "sourceSize": {
+        "w": 14,
+        "h": 64
+      }
+    },
+    "street.pavement": {
+      "frame": {
+        "x": 82,
+        "y": 172,
+        "w": 16,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 32
+      }
+    },
+    "vault.bar": {
+      "frame": {
+        "x": 238,
+        "y": 286,
+        "w": 44,
+        "h": 14
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 44,
+        "h": 14
+      },
+      "sourceSize": {
+        "w": 44,
+        "h": 14
+      }
+    },
+    "vault.boxes": {
+      "frame": {
+        "x": 324,
+        "y": 236,
+        "w": 31,
+        "h": 21
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 31,
+        "h": 21
+      },
+      "sourceSize": {
+        "w": 31,
+        "h": 21
+      }
+    },
+    "vault.door": {
+      "frame": {
+        "x": 426,
+        "y": 122,
+        "w": 36,
+        "h": 36
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 36,
+        "h": 36
+      },
+      "sourceSize": {
+        "w": 36,
+        "h": 36
+      }
+    },
+    "vault.pile.0": {
+      "frame": {
+        "x": 291,
+        "y": 317,
+        "w": 48,
+        "h": 2
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 48,
+        "h": 2
+      },
+      "sourceSize": {
+        "w": 48,
+        "h": 2
+      }
+    },
+    "vault.pile.1": {
+      "frame": {
+        "x": 94,
+        "y": 317,
+        "w": 48,
         "h": 5
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 48,
+        "h": 5
+      },
+      "sourceSize": {
+        "w": 48,
+        "h": 5
+      }
+    },
+    "vault.pile.2": {
+      "frame": {
+        "x": 219,
+        "y": 305,
+        "w": 48,
+        "h": 8
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 48,
+        "h": 8
+      },
+      "sourceSize": {
+        "w": 48,
+        "h": 8
+      }
+    },
+    "vault.pile.3": {
+      "frame": {
+        "x": 400,
+        "y": 286,
+        "w": 48,
+        "h": 11
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 48,
+        "h": 11
+      },
+      "sourceSize": {
+        "w": 48,
+        "h": 11
+      }
+    },
+    "vault.pile.4": {
+      "frame": {
+        "x": 188,
+        "y": 286,
+        "w": 48,
+        "h": 14
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 48,
+        "h": 14
+      },
+      "sourceSize": {
+        "w": 48,
+        "h": 14
+      }
+    },
+    "vault.pile.5": {
+      "frame": {
+        "x": 380,
+        "y": 264,
+        "w": 48,
+        "h": 18
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 48,
+        "h": 18
+      },
+      "sourceSize": {
+        "w": 48,
+        "h": 18
+      }
+    },
+    "wall.alarm.off": {
+      "frame": {
+        "x": 195,
+        "y": 317,
+        "w": 7,
+        "h": 5
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 7,
+        "h": 5
+      },
+      "sourceSize": {
+        "w": 7,
+        "h": 5
+      }
+    },
+    "wall.alarm.on": {
+      "frame": {
+        "x": 204,
+        "y": 317,
+        "w": 7,
+        "h": 5
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 7,
+        "h": 5
+      },
+      "sourceSize": {
+        "w": 7,
+        "h": 5
+      }
+    },
+    "wall.board.small": {
+      "frame": {
+        "x": 374,
+        "y": 286,
+        "w": 16,
+        "h": 12
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 12
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 12
+      }
+    },
+    "wall.clock": {
+      "frame": {
+        "x": 112,
+        "y": 305,
+        "w": 9,
+        "h": 9
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 9,
+        "h": 9
+      },
+      "sourceSize": {
+        "w": 9,
+        "h": 9
+      }
+    },
+    "wall.clock.hand.0": {
+      "frame": {
+        "x": 123,
+        "y": 305,
+        "w": 9,
+        "h": 9
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 9,
+        "h": 9
+      },
+      "sourceSize": {
+        "w": 9,
+        "h": 9
+      }
+    },
+    "wall.clock.hand.1": {
+      "frame": {
+        "x": 134,
+        "y": 305,
+        "w": 9,
+        "h": 9
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 9,
+        "h": 9
+      },
+      "sourceSize": {
+        "w": 9,
+        "h": 9
+      }
+    },
+    "wall.clock.hand.2": {
+      "frame": {
+        "x": 145,
+        "y": 305,
+        "w": 9,
+        "h": 9
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 9,
+        "h": 9
+      },
+      "sourceSize": {
+        "w": 9,
+        "h": 9
+      }
+    },
+    "wall.clock.hand.3": {
+      "frame": {
+        "x": 156,
+        "y": 305,
+        "w": 9,
+        "h": 9
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 9,
+        "h": 9
+      },
+      "sourceSize": {
+        "w": 9,
+        "h": 9
+      }
+    },
+    "wall.clock.hand.4": {
+      "frame": {
+        "x": 167,
+        "y": 305,
+        "w": 9,
+        "h": 9
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 9,
+        "h": 9
+      },
+      "sourceSize": {
+        "w": 9,
+        "h": 9
+      }
+    },
+    "wall.clock.hand.5": {
+      "frame": {
+        "x": 178,
+        "y": 305,
+        "w": 9,
+        "h": 9
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 9,
+        "h": 9
+      },
+      "sourceSize": {
+        "w": 9,
+        "h": 9
+      }
+    },
+    "wall.clock.hand.6": {
+      "frame": {
+        "x": 189,
+        "y": 305,
+        "w": 9,
+        "h": 9
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 9,
+        "h": 9
+      },
+      "sourceSize": {
+        "w": 9,
+        "h": 9
+      }
+    },
+    "wall.clock.hand.7": {
+      "frame": {
+        "x": 200,
+        "y": 305,
+        "w": 9,
+        "h": 9
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 9,
+        "h": 9
+      },
+      "sourceSize": {
+        "w": 9,
+        "h": 9
+      }
+    },
+    "wall.lamp": {
+      "frame": {
+        "x": 341,
+        "y": 317,
+        "w": 10,
+        "h": 2
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 10,
+        "h": 2
+      },
+      "sourceSize": {
+        "w": 10,
+        "h": 2
+      }
+    },
+    "wall.poster.0": {
+      "frame": {
+        "x": 446,
+        "y": 264,
+        "w": 14,
+        "h": 18
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 14,
+        "h": 18
+      },
+      "sourceSize": {
+        "w": 14,
+        "h": 18
+      }
+    },
+    "wall.poster.1": {
+      "frame": {
+        "x": 462,
+        "y": 264,
+        "w": 14,
+        "h": 18
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 14,
+        "h": 18
+      },
+      "sourceSize": {
+        "w": 14,
+        "h": 18
+      }
+    },
+    "wall.poster.2": {
+      "frame": {
+        "x": 478,
+        "y": 264,
+        "w": 14,
+        "h": 18
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 14,
+        "h": 18
+      },
+      "sourceSize": {
+        "w": 14,
+        "h": 18
+      }
+    },
+    "wall.whiteboard": {
+      "frame": {
+        "x": 314,
+        "y": 286,
+        "w": 22,
+        "h": 14
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 22,
+        "h": 14
+      },
+      "sourceSize": {
+        "w": 22,
+        "h": 14
+      }
+    },
+    "wall.window": {
+      "frame": {
+        "x": 60,
+        "y": 286,
+        "w": 24,
+        "h": 17
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 17
+      },
+      "sourceSize": {
+        "w": 24,
+        "h": 17
+      }
+    },
+    "wall.window.big": {
+      "frame": {
+        "x": 100,
+        "y": 172,
+        "w": 96,
+        "h": 30
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 96,
+        "h": 30
+      },
+      "sourceSize": {
+        "w": 96,
+        "h": 30
       }
     }
   },
@@ -872,15 +4372,117 @@
       "emp.walk.2",
       "emp.walk.3"
     ],
+    "emp.run": [
+      "emp.walk.0",
+      "emp.walk.1",
+      "emp.walk.2",
+      "emp.walk.3"
+    ],
     "emp.carry": [
       "emp.carry.0",
-      "emp.carry.1"
+      "emp.carry.1",
+      "emp.carry.2",
+      "emp.carry.3"
+    ],
+    "emp.climb": [
+      "emp.climb.0",
+      "emp.climb.1",
+      "emp.climb.2",
+      "emp.climb.3"
+    ],
+    "emp.cheer": [
+      "emp.cheer.0",
+      "emp.cheer.1"
+    ],
+    "emp.slump": [
+      "emp.slump.0",
+      "emp.slump.1"
+    ],
+    "emp.drink": [
+      "emp.drink.0",
+      "emp.drink.1",
+      "emp.drink.1",
+      "emp.drink.0"
+    ],
+    "emp.chat": [
+      "emp.chat.0",
+      "emp.chat.1"
+    ],
+    "emp.stretch": [
+      "emp.stretch.0",
+      "emp.stretch.1"
+    ],
+    "emp.bench": [
+      "emp.bench.0",
+      "emp.bench.0",
+      "emp.bench.0",
+      "emp.bench.1"
+    ],
+    "emp.visitor.shuffle": [
+      "emp.visitor",
+      "emp.visitor.1"
+    ],
+    "boss.walk": [
+      "boss.walk.0",
+      "boss.walk.1",
+      "boss.walk.2",
+      "boss.walk.3"
     ],
     "prop.coin": [
       "prop.coin.0",
       "prop.coin.1",
       "prop.coin.2",
       "prop.coin.3"
+    ],
+    "fx.flame.1": [
+      "fx.flame.1.0",
+      "fx.flame.1.1"
+    ],
+    "fx.flame.2": [
+      "fx.flame.2.0",
+      "fx.flame.2.1"
+    ],
+    "fx.flame.3": [
+      "fx.flame.3.0",
+      "fx.flame.3.1"
+    ],
+    "core.cab.open": [
+      "core.cab.door.0",
+      "core.cab.door.1",
+      "core.cab.door.2"
+    ],
+    "core.cab.close": [
+      "core.cab.door.2",
+      "core.cab.door.1",
+      "core.cab.door.0"
+    ],
+    "lobby.door.glass.open": [
+      "lobby.door.glass.0",
+      "lobby.door.glass.1",
+      "lobby.door.glass.2"
+    ],
+    "lobby.door.glass.close": [
+      "lobby.door.glass.2",
+      "lobby.door.glass.1",
+      "lobby.door.glass.0"
+    ],
+    "lobby.rollup.open": [
+      "lobby.rollup.0",
+      "lobby.rollup.1",
+      "lobby.rollup.2"
+    ],
+    "lobby.rollup.close": [
+      "lobby.rollup.2",
+      "lobby.rollup.1",
+      "lobby.rollup.0"
+    ],
+    "wall.alarm.pulse": [
+      "wall.alarm.on",
+      "wall.alarm.off",
+      "wall.alarm.on",
+      "wall.alarm.off",
+      "wall.alarm.on",
+      "wall.alarm.off"
     ]
   },
   "meta": {
@@ -888,41 +4490,267 @@
     "image": "characters.png",
     "format": "RGBA8888",
     "size": {
-      "w": 256,
-      "h": 71
+      "w": 512,
+      "h": 325
     },
     "scale": "1",
     "layers": "name = base layer; name#shirt and name#hair are grayscale tint layers drawn on top, same size and anchor",
     "rig": {
       "units": "Sprite pixels. Anchor every character frame at its bottom center.",
       "tint": {
-        "shirt": "body token: sha256(utf8(wallet))[0] mod 8 (spec §5)",
-        "hair": "hair color: sha256(utf8(wallet))[2] mod 6; style: sha256(utf8(wallet))[1] mod 5, where 4 = none (P1)"
+        "shirt": "body token: sha256(utf8(wallet))[0] mod 8 (spec §5.1)",
+        "hair": "hair color: sha256(utf8(wallet))[2] mod 6; style: sha256(utf8(wallet))[1] mod 5 in hairStyles order ('none' draws no hair)"
       },
+      "hairStyles": [
+        "short",
+        "long",
+        "bun",
+        "curly",
+        "none"
+      ],
       "poses": {
         "emp.sit.front": {
           "view": "front",
-          "use": "Seated, between tasks; new hire"
+          "use": "Seated at the desk, between tasks; new hire"
+        },
+        "emp.sit.land": {
+          "view": "front",
+          "use": "One frame on sitting down (the squash, §14.1), then emp.sit.front"
         },
         "emp.type": {
           "view": "side",
           "use": "Working: turned to the monitor while a task is open"
         },
+        "emp.cheer": {
+          "view": "front",
+          "use": "Seated, passed at results or paid on payday; 0.6 s, once"
+        },
+        "emp.slump": {
+          "view": "front",
+          "use": "Seated, missed at results; 0.6 s, once, then hold frame 1 for 1 s"
+        },
+        "emp.sit.side": {
+          "view": "side",
+          "use": "P1 idle at the desk: leaning back, thinking"
+        },
+        "emp.stretch": {
+          "view": "front",
+          "use": "P1 idle at the desk"
+        },
+        "emp.stand.front": {
+          "view": "front",
+          "use": "Standing still facing out: waiting, riding the elevator"
+        },
+        "emp.stand.side": {
+          "view": "side",
+          "use": "Standing in profile: at the printer, the window, waiting for the elevator"
+        },
         "emp.walk": {
           "view": "side",
-          "use": "Rehire walk-in; mirror with scale.x = -1 to face left"
+          "use": "Walking (24 px/s, 8 fps); running is emp.run, the same frames at 48 px/s, 16 fps"
         },
         "emp.carry": {
           "view": "side",
-          "use": "Layoff walk-out with the box"
+          "use": "Layoff walk-out with the box and the desk plant"
+        },
+        "emp.climb": {
+          "view": "side",
+          "use": "Climbing a flight of stairs (1.6 s per floor); mirror on the flights that rise to the left"
+        },
+        "emp.drink": {
+          "view": "side",
+          "use": "At the water cooler or the coffee machine"
+        },
+        "emp.chat": {
+          "view": "side",
+          "use": "Water-cooler chat; partners face each other (one mirrored)"
+        },
+        "emp.bench": {
+          "view": "front",
+          "use": "Laid off: on the street bench with prop.box.full beside; frame 0 head down, frame 1 looking up"
         },
         "emp.visitor": {
           "view": "front",
-          "use": "Lobby visitor; outline only, never filled"
+          "use": "Visitor in the sidewalk queue; outline only, never filled (animation emp.visitor.shuffle)"
         },
-        "boss.*": {
+        "boss.smug|smile|twitchy": {
           "view": "front",
-          "use": "Penthouse; face from the latest pass rate (§17.1)"
+          "use": "Penthouse, standing; face from the latest pass rate (§17.1)"
+        },
+        "boss.walk": {
+          "view": "side",
+          "use": "Pacing the penthouse, coming down for a layoff; carries the mug"
+        },
+        "boss.point": {
+          "view": "side",
+          "use": "Pointing at the employee being laid off"
+        },
+        "boss.sip": {
+          "view": "side",
+          "use": "Penthouse idle: a sip from the mug"
+        }
+      },
+      "frames": {
+        "emp.sit.front": {
+          "view": "front",
+          "headY": 0
+        },
+        "emp.sit.land": {
+          "view": "front",
+          "headY": 1
+        },
+        "emp.cheer.0": {
+          "view": "front",
+          "headY": 0
+        },
+        "emp.cheer.1": {
+          "view": "front",
+          "headY": 0
+        },
+        "emp.slump.0": {
+          "view": "front",
+          "headY": 1
+        },
+        "emp.slump.1": {
+          "view": "front",
+          "headY": 2
+        },
+        "emp.stretch.0": {
+          "view": "front",
+          "headY": 0
+        },
+        "emp.stretch.1": {
+          "view": "front",
+          "headY": 0
+        },
+        "emp.type.0": {
+          "view": "side",
+          "headY": 0
+        },
+        "emp.type.1": {
+          "view": "side",
+          "headY": 0
+        },
+        "emp.sit.side": {
+          "view": "side",
+          "headY": 0,
+          "headX": -1
+        },
+        "emp.stand.front": {
+          "view": "front",
+          "headY": 0
+        },
+        "emp.bench.0": {
+          "view": "front",
+          "headY": 0
+        },
+        "emp.bench.1": {
+          "view": "front",
+          "headY": 0
+        },
+        "emp.stand.side": {
+          "view": "side",
+          "headY": 0,
+          "hand": [
+            6,
+            18
+          ]
+        },
+        "emp.drink.0": {
+          "view": "side",
+          "headY": 0
+        },
+        "emp.drink.1": {
+          "view": "side",
+          "headY": 0
+        },
+        "emp.chat.0": {
+          "view": "side",
+          "headY": 0
+        },
+        "emp.chat.1": {
+          "view": "side",
+          "headY": 0
+        },
+        "emp.walk.0": {
+          "view": "side",
+          "headY": 0,
+          "hand": [
+            0,
+            17
+          ]
+        },
+        "emp.walk.1": {
+          "view": "side",
+          "headY": -1,
+          "hand": [
+            6,
+            17
+          ]
+        },
+        "emp.walk.2": {
+          "view": "side",
+          "headY": 0,
+          "hand": [
+            11,
+            17
+          ]
+        },
+        "emp.walk.3": {
+          "view": "side",
+          "headY": -1,
+          "hand": [
+            6,
+            17
+          ]
+        },
+        "emp.carry.0": {
+          "view": "side",
+          "headY": 0
+        },
+        "emp.carry.1": {
+          "view": "side",
+          "headY": -1
+        },
+        "emp.carry.2": {
+          "view": "side",
+          "headY": 0
+        },
+        "emp.carry.3": {
+          "view": "side",
+          "headY": -1
+        },
+        "emp.climb.0": {
+          "view": "side",
+          "headY": 0,
+          "hand": [
+            0,
+            17
+          ]
+        },
+        "emp.climb.1": {
+          "view": "side",
+          "headY": -1,
+          "hand": [
+            6,
+            17
+          ]
+        },
+        "emp.climb.2": {
+          "view": "side",
+          "headY": 0,
+          "hand": [
+            11,
+            17
+          ]
+        },
+        "emp.climb.3": {
+          "view": "side",
+          "headY": -1,
+          "hand": [
+            6,
+            17
+          ]
         }
       },
       "hair": {
@@ -970,6 +4798,7 @@
             2
           ]
         },
+        "flame": "centered on the character, the flame's bottom on the character's row 12 (shoulders), drawn behind the character",
         "chairFront": [
           -1,
           11
@@ -977,9 +4806,18 @@
         "chairSide": [
           0,
           11
-        ]
+        ],
+        "chairExecFront": [
+          -1,
+          8
+        ],
+        "chairExecSide": [
+          0,
+          8
+        ],
+        "bench": "emp.bench frames stand on the ground line like standing frames; prop.box.full sits on the bench seat beside them"
       },
-      "desk": "Seated frames end at the desk top. Draw the chair, then the character, then the desk front.",
+      "desk": "Seated frames end at the desk top. Draw the room back, the chair, the character, then room.<tier>.front.",
       "animations": {
         "emp.type": {
           "frames": [
@@ -997,10 +4835,95 @@
           ],
           "fps": 8
         },
+        "emp.run": {
+          "frames": [
+            "emp.walk.0",
+            "emp.walk.1",
+            "emp.walk.2",
+            "emp.walk.3"
+          ],
+          "fps": 16
+        },
         "emp.carry": {
           "frames": [
             "emp.carry.0",
-            "emp.carry.1"
+            "emp.carry.1",
+            "emp.carry.2",
+            "emp.carry.3"
+          ],
+          "fps": 8
+        },
+        "emp.climb": {
+          "frames": [
+            "emp.climb.0",
+            "emp.climb.1",
+            "emp.climb.2",
+            "emp.climb.3"
+          ],
+          "fps": 8
+        },
+        "emp.cheer": {
+          "frames": [
+            "emp.cheer.0",
+            "emp.cheer.1"
+          ],
+          "fps": 3.33,
+          "loop": false
+        },
+        "emp.slump": {
+          "frames": [
+            "emp.slump.0",
+            "emp.slump.1"
+          ],
+          "fps": 3.33,
+          "loop": false
+        },
+        "emp.drink": {
+          "frames": [
+            "emp.drink.0",
+            "emp.drink.1",
+            "emp.drink.1",
+            "emp.drink.0"
+          ],
+          "fps": 1
+        },
+        "emp.chat": {
+          "frames": [
+            "emp.chat.0",
+            "emp.chat.1"
+          ],
+          "fps": 2
+        },
+        "emp.stretch": {
+          "frames": [
+            "emp.stretch.0",
+            "emp.stretch.1"
+          ],
+          "fps": 2,
+          "loop": false
+        },
+        "emp.bench": {
+          "frames": [
+            "emp.bench.0",
+            "emp.bench.0",
+            "emp.bench.0",
+            "emp.bench.1"
+          ],
+          "fps": 0.5
+        },
+        "emp.visitor.shuffle": {
+          "frames": [
+            "emp.visitor",
+            "emp.visitor.1"
+          ],
+          "fps": 1
+        },
+        "boss.walk": {
+          "frames": [
+            "boss.walk.0",
+            "boss.walk.1",
+            "boss.walk.2",
+            "boss.walk.3"
           ],
           "fps": 6
         },
@@ -1012,6 +4935,613 @@
             "prop.coin.3"
           ],
           "fps": 12
+        },
+        "fx.flame.1": {
+          "frames": [
+            "fx.flame.1.0",
+            "fx.flame.1.1"
+          ],
+          "fps": 4
+        },
+        "fx.flame.2": {
+          "frames": [
+            "fx.flame.2.0",
+            "fx.flame.2.1"
+          ],
+          "fps": 4
+        },
+        "fx.flame.3": {
+          "frames": [
+            "fx.flame.3.0",
+            "fx.flame.3.1"
+          ],
+          "fps": 4
+        },
+        "core.cab.open": {
+          "frames": [
+            "core.cab.door.0",
+            "core.cab.door.1",
+            "core.cab.door.2"
+          ],
+          "fps": 5,
+          "loop": false
+        },
+        "core.cab.close": {
+          "frames": [
+            "core.cab.door.2",
+            "core.cab.door.1",
+            "core.cab.door.0"
+          ],
+          "fps": 5,
+          "loop": false
+        },
+        "lobby.door.glass.open": {
+          "frames": [
+            "lobby.door.glass.0",
+            "lobby.door.glass.1",
+            "lobby.door.glass.2"
+          ],
+          "fps": 7.5,
+          "loop": false
+        },
+        "lobby.door.glass.close": {
+          "frames": [
+            "lobby.door.glass.2",
+            "lobby.door.glass.1",
+            "lobby.door.glass.0"
+          ],
+          "fps": 7.5,
+          "loop": false
+        },
+        "lobby.rollup.open": {
+          "frames": [
+            "lobby.rollup.0",
+            "lobby.rollup.1",
+            "lobby.rollup.2"
+          ],
+          "fps": 5,
+          "loop": false
+        },
+        "lobby.rollup.close": {
+          "frames": [
+            "lobby.rollup.2",
+            "lobby.rollup.1",
+            "lobby.rollup.0"
+          ],
+          "fps": 5,
+          "loop": false
+        },
+        "wall.alarm.pulse": {
+          "frames": [
+            "wall.alarm.on",
+            "wall.alarm.off",
+            "wall.alarm.on",
+            "wall.alarm.off",
+            "wall.alarm.on",
+            "wall.alarm.off"
+          ],
+          "fps": 4,
+          "loop": false
+        }
+      },
+      "building": {
+        "units": "Sprite pixels from the building's left edge (x) and each band's ceiling (y), y down.",
+        "geometry": {
+          "width": 380,
+          "wall": 4,
+          "stairs": {
+            "x": 4,
+            "w": 20
+          },
+          "tube": {
+            "x": 24,
+            "w": 4
+          },
+          "shaft": {
+            "x": 28,
+            "w": 20
+          },
+          "core": {
+            "x": 4,
+            "w": 44
+          },
+          "rooms": {
+            "x": 48,
+            "w": 288
+          },
+          "bay": {
+            "x": 336,
+            "w": 40
+          },
+          "floor": {
+            "h": 48,
+            "slab": 4,
+            "pitch": 52,
+            "deskTop": 36
+          },
+          "penthouse": {
+            "h": 64
+          },
+          "lobby": {
+            "h": 48
+          },
+          "street": {
+            "h": 32,
+            "standY": 24
+          },
+          "basement": {
+            "h": 56
+          },
+          "roof": {
+            "h": 44
+          }
+        },
+        "states": {
+          "garage": {
+            "employees": [
+              1,
+              10
+            ],
+            "sign": "sign.garage",
+            "doors": "lobby.rollup"
+          },
+          "office": {
+            "employees": [
+              11,
+              50
+            ],
+            "sign": "sign.office",
+            "doors": "lobby.door.glass"
+          },
+          "tower": {
+            "employees": [
+              51,
+              250
+            ],
+            "sign": "sign.tower",
+            "doors": "lobby.door.glass"
+          }
+        },
+        "bands": "Top to bottom: roof, penthouse, tier floors (Directors, Managers, Associates, Interns), lobby, street, basement. A floor band is floor.h tall plus a slab of floor.slab rows below it; feet stand on the slab's first row (y = floor.h).",
+        "shell": {
+          "wall": "shell.<state>.wall tiles down both outer walls (x 0 and x 376) over each band's interior; shell.<state>.window on the right wall at y 12 of every floor (the bay's window point); shell.<state>.slab where each slab meets the wall",
+          "parapet": "shell.<state>.parapet along the roof line, above the penthouse",
+          "front": "shell.<state>.front, one per 72 px across the lobby's rooms from x 48, then the doors in the bay: in front of lobby characters, behind street characters",
+          "slab": "bldg.slab tiles across x 48..376 under every floor; the core tiles carry their own slab"
+        },
+        "core": {
+          "stairs": "core.stairs at (stairs.x, floor top) on every floor from the lobby to the top tier; core.stairs.top in the penthouse. Climb: from (x 2, floor line) up the lower flight to the landing, then up the upper flight to (x 2, y -4), the next floor's line. Mirror the character on the upper flight.",
+          "landing": {
+            "x": 14,
+            "y": 20
+          },
+          "tube": "core.tube at (tube.x, band top) on every band from the basement to the top tier; core.tube.cap on top; core.tube.foot in the basement",
+          "outlet": {
+            "x": 28,
+            "y": 27,
+            "mouth": [
+              34,
+              29
+            ],
+            "note": "core.tube.outlet on every tier floor: coins pop out of the mouth and arc to the desks"
+          },
+          "shaft": "core.shaft on every floor from the lobby to the top tier; core.shaft.top in the penthouse",
+          "cab": {
+            "x": 29,
+            "floorRow": 30,
+            "note": "core.cab top-left = (29, floor line - 30); riders stand on its row 30, inside x 30..45; core.cab.door.<0|1|2> over the riders"
+          },
+          "indicator": {
+            "x": 34,
+            "y": 4,
+            "note": "core.indicator.<off|up|down> above the shaft on every floor"
+          }
+        },
+        "floor": {
+          "alarm": {
+            "x": 50,
+            "y": 0
+          },
+          "clock": {
+            "x": 337,
+            "y": 3,
+            "note": "wall.clock, then wall.clock.hand.<0..7> for the share of the window left (0 = full)"
+          },
+          "whiteboard": {
+            "x": 350,
+            "y": 3,
+            "text": {
+              "x": 2,
+              "y": 2,
+              "w": 18,
+              "h": 8,
+              "note": "the task number"
+            }
+          },
+          "bay": {
+            "x": 336,
+            "y": 0,
+            "points": {
+              "cooler": 343,
+              "printer": 355,
+              "outbox": 360,
+              "coffee": 362,
+              "window": 368
+            }
+          },
+          "outboxSheets": {
+            "x": 360,
+            "y": 29,
+            "note": "prop.sheets.<1..6>, one sheet per submission from the floor"
+          },
+          "plaque": {
+            "x": 50,
+            "y": 6,
+            "note": "tier name and headcount in screen-size text, on the first floor of each tier"
+          },
+          "posters": {
+            "y": 3,
+            "note": "wall.poster.<0..2> on the interns' back wall, one per 72 px from x 102 (decoration)"
+          }
+        },
+        "rooms": {
+          "directors": {
+            "w": 72,
+            "perFloor": 4,
+            "desk": {
+              "x": 22,
+              "w": 42
+            },
+            "seat": 30,
+            "chair": "exec",
+            "screen": "monitor",
+            "monitor": [
+              48,
+              26
+            ],
+            "paper": [
+              55,
+              29
+            ],
+            "dot": [
+              57,
+              19
+            ],
+            "streak": [
+              24,
+              39
+            ],
+            "chip": [
+              24,
+              39
+            ],
+            "plate": [
+              43,
+              43
+            ],
+            "box": [
+              39,
+              30
+            ]
+          },
+          "managers": {
+            "w": 48,
+            "perFloor": 6,
+            "desk": {
+              "x": 6,
+              "w": 34
+            },
+            "seat": 8,
+            "chair": "standard",
+            "screen": "monitor",
+            "monitor": [
+              27,
+              26
+            ],
+            "paper": [
+              33,
+              29
+            ],
+            "dot": [
+              33,
+              19
+            ],
+            "streak": [
+              8,
+              39
+            ],
+            "chip": [
+              8,
+              39
+            ],
+            "plate": [
+              23,
+              43
+            ],
+            "box": [
+              19,
+              30
+            ]
+          },
+          "associates": {
+            "w": 36,
+            "perFloor": 8,
+            "desk": {
+              "x": 4,
+              "w": 32
+            },
+            "seat": 5,
+            "chair": "standard",
+            "screen": "monitor",
+            "monitor": [
+              23,
+              26
+            ],
+            "paper": [
+              29,
+              29
+            ],
+            "dot": [
+              29,
+              19
+            ],
+            "streak": [
+              6,
+              39
+            ],
+            "chip": [
+              6,
+              39
+            ],
+            "plate": [
+              20,
+              43
+            ],
+            "box": [
+              16,
+              30
+            ]
+          },
+          "interns": {
+            "w": 24,
+            "perFloor": 12,
+            "desk": {
+              "x": 0,
+              "w": 24
+            },
+            "seat": 2,
+            "chair": "standard",
+            "screen": "laptop",
+            "monitor": [
+              13,
+              31
+            ],
+            "paper": [
+              19,
+              29
+            ],
+            "dot": [
+              18,
+              19
+            ],
+            "streak": [
+              2,
+              39
+            ],
+            "chip": [
+              2,
+              39
+            ],
+            "plate": [
+              12,
+              43
+            ],
+            "box": [
+              8,
+              30
+            ]
+          }
+        },
+        "roomTiles": "room.<tier>.back behind the chair; room.<tier>.front (or .empty) in front of the seated character; rooms start at rooms.x and repeat every rooms[tier].w. Directors' rooms close with room.directors.wall at the right end (x 332).",
+        "penthouse": {
+          "h": 64,
+          "window": {
+            "tile": "wall.window.big",
+            "x": 150,
+            "y": 10
+          },
+          "shelf": {
+            "tile": "pent.shelf",
+            "x": 70,
+            "y": 22
+          },
+          "orgchart": {
+            "tile": "pent.orgchart",
+            "x": 272,
+            "y": 12
+          },
+          "desk": {
+            "tile": "pent.desk",
+            "x": 170,
+            "y": 47
+          },
+          "chair": {
+            "tile": "prop.chair.exec.front",
+            "x": 189,
+            "y": 40
+          },
+          "boss": {
+            "home": 206,
+            "paceFrom": 110,
+            "paceTo": 330,
+            "window": 196,
+            "note": "the boss stands on the penthouse floor line, y 64"
+          }
+        },
+        "lobby": {
+          "logo": {
+            "tile": "lobby.logo",
+            "x": 182,
+            "y": 6
+          },
+          "reception": {
+            "tile": "lobby.reception",
+            "x": 180,
+            "y": 28
+          },
+          "cafe": {
+            "tile": "lobby.cafe",
+            "x": 56,
+            "y": 18,
+            "stools": [
+              96,
+              108
+            ],
+            "table": {
+              "x": 120,
+              "y": 34
+            }
+          },
+          "hrDoor": {
+            "tile": "lobby.door.hr",
+            "x": 146,
+            "y": 12
+          },
+          "plants": [
+            {
+              "tile": "lobby.plant",
+              "x": 258,
+              "y": 20
+            }
+          ],
+          "doors": {
+            "x": 336,
+            "y": 0,
+            "point": 356,
+            "note": "lobby.door.glass.<n> (lobby.rollup.<n> in the garage) fill the bay, in the street front's layer"
+          },
+          "points": {
+            "stairs": 10,
+            "elevator": 38,
+            "cafe": 72,
+            "hr": 156,
+            "reception": 210,
+            "door": 356
+          },
+          "crowdSign": {
+            "x": 276,
+            "y": 8,
+            "w": 56,
+            "h": 22,
+            "note": "paper sign taped on the glass left of the doors (spec §12.5); prop.tape at its top corners; text in the 13 px label style"
+          }
+        },
+        "street": {
+          "h": 32,
+          "standY": 24,
+          "tile": "street.pavement",
+          "note": "street.pavement tiles across the full stage width; the sidewalk is in front of the lobby, so street characters overlap the lobby's street front",
+          "bench": {
+            "tile": "street.bench",
+            "x": 120,
+            "y": 14,
+            "seats": [
+              122,
+              134,
+              146,
+              158
+            ],
+            "note": "up to 4 laid-off employees (emp.bench), then a +n sign; prop.box.full beside the last seat"
+          },
+          "lamp": {
+            "tile": "street.lamp",
+            "x": 186,
+            "y": -40
+          },
+          "queue": {
+            "spots": [
+              338,
+              320,
+              302,
+              284,
+              266
+            ],
+            "note": "visitors (emp.visitor) facing the doors, up to 5, then +n"
+          },
+          "door": {
+            "x": 356,
+            "note": "characters step out of the doors (the lobby floor line) and down to the sidewalk (standY) in 0.4 s: walking toward the viewer"
+          }
+        },
+        "basement": {
+          "h": 56,
+          "ceiling": "the first 3 rows are the ground-floor slab under the sidewalk (concrete shade)",
+          "tubeFoot": {
+            "tile": "core.tube.foot",
+            "x": 19,
+            "y": 38
+          },
+          "vaultDoor": {
+            "tile": "vault.door",
+            "x": 56,
+            "y": 18
+          },
+          "boxes": {
+            "tile": "vault.boxes",
+            "x": 100,
+            "y": 8
+          },
+          "bar": {
+            "tile": "vault.bar",
+            "x": 140,
+            "y": 10,
+            "fill": {
+              "x": 2,
+              "y": 2,
+              "w": 40,
+              "h": 10
+            },
+            "note": "fill = min(1, runway_tasks / 30) in the coin color, Bad when low (spec §4.6)"
+          },
+          "pile": {
+            "tile": "vault.pile.<0..5>",
+            "x": 138,
+            "bottom": 56,
+            "note": "level = round(fill * 5)"
+          },
+          "partition": {
+            "x": 232
+          },
+          "racks": [
+            {
+              "tile": "server.rack",
+              "x": 252,
+              "y": 16
+            },
+            {
+              "tile": "server.rack",
+              "x": 270,
+              "y": 16
+            },
+            {
+              "tile": "server.rack",
+              "x": 288,
+              "y": 16
+            }
+          ]
+        },
+        "roof": {
+          "h": 44,
+          "sign": "sign.<state>, centered on the rooms, standing on the roof line",
+          "tank": {
+            "tile": "roof.tank",
+            "x": 300
+          },
+          "machine": {
+            "tile": "roof.machine",
+            "x": 22,
+            "note": "above the elevator shaft"
+          }
         }
       }
     }

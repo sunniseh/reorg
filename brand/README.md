@@ -6,7 +6,7 @@
 
 > **TODO(art): placeholder brand.** The wordmark, icon and social images are stand-ins drawn from code. Replace them with the final brand art before launch, and before any public post or token deploy that bakes the icon into on-chain metadata (the token `icon` is set at init). The characters come from [`art/`](../art/README.md), which is placeholder art too.
 
-This folder has the logo, icon, token icon and social images. All of them come from `build.mjs`, which draws them from code in the Blueprint palette, using the character sprites in `art/`. Change the script, not the outputs, and run `npm run brand` again; it needs Chrome to write the PNGs (set `CHROME=/path/to/chrome` if it is not installed in the usual place). Colors, type, voice and the rules against generic design are in [`docs/design/REORG Design Spec.md`](../docs/design/REORG%20Design%20Spec.md) §2, §6, §7 and §13. That spec wins where this page disagrees with it.
+This folder has the logo, icon, token icon and social images. All of them come from `build.mjs`, which draws them from code in the Blueprint palette, using the sprites and the building composition in `art/` (`art/scene.mjs`). Change the script, not the outputs, and run `npm run brand` again; it needs Chrome to write the PNGs (set `CHROME=/path/to/chrome` if it is not installed in the usual place). Colors, type, voice and the rules against generic design are in [`docs/design/REORG Design Spec.md`](../docs/design/REORG%20Design%20Spec.md) §2, §6, §7 and §13. That spec wins where this page disagrees with it.
 
 ## The mark
 
@@ -32,7 +32,7 @@ This folder has the logo, icon, token icon and social images. All of them come f
 | `social/og-card.png` | 1200 × 630 link preview (`og:image`, `twitter:image`) |
 | `social/x-avatar-400.png`, `x-banner.png` | Profile picture and 1500 × 500 header |
 
-The social images show an illustrated tower, not live state. Text on the social images is set in the system UI font and baked into the PNGs; the SVG versions depend on the viewer's fonts, so share the PNGs.
+The social images show the game's building (`art/scene.mjs`, the payday sample moment, including its SIMULATED CROWD sign), not live state: the whole building on the OG card, the four tier floors on the X banner. Text on the social images is set in the system UI font and baked into the PNGs; the SVG versions depend on the viewer's fonts, so share the PNGs.
 
 ## Palette (from spec §6)
 
