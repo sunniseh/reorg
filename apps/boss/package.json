@@ -1,0 +1,17 @@
+{
+  "name": "@reorg/boss",
+  "version": "0.0.0",
+  "private": true,
+  "description": "REORG boss service: scheduler, puzzles, flavor text, HTTP API (roadmap §6)",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@reorg/chain-near": "*",
+    "@reorg/core": "*",
+    "zod": "^4.6.7"
+  }
+}

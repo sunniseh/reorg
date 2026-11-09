@@ -74,7 +74,7 @@ reorg/
     core/                     # CHAIN-AGNOSTIC TS: crypto, ciphers, puzzle gen, pay-math mirror, layoff/status calc, tower model + layout, types
     chain-near/               # NEAR adapters (ChainAdapter, WalletAdapter, CrowdSigner): the only TS place importing NEAR libs
   apps/
-    boss/                     # Node/TS boss service (Fastify + SQLite): scheduler, API, demo faucet
+    boss/                     # Node/TS boss service (node:http + node:sqlite): scheduler, API, demo faucet (D-09)
     web/                      # Vite + TS + PixiJS tower client
   scripts/                    # demo orchestration, deploy, crowd seeding/runner, e2e
   .env.example
@@ -82,7 +82,7 @@ reorg/
 
 Stack (verify versions against docs.near.org before pinning):
 - Contracts: Rust, `near-sdk` 5.x, `near-contract-standards`, `cargo near build`; integration tests with `near-workspaces`.
-- TS: Node ≥ 20, `vitest`, `zod`, `better-sqlite3`, Fastify; web: Vite + PixiJS v8.
+- TS: Node ≥ 22.13, `vitest`, `zod`, `node:sqlite` and `node:http` (no native modules, no web framework: chosen while building the boss), `tsx` to run; web: Vite + PixiJS v8.
 - Chain access: current NEAR JS SDK (`near-api-js` or successor). Wallet connect via `@near-wallet-selector` or its successor (**check docs first**), behind `WalletAdapter`.
 - LLM: `FlavorLLM` interface. **Template implementation is the default** (no keys needed to run). NEAR AI Cloud implementation is P1 (confirm endpoint/auth at docs.near.ai; key via env).
 
@@ -151,24 +151,24 @@ Planned commands (add to CLAUDE.md when real): `npm run demo`, `npm test`, `npm 
   - **Look-ahead queue:** the scheduler generates and self-checks the next 7 tasks ahead of time and surfaces a failure in `/healthz` days before it matters.
 
 ### 6.2 Flavor text
-- [ ] **B-05 (P0)** `FlavorLLM` interface; zod schema `{task_text, announcements[], tone_notes}` with length caps and the money-word check.
-- [ ] **B-06 (P0)** `TemplateFlavor`: memos built from a grammar (subject × department × verb × closing, thousands of combinations; ≥ 12 hand-checked seeds as tests) + announcement templates (layoff, rehire, payday, low reserve, streak) in the spec §8.3 voice. Default and fallback. Every generated memo passes the money-word check in the fuzz test.
-- [ ] **B-07 (P1)** `NearAiFlavor` with spec §8.4 inputs, JSON output, one retry, fallback on any failure; feed shows "written by: AI | template".
+- [x] **B-05 (P0)** *(done: `apps/boss/src/flavor/schema.ts`: `FlavorWriter`, `FlavorOutputSchema`, `flavorProblem` (announcement count, no money talk in the task, no links); `writeFlavor` re-validates every writer's output)* `FlavorLLM` interface; zod schema `{task_text, announcements[], tone_notes}` with length caps and the money-word check.
+- [x] **B-06 (P0)** *(done: `flavor/template.ts`; 12 × 12 × 10 × 10 = 14,400 memos, all money-checked in `test/flavor.test.ts`, 12 hand-checked seeds)* `TemplateFlavor`: memos built from a grammar (subject × department × verb × closing, thousands of combinations; ≥ 12 hand-checked seeds as tests) + announcement templates (layoff, rehire, payday, low reserve, streak) in the spec §8.3 voice. Default and fallback. Every generated memo passes the money-word check in the fuzz test.
+- [x] **B-07 (P1)** *(done: `flavor/nearai.ts`, any OpenAI-compatible endpoint, on only when `NEAR_AI_API_KEY`/`_BASE_URL`/`_MODEL` are all set; tested with a stubbed endpoint, not yet against NEAR AI Cloud. The feed's `source` and `/api/task/current`'s `written_by` say ai or template)* `NearAiFlavor` with spec §8.4 inputs, JSON output, one retry, fallback on any failure; feed shows "written by: AI | template".
 
 ### 6.3 Scheduler (P0)
-- [ ] **B-08** SQLite state machine, one row per task, persisted **before** each side effect: `PICKED → GENERATED → CHECKED → OPENING → OPEN → CLOSED → FINALIZING → FINALIZED`. `day_secret` stored before `open_task`. Idempotent steps; resumes after restart.
-- [ ] **B-09** Cycle: pick → generate → self-check → secret → `open_task` → announce → wait for `closes_at` **plus a finality margin** → page through submissions → recompute passers → `finalize_task` in batches → results feed → layoff/rehire notices from status diffs.
-- [ ] **B-10** Config: `EPOCH_SECONDS`, `WINDOW_FRACTION`, warm-up mode (N tasks with ~10 s windows). Picker: never the same family as yesterday, weekly rhythm once more than one family exists, and a fixed demo schedule so the six-step story (scripted wallet F) is reproducible. Level comes from a config schedule; the auto-adjust rule (>90% passed → +1, <50% → −1, clamped 1–5) is ~20 deterministic lines, pulled forward from P2 if M2 is green.
-- [ ] **B-11** RPC retry/backoff; a stuck finalize shows `STALLED` in `/healthz` and the feed; manual recovery documented (void is P2).
+- [x] **B-08** *(done: `apps/boss/src/store.ts` (`node:sqlite`, WAL, synchronous=FULL) + `scheduler.ts`)* SQLite state machine, one row per task, persisted **before** each side effect: `PICKED → GENERATED → CHECKED → OPENING → OPEN → CLOSED → FINALIZING → FINALIZED`. `day_secret` stored before `open_task`. Idempotent steps; resumes after restart.
+- [x] **B-09** *(done: `scheduler.ts`. Finalize is two-phase: an empty first call freezes the submission set, then passers are recomputed from chain state and batched, so late callbacks and restarts are safe. Notices: `notices.ts`)* Cycle: pick → generate → self-check → secret → `open_task` → announce → wait for `closes_at` **plus a finality margin** → page through submissions → recompute passers → `finalize_task` in batches → results feed → layoff/rehire notices from status diffs.
+- [x] **B-10** *(done: `env.ts`, `picker.ts`. Only one family ships, so "never the same type as yesterday" applies to the cipher. Auto difficulty is in, opt-in via `LEVEL_MODE=auto`; fixed demo schedule via `PUZZLE_SCHEDULE`)* Config: `EPOCH_SECONDS`, `WINDOW_FRACTION`, warm-up mode (N tasks with ~10 s windows). Picker: never the same family as yesterday, weekly rhythm once more than one family exists, and a fixed demo schedule so the six-step story (scripted wallet F) is reproducible. Level comes from a config schedule; the auto-adjust rule (>90% passed → +1, <50% → −1, clamped 1–5) is ~20 deterministic lines, pulled forward from P2 if M2 is green.
+- [x] **B-11** *(done: backoff 1–60 s, STALLED after 5 attempts or at once on a chain state needing a human; `stalled`/`recovered` feed entries; recovery in `apps/boss/README.md`)* RPC retry/backoff; a stuck finalize shows `STALLED` in `/healthz` and the feed; manual recovery documented (void is P2).
 
 ### 6.4 HTTP API (P0)
-- [ ] **B-12** `GET /api/task/current`, `GET /api/puzzle?wallet=`, `GET /api/feed` + SSE `/api/feed/stream`, `GET /api/reveal/:task_id` (only after finalize), `GET /healthz`; CORS limited to the web origin.
-- [ ] **B-13** Test: no secret or expected answers before finalize.
+- [x] **B-12** *(done: `apps/boss/src/api.ts`, `node:http` instead of Fastify, served from the store; routes in `apps/boss/README.md`)* `GET /api/task/current`, `GET /api/puzzle?wallet=`, `GET /api/feed` + SSE `/api/feed/stream`, `GET /api/reveal/:task_id` (only after finalize), `GET /healthz`; CORS limited to the web origin.
+- [x] **B-13** Test: no secret or expected answers before finalize. *(done: `test/api.test.ts` scans every route in OPEN/CLOSED/FINALIZING and for look-ahead slots; errors echoing the secret are redacted)*
 - [ ] **B-14 (P2)** NEP-413 signed login + rate limits.
 
 ### 6.5 Tests (P0)
-- [ ] **B-15** Cipher round-trip property tests; generator determinism; self-check rejects an ambiguous puzzle; bad LLM JSON → template.
-- [ ] **B-16** Kill and restart at every scheduler state: no double-open, secret never lost.
+- [x] **B-15** *(done: `packages/core/test/ciphers.test.ts`, `puzzle.fuzz.test.ts`, `apps/boss/test/flavor.test.ts`)* Cipher round-trip property tests; generator determinism; self-check rejects an ambiguous puzzle; bad LLM JSON → template.
+- [x] **B-16** *(done: `test/restart.test.ts`: killed after each of the 10 writes of a task and before/after every open/finalize call; plus `npm run boss:sandbox`, the full boss against the real contracts with bots solving over HTTP)* Kill and restart at every scheduler state: no double-open, secret never lost.
 
 ---
 

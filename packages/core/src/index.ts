@@ -4,4 +4,6 @@ export * from "./events";
 export * from "./tier";
 export * from "./crowd";
 export * from "./crypto";
+export * from "./employee";
+export * from "./chain";
 export * from "./puzzle";
