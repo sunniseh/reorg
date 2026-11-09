@@ -1,6 +1,6 @@
 // Boss service entry point: `npm run boss` (env vars: see .env.example). Wires the store, the
 // NEAR adapter, flavor text, the scheduler and the HTTP API; Ctrl-C stops cleanly.
-import { NearChainAdapter } from "@reorg/chain-near";
+import { NearChainAdapter, NearFaucet } from "@reorg/chain-near";
 import { createApi } from "./api";
 import { loadEnv } from "./env";
 import { NearAiFlavor, TemplateFlavor } from "./flavor";
@@ -28,7 +28,20 @@ async function main(): Promise<void> {
 
   const flavor = env.llm ? new NearAiFlavor(env.llm) : TemplateFlavor;
   const scheduler = new Scheduler({ store, chain, flavor, config: env.scheduler, log });
-  const api = createApi({ store, health: () => scheduler.health(), origins: env.origins, network: env.network });
+  const faucet = env.faucet
+    ? {
+        faucet: new NearFaucet({
+          rpcUrl: env.rpcUrl,
+          contractId: env.contractId,
+          funderId: env.faucet.accountId,
+          funderKey: env.faucet.key,
+          nativeAmount: env.faucet.nativeAmount,
+          tokenAmount: env.faucet.tokenAmount,
+        }),
+        perIpPerHour: env.faucet.perIpPerHour,
+      }
+    : undefined;
+  const api = createApi({ store, health: () => scheduler.health(), origins: env.origins, network: env.network, ...(faucet ? { faucet } : {}) });
   api.listen(env.port, () =>
     log.info("boss listening", {
       port: env.port,

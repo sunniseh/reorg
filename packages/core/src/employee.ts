@@ -63,6 +63,18 @@ export function multiplierBps(streakBefore: number, streakStepBps: number, strea
   return BPS + streakStepBps * Math.min(streakBefore, streakMaxSteps);
 }
 
+/** §7.4: a claim pays only if `current × BPS ≥ antidump_bps × snapshot`; otherwise it forfeits. */
+export function antidumpAllows(currentBalance: bigint, snapshotBalance: bigint, antidumpBps: number): boolean {
+  return currentBalance * BigInt(BPS) >= BigInt(antidumpBps) * snapshotBalance;
+}
+
+/** Smallest balance that still passes the §7.4 check (rounded up), for the claim-blocked copy. */
+export function antidumpMinimum(snapshotBalance: bigint, antidumpBps: number): bigint {
+  const num = BigInt(antidumpBps) * snapshotBalance;
+  const bps = BigInt(BPS);
+  return (num + bps - 1n) / bps;
+}
+
 /** §6.4: stored streak after passing task `taskId`. */
 export function streakAfterPass(taskId: TaskId, lastPassDay: TaskId | null, storedStreak: number): number {
   return lastPassDay === taskId - 1 ? storedStreak + 1 : 1;

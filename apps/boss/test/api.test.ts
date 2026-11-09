@@ -197,3 +197,56 @@ describe("CORS and health (B-12)", () => {
     expect(feed.entries.at(-1).kind).toBe("stalled");
   });
 });
+
+describe("demo faucet (D-09)", () => {
+  async function bootFaucet(perIpPerHour: number) {
+    world = makeWorld();
+    const funded: string[] = [];
+    server = createApi({
+      store: world.store,
+      health: () => world.scheduler.health(),
+      origins: ["http://localhost:5173"],
+      now: world.clock.now,
+      faucet: {
+        perIpPerHour,
+        faucet: {
+          async fund(pk) {
+            funded.push(pk);
+            return { account_id: `p${funded.length}.faucet.test`, tokens: "600", native: "2" };
+          },
+        },
+      },
+    });
+    await new Promise<void>((r) => server!.listen(0, "127.0.0.1", () => r()));
+    base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    return funded;
+  }
+  const post = (body: string) => fetch(`${base}/api/faucet`, { method: "POST", headers: { "content-type": "application/json" }, body });
+
+  it("funds a burner, rejects bad input and rate-limits per address (bad requests use quota too)", async () => {
+    const funded = await bootFaucet(4);
+    const ok = await post(JSON.stringify({ public_key: "ed25519:abc" }));
+    expect(ok.status).toBe(200);
+    expect(await ok.json()).toEqual({ account_id: "p1.faucet.test", tokens: "600", native: "2" });
+    expect((await post("not json")).status).toBe(400);
+    expect((await post(JSON.stringify({ public_key: 5 }))).status).toBe(400);
+    expect((await post(JSON.stringify({ public_key: "ed25519:def" }))).status).toBe(200);
+    expect((await post(JSON.stringify({ public_key: "ed25519:ghi" }))).status).toBe(429);
+    world.clock.advance(3_600_001);
+    expect((await post(JSON.stringify({ public_key: "ed25519:jkl" }))).status).toBe(200);
+    expect(funded).toHaveLength(3);
+    expect((await json("/healthz")).faucet).toBe(true);
+  });
+
+  it("takes the quota before any await, so parallel requests cannot beat it", async () => {
+    const funded = await bootFaucet(2);
+    const res = await Promise.all(Array.from({ length: 6 }, (_, i) => post(JSON.stringify({ public_key: `ed25519:k${i}` }))));
+    expect(res.map((r) => r.status).sort()).toEqual([200, 200, 429, 429, 429, 429]);
+    expect(funded).toHaveLength(2);
+  });
+
+  it("is off unless configured", async () => {
+    await boot();
+    expect((await post(JSON.stringify({ public_key: "ed25519:abc" }))).status).toBe(404);
+  });
+});

@@ -1,0 +1,22 @@
+{
+  "name": "@reorg/web",
+  "version": "0.0.0",
+  "private": true,
+  "description": "REORG tower client: a living office building in PixiJS under a DOM HUD (roadmap §7)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@reorg/chain-near": "*",
+    "@reorg/core": "*",
+    "pixi.js": "^8.22.0"
+  },
+  "devDependencies": {
+    "vite": "^8.3.6"
+  }
+}

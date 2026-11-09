@@ -7,3 +7,5 @@ export * from "./crypto";
 export * from "./employee";
 export * from "./chain";
 export * from "./puzzle";
+export * from "./identity";
+export * from "./tower";

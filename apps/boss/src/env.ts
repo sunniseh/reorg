@@ -33,6 +33,12 @@ const EnvSchema = z.object({
   NEAR_AI_API_KEY: opt,
   NEAR_AI_BASE_URL: opt,
   NEAR_AI_MODEL: opt,
+  FAUCET_ENABLED: z.enum(["0", "1", "true", "false"]).default("0"),
+  FAUCET_ACCOUNT_ID: opt,
+  FAUCET_PRIVATE_KEY: opt,
+  FAUCET_NEAR_AMOUNT: z.string().regex(/^\d+$/).default("2000000000000000000000000"),
+  FAUCET_TOKEN_AMOUNT: z.string().regex(/^\d+$/).default("600000000000000000000000"),
+  FAUCET_RATE_LIMIT_PER_IP: num(5).pipe(z.number().int().min(1)),
 });
 
 export interface BossEnv {
@@ -47,6 +53,8 @@ export interface BossEnv {
   origins: string[];
   scheduler: SchedulerConfig;
   llm: { apiKey: string; baseUrl: string; model: string } | null;
+  /** Demo faucet (D-09); null when off. */
+  faucet: { accountId: string; key: string; nativeAmount: bigint; tokenAmount: bigint; perIpPerHour: number } | null;
 }
 
 export function loadEnv(env: Record<string, string | undefined> = process.env): BossEnv {
@@ -95,5 +103,20 @@ export function loadEnv(env: Record<string, string | undefined> = process.env): 
       },
     },
     llm: e.NEAR_AI_API_KEY ? { apiKey: e.NEAR_AI_API_KEY, baseUrl: e.NEAR_AI_BASE_URL!, model: e.NEAR_AI_MODEL! } : null,
+    faucet: faucetOf(e),
+  };
+}
+
+function faucetOf(e: z.infer<typeof EnvSchema>): BossEnv["faucet"] {
+  if (e.FAUCET_ENABLED !== "1" && e.FAUCET_ENABLED !== "true") return null;
+  if (!e.FAUCET_ACCOUNT_ID || !e.FAUCET_PRIVATE_KEY?.startsWith("ed25519:")) {
+    throw new Error("FAUCET_ENABLED needs FAUCET_ACCOUNT_ID and an ed25519 FAUCET_PRIVATE_KEY");
+  }
+  return {
+    accountId: e.FAUCET_ACCOUNT_ID,
+    key: e.FAUCET_PRIVATE_KEY,
+    nativeAmount: BigInt(e.FAUCET_NEAR_AMOUNT),
+    tokenAmount: BigInt(e.FAUCET_TOKEN_AMOUNT),
+    perIpPerHour: e.FAUCET_RATE_LIMIT_PER_IP,
   };
 }

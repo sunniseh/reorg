@@ -44,7 +44,7 @@ PICKED → GENERATED → CHECKED → OPENING → OPEN → CLOSED → FINALIZING 
 
 ## HTTP API
 
-All `GET`, JSON, `cache-control: no-store`. CORS only for origins in `WEB_ORIGIN` (comma-separated).
+All `GET` (except the demo faucet), JSON, `cache-control: no-store`. CORS only for origins in `WEB_ORIGIN` (comma-separated).
 
 | Route | Returns |
 |---|---|
@@ -53,7 +53,8 @@ All `GET`, JSON, `cache-control: no-store`. CORS only for origins in `WEB_ORIGIN
 | `GET /api/feed?since=<id>&limit=<≤200>` | `{entries, last_id}`. Entry: `id, at (ms), kind, task_id, text, source (ai/template/system), data`. `data` holds the code-computed facts; `text` is flavor. Kinds: `task_opened, results, payday, streak, reserve_low, layoff_warning, layoff, rehire, stalled, recovered`. |
 | `GET /api/feed/stream` | Server-sent events (`event: feed`, `id` = entry id). Resumes after `Last-Event-ID` or `?since=`. |
 | `GET /api/reveal/<task_id>[?wallet=<id>]` | **Only after FINALIZED**: the day secret (check `sha256(secret) == commit_hash` yourself), plus that wallet's puzzle and `expected_answer`. 409 before. |
-| `GET /healthz` | 200 / 503. Scheduler status (`RUNNING`/`STALLED`), head slot and state, retry count and last error (secrets redacted), the look-ahead queue with self-check results, and the flavor source. |
+| `POST /api/faucet` | **Demo only** (D-09), off unless `FAUCET_ENABLED=1`: body `{public_key: "ed25519:…"}` → creates `p<random>.<FAUCET_ACCOUNT_ID>` with that key, registers it with the token, sends `FAUCET_NEAR_AMOUNT` yoctoNEAR and `FAUCET_TOKEN_AMOUNT` $REORG; returns `{account_id, tokens, native}`. At most `FAUCET_RATE_LIMIT_PER_IP` per address per hour (429). The web client's demo player uses it. |
+| `GET /healthz` | 200 / 503. Scheduler status (`RUNNING`/`STALLED`), head slot and state, retry count and last error (secrets redacted), the look-ahead queue with self-check results, the flavor source, `now_ms` (the boss clock) and whether the faucet is on. |
 
 The client computes `answer_hash` itself (`answerHashBase64` in `@reorg/core`) and submits it to
 the contract with its own wallet. The boss never sees an answer.

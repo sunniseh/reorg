@@ -3,7 +3,7 @@
 // expected answer leaves this process before the task is FINALIZED; /api/reveal is the only
 // route that returns them, and only afterwards.
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
-import { CIPHERS, generatePuzzle, fromBase64, type PuzzleParams } from "@reorg/core";
+import { CIPHERS, generatePuzzle, fromBase64, type Faucet, type PuzzleParams } from "@reorg/core";
 import type { Health } from "./scheduler";
 import type { FeedEntry, Store, TaskRow } from "./store";
 
@@ -14,6 +14,8 @@ export interface ApiOptions {
   origins: string[];
   now?: () => number;
   network?: string;
+  /** Demo faucet (D-09): `POST /api/faucet {public_key}` creates and funds a burner. Off when absent. */
+  faucet?: { faucet: Faucet; perIpPerHour: number };
 }
 
 const LIVE_STATES = new Set(["OPEN", "CLOSED", "FINALIZING", "FINALIZED"]);
@@ -73,7 +75,7 @@ export function createApi(opts: ApiOptions): Server {
     if (origin && opts.origins.includes(origin)) {
       res.setHeader("access-control-allow-origin", origin);
       res.setHeader("vary", "origin");
-      res.setHeader("access-control-allow-methods", "GET, OPTIONS");
+      res.setHeader("access-control-allow-methods", opts.faucet ? "GET, POST, OPTIONS" : "GET, OPTIONS");
       res.setHeader("access-control-allow-headers", "last-event-id, content-type");
     }
   };
@@ -101,6 +103,57 @@ export function createApi(opts: ApiOptions): Server {
       body["puzzle"] = { wallet, display: p.display, hint: p.hint, expected_answer: p.expectedAnswer };
     }
     send(res, 200, body);
+  };
+
+  // D-09: one burner per request, at most `perIpPerHour` per client address and 20× that overall
+  // per rolling hour. The quota is taken synchronously, before any await, so parallel requests
+  // cannot slip past it; funding runs one at a time (one funder key, one nonce sequence).
+  const grants = new Map<string, number[]>();
+  let fundQueue: Promise<unknown> = Promise.resolve();
+  const takeQuota = (ip: string, perIp: number): boolean => {
+    const t = now();
+    let total = 0;
+    for (const [k, v] of grants) {
+      const kept = v.filter((x) => t - x < 3_600_000);
+      if (kept.length) grants.set(k, kept);
+      else grants.delete(k);
+      total += kept.length;
+    }
+    const mine = grants.get(ip) ?? [];
+    if (mine.length >= perIp || total >= perIp * 20) return false;
+    mine.push(t);
+    grants.set(ip, mine);
+    return true;
+  };
+  const faucet = (req: IncomingMessage, res: ServerResponse) => {
+    const f = opts.faucet;
+    if (!f) return fail(res, 404, "not found");
+    // Behind a proxy every client shares one address; put the faucet behind per-client limits there.
+    const ip = req.socket.remoteAddress ?? "?";
+    if (!takeQuota(ip, f.perIpPerHour)) return fail(res, 429, "the faucet is resting; try again later");
+    let body = "";
+    req.setEncoding("utf8");
+    req.on("data", (chunk: string) => {
+      body += chunk;
+      if (body.length > 2048) req.destroy();
+    });
+    req.on("end", () => {
+      let key: unknown;
+      try {
+        key = (JSON.parse(body) as { public_key?: unknown }).public_key;
+      } catch {
+        return fail(res, 400, "expected JSON {public_key}");
+      }
+      if (typeof key !== "string") return fail(res, 400, "expected JSON {public_key}");
+      const job = fundQueue.then(() => f.faucet.fund(key as string, ip));
+      fundQueue = job.catch(() => undefined);
+      job
+        .then((g) => send(res, 200, g))
+        .catch((e: unknown) => {
+          console.warn(JSON.stringify({ level: "warn", msg: "faucet failed", error: e instanceof Error ? e.message.slice(0, 300) : String(e) }));
+          fail(res, 502, "the faucet could not fund an account; try again later");
+        });
+    });
   };
 
   const routes: Record<string, (url: URL, req: IncomingMessage, res: ServerResponse) => void> = {
@@ -164,7 +217,7 @@ export function createApi(opts: ApiOptions): Server {
 
     "/healthz": (_url, _req, res) => {
       const h = opts.health();
-      send(res, h.ok ? 200 : 503, { ...h, network: opts.network ?? null });
+      send(res, h.ok ? 200 : 503, { ...h, network: opts.network ?? null, now_ms: now(), faucet: !!opts.faucet });
     },
   };
 
@@ -175,8 +228,9 @@ export function createApi(opts: ApiOptions): Server {
         res.writeHead(204);
         return res.end();
       }
-      if (req.method !== "GET") return fail(res, 405, "method not allowed");
       const url = new URL(req.url ?? "/", "http://boss.local");
+      if (req.method === "POST" && url.pathname === "/api/faucet") return faucet(req, res);
+      if (req.method !== "GET") return fail(res, 405, "method not allowed");
       const route = routes[url.pathname];
       if (route) return route(url, req, res);
       const m = /^\/api\/reveal\/(\d{1,15})$/.exec(url.pathname);

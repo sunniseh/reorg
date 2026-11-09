@@ -22,7 +22,9 @@
     "boss": "npm run start -w @reorg/boss",
     "boss:sandbox": "REORG_SANDBOX=1 npm test -w @reorg/chain-near -w @reorg/boss",
     "brand": "node brand/build.mjs",
-    "art": "node art/build.mjs"
+    "art": "node art/build.mjs",
+    "dev:live": "tsx scripts/dev-live.ts",
+    "web": "npm run dev -w @reorg/web"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",
