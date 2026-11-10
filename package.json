@@ -23,7 +23,8 @@
     "boss:sandbox": "REORG_SANDBOX=1 npm test -w @reorg/chain-near -w @reorg/boss",
     "brand": "node brand/build.mjs",
     "art": "node art/build.mjs",
-    "dev:live": "tsx scripts/dev-live.ts",
+    "demo": "npm run start -w @reorg/demo",
+    "e2e": "npm run e2e -w @reorg/demo",
     "web": "npm run dev -w @reorg/web"
   },
   "devDependencies": {

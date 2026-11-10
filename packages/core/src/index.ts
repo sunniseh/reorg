@@ -5,6 +5,7 @@ export * from "./tier";
 export * from "./crowd";
 export * from "./crypto";
 export * from "./employee";
+export * from "./pay";
 export * from "./chain";
 export * from "./puzzle";
 export * from "./identity";

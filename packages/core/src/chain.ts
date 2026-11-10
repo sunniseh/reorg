@@ -10,6 +10,7 @@ import type {
   FinalizeTaskArgs,
   HolderEntry,
   HolderInfo,
+  IncomeTag,
   OpenTaskArgs,
   SubmissionView,
   SubmitOutcome,
@@ -87,6 +88,30 @@ export interface WalletAdapter {
   submit(taskId: TaskId, answerHashB64: string): Promise<SubmitOutcome>;
   claimSalary(taskId: TaskId): Promise<ClaimOutcome>;
   provePass?(taskId: TaskId): Promise<string>;
+}
+
+/**
+ * Signs for the simulated crowd (roadmap §3, D-02): account *i* of a crowd whose keys derive from
+ * a seed. Same failure contract as `WalletAdapter`: rejections after the balance read are values.
+ */
+export interface CrowdSigner {
+  /** Account id of crowd member `index`. */
+  accountId(index: number): WalletId;
+  submit(index: number, taskId: TaskId, answerHashB64: string): Promise<SubmitOutcome>;
+  claimSalary(index: number, taskId: TaskId): Promise<ClaimOutcome>;
+  /** Token transfer from member `index` (the dumper's sale). */
+  sendTokens(index: number, to: WalletId, amount: bigint): Promise<void>;
+}
+
+/**
+ * The demo operator (D-08): one funded account that is excluded from the company. It deposits the
+ * simulated income and is the "market" the dumper sells to and buys back from.
+ */
+export interface DemoOperator {
+  readonly accountId: WalletId;
+  /** Payout base units (yoctoNEAR) into the treasury, tagged. */
+  depositIncome(amount: bigint, tag: IncomeTag): Promise<void>;
+  sendTokens(to: WalletId, amount: bigint): Promise<void>;
 }
 
 /** Demo faucet (D-09): creates and funds a burner account for a public key. */

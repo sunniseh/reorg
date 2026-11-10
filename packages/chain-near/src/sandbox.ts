@@ -1,10 +1,11 @@
 // Local near-sandbox harness: deploys the real token and REORG contract and creates funded
-// player accounts. Used by the boss end-to-end test and, later, by `npm run demo` (D-01).
+// player accounts. Used by the boss end-to-end test and by `npm run demo` / `npm run e2e` (D-01, D-04).
 // Throwaway keys only: everything here lives on a local chain that is deleted on tearDown.
 import { readFileSync } from "node:fs";
-import { ConfigSchema, type ContractConfig, type SubmitOutcome, type TaskId } from "@reorg/core";
+import { ConfigSchema, crowdDistribution, type ContractConfig, type CrowdAccount, type SubmitOutcome, type TaskId } from "@reorg/core";
 import { Account, JsonRpcProvider, KeyPair, nearToYocto, teraToGas, type KeyPairString } from "near-api-js";
 import { DEFAULT_ACCOUNT_ID, DEFAULT_PRIVATE_KEY, Sandbox } from "near-sandbox";
+import { crowdPublicKey } from "./crowd";
 
 const REPO = new URL("../../../", import.meta.url);
 const TOKEN_DECIMALS = 18n;
@@ -12,13 +13,21 @@ export const ONE_TOKEN = 10n ** TOKEN_DECIMALS;
 export const DEFAULT_SUPPLY = 1_000_000_000n * ONE_TOKEN;
 const USER_GAS = teraToGas("100");
 
+/**
+ * A fresh local build (`npm run contracts:build`) wins; otherwise the prebuilt copy in
+ * `contracts/res/` (refreshed by every build), so a clone without Rust still runs the demo.
+ */
 function wasm(name: string): Uint8Array {
-  const url = new URL(`contracts/target/near/${name}/${name}.wasm`, REPO);
-  try {
-    return readFileSync(url);
-  } catch {
-    throw new Error(`${url.pathname} missing: run \`npm run contracts:build\` first`);
+  const built = new URL(`contracts/target/near/${name}/${name}.wasm`, REPO);
+  const prebuilt = new URL(`contracts/res/${name}.wasm`, REPO);
+  for (const url of [built, prebuilt]) {
+    try {
+      return readFileSync(url);
+    } catch {
+      /* try the next */
+    }
   }
+  throw new Error(`${name}.wasm missing (${built.pathname} or ${prebuilt.pathname}): run \`npm run contracts:build\` first`);
 }
 
 export function defaultContractConfig(): ContractConfig {
@@ -49,6 +58,8 @@ export interface SandboxOptions {
   /** Overrides for protocol/config.default.json (e.g. a short `min_window_ns`). */
   config?: Partial<ContractConfig>;
   supply?: bigint;
+  /** NEAR for the deployer (default 100). The demo uses it as the income bot and faucet. */
+  deployerNear?: `${number}`;
 }
 
 export async function startSandbox(opts: SandboxOptions = {}): Promise<SandboxEnv> {
@@ -74,7 +85,7 @@ async function setup(sandbox: Sandbox, opts: SandboxOptions): Promise<SandboxEnv
   };
 
   const supply = opts.supply ?? DEFAULT_SUPPLY;
-  const deployerId = await create("deployer", "100");
+  const deployerId = await create("deployer", opts.deployerNear ?? "100");
   const bossId = await create("boss", "20");
   const tokenId = await create("token", "10");
   const contractId = await create("reorg", "20");
@@ -149,4 +160,54 @@ async function setup(sandbox: Sandbox, opts: SandboxOptions): Promise<SandboxEnv
     },
     tearDown: () => sandbox.tearDown(),
   };
+}
+
+/**
+ * Adds a fresh full-access key to `accountId` and returns it. Two processes signing for one account
+ * (the demo's income bot and the boss's faucet, both the deployer) each get their own key, so their
+ * nonces never collide.
+ */
+export async function addAccessKey(env: SandboxEnv, accountId: string): Promise<KeyPairString> {
+  const key = KeyPair.fromRandom("ed25519");
+  await env.account(accountId).addFullAccessKey(key.getPublicKey());
+  return key.toString() as KeyPairString;
+}
+
+export interface SandboxCrowd {
+  /** Crowd accounts are `<name>.<root>`; the client labels them SIMULATED from this. */
+  root: string;
+  crowd: CrowdAccount[];
+}
+
+/**
+ * Creates the D13 crowd on a sandbox (roadmap D-01): `c001…<size>.crowd.<sandbox root>`, keys from
+ * `crowdKey(seed, i)`, each registered with the token and holding its `crowdDistribution` share.
+ * Two sequential lanes run side by side, one per signer (nonces are per account key): the crowd
+ * root creates the accounts while the deployer registers and funds them with the token (which does
+ * not need the account to exist yet).
+ */
+export async function seedCrowd(env: SandboxEnv, opts: { seed: string; size: number; nearEach?: `${number}` }): Promise<SandboxCrowd> {
+  const nearEach = opts.nearEach ?? "5";
+  const config = ConfigSchema.parse(await env.provider.callFunction({ contractId: env.contractId, method: "get_config", args: {} }));
+  const supply = BigInt((await env.provider.callFunction({ contractId: env.tokenId, method: "ft_total_supply", args: {} })) as string);
+  const crowd = crowdDistribution(opts.size, supply, config.tier_thresholds_ppm);
+  const root = await env.createPlayer("crowd", 0n, `${Number(nearEach) * opts.size + 5}`);
+  const bounds = (await env.provider.callFunction({ contractId: env.tokenId, method: "storage_balance_bounds", args: {} })) as { min: string };
+  const creator = env.account(root);
+  const deployer = env.account(env.deployerId);
+  const id = (c: CrowdAccount) => `${c.name}.${root}`;
+  await Promise.all([
+    (async () => {
+      for (const c of crowd) {
+        await creator.createSubAccount({ accountOrPrefix: id(c), publicKey: crowdPublicKey(opts.seed, c.index), nearToTransfer: nearToYocto(nearEach) });
+      }
+    })(),
+    (async () => {
+      for (const c of crowd) {
+        await deployer.callFunction({ contractId: env.tokenId, methodName: "storage_deposit", args: { account_id: id(c) }, deposit: BigInt(bounds.min) });
+        await deployer.callFunction({ contractId: env.tokenId, methodName: "ft_transfer", args: { receiver_id: id(c), amount: c.amount.toString() }, deposit: 1n });
+      }
+    })(),
+  ]);
+  return { root, crowd };
 }
