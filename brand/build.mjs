@@ -2,8 +2,9 @@
 // and the NEP-141 token icon data URI. Run with `npm run brand`.
 //
 // TODO(art): placeholder brand art. The wordmark, icon and social images will be
-// replaced by the final art; see brand/README.md. Characters come from
-// art/sprites.mjs, so new character art flows into the icon and social images.
+// replaced by the final art; see brand/README.md. The wordmark is the lobby.logo
+// sprite and the characters come from art/sprites.mjs, so new art flows into the
+// logo, icon and social images.
 //
 // Colors are the Blueprint tokens (docs/design/REORG Design Spec.md §6), from art/palette.mjs.
 // All art is drawn from code (spec §13.1 rule 5): no fonts in the logo, no generated images.
@@ -20,45 +21,19 @@ const OUT = dirname(fileURLToPath(import.meta.url));
 const FONT = "system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 
 // ---------------------------------------------------------------------------
-// Wordmark. Geometric letters on a 100-unit cap height, 22-unit stroke.
-// The O is the reorganized letter: accent-colored and moved down one floor.
+// Wordmark: the game's own logo. It is the `lobby.logo` sprite (art/building.mjs),
+// the same pixel REORG that signs the lobby wall and sits in the client's top bar
+// (design spec §3, §6: accent color, 1 px shade). Drawn in sprite pixels and scaled
+// up, so the brand can never drift from the UI again: change the sprite, run `npm run brand`.
 
-const CAP = 100;
-const DROP = 18;
-const GAP = 14;
+const LOGO_SCALE = 8;
 
-function ring(x, y, w, h, r, s) {
-  const ri = r - s;
-  const outer = `M${x + r} ${y}H${x + w - r}A${r} ${r} 0 0 1 ${x + w} ${y + r}V${y + h - r}A${r} ${r} 0 0 1 ${x + w - r} ${y + h}H${x + r}A${r} ${r} 0 0 1 ${x} ${y + h - r}V${y + r}A${r} ${r} 0 0 1 ${x + r} ${y}Z`;
-  const ix = x + s, iy = y + s, iw = w - 2 * s, ih = h - 2 * s;
-  const inner = `M${ix + ri} ${iy}H${ix + iw - ri}A${ri} ${ri} 0 0 1 ${ix + iw} ${iy + ri}V${iy + ih - ri}A${ri} ${ri} 0 0 1 ${ix + iw - ri} ${iy + ih}H${ix + ri}A${ri} ${ri} 0 0 1 ${ix} ${iy + ih - ri}V${iy + ri}A${ri} ${ri} 0 0 1 ${ix + ri} ${iy}Z`;
-  return `${outer} ${inner}`;
-}
-
-const letters = {
-  R: { w: 80, d: ["M0 0H48A30 30 0 0 1 48 60H22V100H0Z M22 22H48A8 8 0 0 1 48 38H22Z", "M30 52H54L80 100H56Z"] },
-  E: { w: 66, d: ["M0 0H66V22H22V39H58V61H22V78H66V100H0Z"] },
-  O: { w: 84, d: [ring(0, 0, 84, 100, 34, 22)] },
-  G: {
-    w: 84,
-    d: [
-      "M84 34H62A12 12 0 0 0 50 22H34A12 12 0 0 0 22 34V66A12 12 0 0 0 34 78H50A12 12 0 0 0 62 66H44V46H84V66A34 34 0 0 1 50 100H34A34 34 0 0 1 0 66V34A34 34 0 0 1 34 0H50A34 34 0 0 1 84 34Z",
-    ],
-  },
-};
-
-/** { svg, w, h } for the wordmark at cap height 100. */
-function wordmarkGroup({ ink = C.ink, accent = C.accent } = {}) {
-  let x = 0;
-  const parts = [];
-  for (const ch of "REORG") {
-    const L = letters[ch];
-    const dy = ch === "O" ? DROP : 0;
-    const fill = ch === "O" ? accent : ink;
-    for (const d of L.d) parts.push(`<path transform="translate(${x} ${dy})" fill="${fill}" fill-rule="evenodd" d="${d}"/>`);
-    x += L.w + GAP;
-  }
-  return { svg: parts.join(""), w: x - GAP, h: CAP + DROP };
+/** { svg, w, h } for the wordmark: the lobby.logo sprite at LOGO_SCALE (472 x 120). */
+function wordmarkGroup() {
+  const logo = bake("lobby.logo");
+  const w = logo[0].length * LOGO_SCALE;
+  const h = logo.length * LOGO_SCALE;
+  return { svg: `<g transform="scale(${LOGO_SCALE})" shape-rendering="crispEdges">${gridToPaths(logo)}</g>`, w, h };
 }
 
 function svgDoc(w, h, body, { title, viewBox, crisp } = {}) {
@@ -171,6 +146,29 @@ const tokenSvg = tokenIconSvg();
 const dataUri = `data:image/svg+xml;base64,${Buffer.from(tokenSvg).toString("base64")}`;
 write("icon/token-icon.svg", tokenSvg + "\n");
 write("icon/token-icon.datauri.txt", dataUri + "\n");
+
+// Web app manifest: served from the client's publicDir (brand/icon) next to the favicons.
+write(
+  "icon/site.webmanifest",
+  JSON.stringify(
+    {
+      name: "REORG: Hold the token. Get hired. Survive the reorg.",
+      short_name: "REORG",
+      description: "A memecoin where the token is a job. Hold $REORG, get hired, survive the reorg.",
+      start_url: "/",
+      display: "standalone",
+      background_color: "#0a1626",
+      theme_color: "#0a1626",
+      icons: [
+        { src: "/apple-touch-icon-180.png", sizes: "180x180", type: "image/png" },
+        { src: "/reorg-icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+        { src: "/reorg-icon.svg", sizes: "any", type: "image/svg+xml" },
+      ],
+    },
+    null,
+    2,
+  ) + "\n",
+);
 
 const rasters = [
   // [source svg, output png, width, height, transparent]

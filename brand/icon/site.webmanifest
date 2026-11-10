@@ -1,0 +1,27 @@
+{
+  "name": "REORG: Hold the token. Get hired. Survive the reorg.",
+  "short_name": "REORG",
+  "description": "A memecoin where the token is a job. Hold $REORG, get hired, survive the reorg.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a1626",
+  "theme_color": "#0a1626",
+  "icons": [
+    {
+      "src": "/apple-touch-icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/reorg-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/reorg-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

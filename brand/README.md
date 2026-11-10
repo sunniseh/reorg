@@ -10,12 +10,12 @@ This folder has the logo, icon, token icon and social images. All of them come f
 
 ## The mark
 
-**Wordmark.** REORG in heavy geometric capitals drawn as paths, so it needs no font. The O has been reorganized: it is the only letter in the accent color and sits one floor lower than the others. The accent is the only decoration (spec §2).
+**Wordmark.** The game's own logo: the `lobby.logo` sprite from `art/building.mjs`, the pixel REORG that signs the lobby wall and sits in the client's top bar (spec §3). It is drawn in sprite pixels (59 × 15, scaled 8×) as paths, so it needs no font and stays crisp at every size. It is accent-colored with its 1 px accent-shade drop shadow, and the accent is the only decoration (spec §2). Because it is read from the sprite, the brand cannot drift from the UI: change the sprite, run `npm run brand`.
 
-- Use it on navy (`#0a1626`) or the panel color (`#11233a`). The letters are light, so on white or photos use `reorg-lockup.svg`, which has its own navy plate.
-- Keep the O dropped and in the accent. Don't straighten it, recolor it, or add a second accent.
-- Leave clear space of at least the O's width on every side. The smallest size is 18 px cap height (about 90 px wide).
-- No gradients, glows, outlines, shadows, or tilt (spec §13.1).
+- Use it on navy (`#0a1626`) or the panel color (`#11233a`). The accent is too faint on white or photos, so there use `reorg-lockup.svg`, which has its own navy plate.
+- Keep it in the accent with its shade. Don't recolor it, add a second accent, or smooth the pixels.
+- Leave clear space of at least one letter's width on every side. The smallest size is 59 px wide (1 px per sprite pixel).
+- No gradients, glows, outlines, or tilt (spec §13.1). The built-in 1 px shade is part of the sprite, not an added shadow.
 
 **Icon.** The boss, smug, from the chest up, on navy: silver hair, the accent blazer, a lanyard and a coffee mug. It is the `boss.smug` sprite from `art/sprites.mjs`, drawn in sprite pixels (a 24-unit viewBox), so it stays crisp at every size. The face sits inside the inscribed circle, so wallets that crop token icons to a circle keep it.
 
@@ -27,10 +27,13 @@ This folder has the logo, icon, token icon and social images. All of them come f
 | `logo/reorg-lockup.svg`, `.png` | Wordmark and tagline on a navy plate. The README header; works on GitHub light and dark |
 | `icon/reorg-icon.svg`, `reorg-icon-512.png` | App icon with rounded corners |
 | `icon/favicon-32.png`, `apple-touch-icon-180.png` | Web client favicon and home-screen icon |
+| `icon/site.webmanifest` | Web app manifest (name, theme and icons), served by the client |
 | `icon/reorg-icon-square.svg` | Full-bleed square, for places that apply their own mask |
 | `icon/token-icon.svg`, `token-icon.datauri.txt` | NEP-141 `icon` metadata: a 64 px square SVG, about 2.2 KB as a data URI (one path per color). Pass the contents of the `.txt` as `metadata.icon` when initializing the token |
 | `social/og-card.png` | 1200 × 630 link preview (`og:image`, `twitter:image`) |
 | `social/x-avatar-400.png`, `x-banner.png` | Profile picture and 1500 × 500 header |
+
+**Wired into the client** (`apps/web`): `vite.config.ts` serves everything in `icon/` at the site root (favicons, `reorg-icon.svg`, `site.webmanifest`) and serves and emits `social/og-card.png` as `/og-card.png`; `index.html` links them and sets the description and the Open Graph and Twitter tags. Link crawlers need absolute URLs, so `og:image`, `og:url` and `twitter:image` are only injected when `VITE_PUBLIC_URL` is set (the public site address, no trailing path); there is no guessed default. The top bar and badge use the `lobby.logo` atlas frame, not these files.
 
 The social images show the game's building (`art/scene.mjs`, the payday sample moment, including its SIMULATED CROWD sign), not live state: the whole building on the OG card, the four tier floors on the X banner. Text on the social images is set in the system UI font and baked into the PNGs; the SVG versions depend on the viewer's fonts, so share the PNGs.
 
@@ -42,7 +45,7 @@ The social images show the game's building (`art/scene.mjs`, the payday sample m
 | Surface | Panel | `#11233a` |
 | Text and the wordmark | Ink | `#e6f1fb` |
 | Secondary text | Muted | `#8fa6bf` |
-| The O, the boss, the player, signage | Accent | `#6ad4ff` |
+| The logo, the boss, the player, signage | Accent | `#6ad4ff` |
 | Text on the accent | Button text | `#0a1626` |
 | Money | Coin | `#f2c230` |
 
