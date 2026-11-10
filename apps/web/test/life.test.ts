@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { sample } from "../src/agents/track";
-import { Life, MAX_TRIP_FLIGHTS, SLOT_MARGIN_MS, SLOT_MS, slotStart, type LifeAgent, type LifeTask, type LifeWorld } from "../src/life";
+import { Life, MAX_TRIP_FLIGHTS, PACE, SLOT_MARGIN_MS, SLOT_MS, slotStart, type LifeAgent, type LifeTask, type LifeWorld } from "../src/life";
 import { POINTS } from "../src/nav";
 import { testNav } from "./helpers";
 
@@ -16,6 +16,7 @@ function crowd(submittedEvery = 2): LifeAgent[] {
     for (let r = 0; r < per; r++) out.push({ wallet: `w${k}.sim`, home: { kind: "seat", band, x: nav.seatX(tier, r) }, submitted: k++ % submittedEvery === 0 });
   }
   out.push({ wallet: "laid.sim", home: { kind: "bench", x: 130 }, submitted: false });
+  out.push({ wallet: "laid2.sim", home: { kind: "bench", x: 166 }, submitted: false });
   out.push({ wallet: "visitor.sim", home: { kind: "queue", x: 346 }, submitted: false });
   return out;
 }
@@ -63,7 +64,8 @@ describe("life (W-21)", () => {
       for (let s = 0; s < SLOTS; s++) {
         const slot = BASE / SLOT_MS + s;
         for (const a of agents) {
-          const mustStay = a.home.kind !== "seat" || task.status !== "open" || !a.submitted;
+          // The laid off may pace beside the bench (P1); that is checked below.
+          const mustStay = a.home.kind === "queue" || (a.home.kind === "seat" && (task.status !== "open" || !a.submitted));
           if (!mustStay) continue;
           expect(life.activity(a, slot).kind).toBe("stay");
           const home = life.home(a, slotStart(slot));
@@ -134,6 +136,33 @@ describe("life (W-21)", () => {
     }
     expect(trips).toBeGreaterThan(0);
     expect(chats).toBeGreaterThan(0);
+  });
+
+  it("the laid off stay on the bench or pace beside it on the sidewalk, back on the bench at slot ends", () => {
+    for (const task of [{ id: 4, status: "open", closesAt: BASE + SLOT_MS * 30 } as LifeTask, { id: 4, status: "finalized", closesAt: BASE - 1 } as LifeTask]) {
+      const life = new Life(world(agents, task));
+      let paced = 0;
+      for (const a of agents.filter((x) => x.home.kind === "bench")) {
+        const hx = (a.home as { x: number }).x;
+        for (let s = 0; s < SLOTS; s++) {
+          const slot = BASE / SLOT_MS + s;
+          const act = life.activity(a, slot).kind;
+          expect(["stay", "pace"]).toContain(act);
+          if (act === "pace") paced++;
+          const tr = life.track(a, slot);
+          expect(tr.t1).toBeLessThanOrEqual(slotStart(slot + 1) + 1e-6);
+          for (const t of [slotStart(slot), slotStart(slot + 1) - SLOT_MARGIN_MS]) expect(life.positionAt(a, t)).toMatchObject({ band: "street", x: hx, frame: expect.stringMatching(/^emp\.bench/) });
+          for (let t = slotStart(slot); t < slotStart(slot + 1); t += 250) {
+            const p = life.positionAt(a, t);
+            expect(p.band).toBe("street");
+            expect(p.layer).toBe("street");
+            const beside = p.x === hx || (p.x >= PACE.left[0] && p.x <= PACE.left[1] + 30) || (p.x >= PACE.right[0] - 30 && p.x <= PACE.right[1]);
+            expect(beside).toBe(true);
+          }
+        }
+      }
+      expect(paced).toBeGreaterThan(0);
+    }
   });
 
   it("reduced motion: no idle trips and still poses (design §14.5)", () => {

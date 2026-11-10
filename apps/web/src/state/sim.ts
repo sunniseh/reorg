@@ -9,6 +9,7 @@
  */
 import {
   BPS,
+  PPM,
   ConfigSchema,
   LEVEL_CIPHERS,
   answerHashBase64,
@@ -66,7 +67,7 @@ export const SIM_PLAYER = "you.sim";
 const MARKET = "market.sim";
 
 export interface SimOptions {
-  /** Holders, including ~10% visitors. The preview stages are 8, 24 and 60 (D18). */
+  /** Holders, including ~10% visitors. The top bar offers one size per building state (8 … 50,000, D22); `?size=` reaches 100,000. */
   size: number;
   seed?: string;
   /** Task epoch (ms). The window is 60% of it; results land 2.5 s after it closes. */
@@ -193,6 +194,8 @@ export class SimSource implements StateSource {
   private readonly config: ContractConfig;
 
   private bots: Bot[] = [];
+  /** Bots by wallet (finalize looks one up per passer). */
+  private botOf = new Map<WalletId, Bot>();
   private holders = new Map<WalletId, Holder>();
   private employees = new Map<WalletId, Employee>();
   private tasks = new Map<TaskId, Task>();
@@ -208,7 +211,14 @@ export class SimSource implements StateSource {
     total_forfeited: 0n,
     total_operating_cost: 0n,
   };
+  /** A binary min-heap on (t, n): a big preview schedules a submission per holder per task. */
   private queue: Action[] = [];
+  /** Snapshots of a big company are built at most this often (ms), so the client keeps its frame rate. */
+  private readonly snapEvery: number;
+  private lastSnapAt = -Infinity;
+  private pendingSnap = false;
+  /** Event feed lines wait here and join the feed once per tick (a busy window is thousands). */
+  private feedBuf: FeedItem[] = [];
   private seqN = 0;
   private eventSeq = 0;
   private replaying = true;
@@ -224,6 +234,7 @@ export class SimSource implements StateSource {
 
   constructor(opts: SimOptions) {
     this.size = Math.max(1, Math.floor(opts.size));
+    this.snapEvery = this.size > 20_000 ? 2000 : this.size > 2000 ? 1000 : 0;
     this.seed = opts.seed ?? "reorg-preview";
     this.epoch = opts.epochMs ?? 60_000;
     this.window = Math.round(this.epoch * 0.6);
@@ -233,7 +244,8 @@ export class SimSource implements StateSource {
     this.simWallet = new SimWallet(this);
 
     const now = this.clock();
-    const history = opts.history ?? 6;
+    // A huge preview replays fewer days, so it opens in seconds (each day verifies every answer).
+    const history = opts.history ?? (this.size > 20_000 ? 2 : this.size > 2000 ? 4 : 6);
     this.historyTasks = history;
     const firstLive = opts.firstOpenInMs ?? 4000;
     const origin = now + firstLive - history * this.epoch;
@@ -293,6 +305,7 @@ export class SimSource implements StateSource {
   }
 
   feed(): readonly FeedItem[] {
+    this.flushFeed();
     return this.feedLog.list();
   }
 
@@ -371,20 +384,54 @@ export class SimSource implements StateSource {
 
   /** Runs every scheduled action up to `to` (ms). */
   advance(to: number): void {
-    let any = false;
     while (this.queue.length && this.queue[0]!.t <= to) {
-      const a = this.queue.shift()!;
-      this.run(a);
-      any = true;
+      this.run(this.pop());
+      this.pendingSnap = true;
     }
-    if (any) this.changed();
+    this.flushFeed();
+    // A big company publishes on a slower beat; the scheduled moments still run on time.
+    if (this.pendingSnap && (this.replaying || to - this.lastSnapAt >= this.snapEvery)) {
+      this.pendingSnap = false;
+      this.lastSnapAt = to;
+      this.changed();
+    }
+  }
+
+  private static before(a: Action, b: Action): boolean {
+    return a.t < b.t || (a.t === b.t && a.n < b.n);
   }
 
   private push(a: NewAction): void {
+    const q = this.queue;
     const action = { ...a, n: this.seqN++ } as Action;
-    let i = this.queue.length;
-    while (i > 0 && (this.queue[i - 1]!.t > action.t || (this.queue[i - 1]!.t === action.t && this.queue[i - 1]!.n > action.n))) i--;
-    this.queue.splice(i, 0, action);
+    let i = q.push(action) - 1;
+    while (i > 0) {
+      const up = (i - 1) >> 1;
+      if (!SimSource.before(action, q[up]!)) break;
+      q[i] = q[up]!;
+      i = up;
+    }
+    q[i] = action;
+  }
+
+  private pop(): Action {
+    const q = this.queue;
+    const top = q[0]!;
+    const last = q.pop()!;
+    if (q.length > 0) {
+      let i = 0;
+      for (;;) {
+        const l = 2 * i + 1;
+        if (l >= q.length) break;
+        const r = l + 1;
+        const c = r < q.length && SimSource.before(q[r]!, q[l]!) ? r : l;
+        if (!SimSource.before(q[c]!, last)) break;
+        q[i] = q[c]!;
+        i = c;
+      }
+      q[i] = last;
+    }
+    return top;
   }
 
   private run(a: Action): void {
@@ -419,9 +466,9 @@ export class SimSource implements StateSource {
   // ------------------------------------------------------------------ the company
 
   private amountFor(tier: 0 | 1 | 2 | 3, u: number): bigint {
-    const th = BigInt(this.config.tier_thresholds_bps[tier]);
+    const th = BigInt(this.config.tier_thresholds_ppm[tier]);
     const mille = BigInt(Math.round((tier === 0 ? 1.02 + 0.2 * u : 1.05 + 0.55 * u) * 1000));
-    return (SUPPLY * th * mille) / (BigInt(BPS) * 1000n);
+    return (SUPPLY * th * mille) / (BigInt(PPM) * 1000n);
   }
 
   private incomePerTask(): bigint {
@@ -431,9 +478,11 @@ export class SimSource implements StateSource {
   private seedCompany(at: number): void {
     const n = this.size;
     const visitors = Math.max(1, Math.round(n * 0.1));
-    const directors = Math.max(1, Math.round(n * 0.08));
-    const managers = Math.max(1, Math.round(n * 0.12));
-    const associates = Math.max(1, Math.round(n * 0.25));
+    // Small previews show every tier well; a big one looks like a real token: the upper tiers are
+    // capped near what the supply allows (Directors ≤ 33 at 3%), so almost everyone is an Intern.
+    const directors = Math.max(1, Math.min(20, Math.round(n * 0.08)));
+    const managers = Math.max(1, Math.min(60, Math.round(n * 0.12)));
+    const associates = Math.max(1, Math.min(320, Math.round(n * 0.25)));
     const interns = Math.max(1, n - visitors - directors - managers - associates);
     const roles: (0 | 1 | 2 | 3 | "v")[] = [];
     const counts: [0 | 1 | 2 | 3 | "v", number][] = [[0, directors], [1, managers], [2, associates], [3, interns], ["v", visitors]];
@@ -453,7 +502,9 @@ export class SimSource implements StateSource {
       if (profile === "dumper" && i % 16 !== 7) profile = "flaky";
       if (role !== "v" && i % 12 === 11) profile = "newcomer";
       const startsAt = profile === "newcomer" ? 8 + (i % 3) : 1;
-      this.bots.push({ wallet, profile, startsAt });
+      const bot: Bot = { wallet, profile, startsAt };
+      this.bots.push(bot);
+      this.botOf.set(wallet, bot);
     });
     // Guarantee the cast every mechanic needs: at least one slacker (layoffs) and one dumper
     // (anti-dump forfeits), about one of each per 16 holders.
@@ -549,7 +600,7 @@ export class SimSource implements StateSource {
     const h = this.holders.get(wallet);
     const balance = h?.balance ?? 0n;
     if (h && h.lastReceivedAt >= task.opensAt) return { accepted: false, reason: "tokens received after the task opened (anti-recycling)" };
-    const tier = tierOf(balance, SUPPLY, this.config.tier_thresholds_bps);
+    const tier = tierOf(balance, SUPPLY, this.config.tier_thresholds_ppm);
     if (tier === null) return { accepted: false, reason: "balance below the minimum tier (visitor)" };
     let emp = this.employees.get(wallet);
     if (!emp) {
@@ -630,7 +681,7 @@ export class SimSource implements StateSource {
     this.treasury.reserve = reserveAfter;
     this.treasury.outstanding += totalPayable;
     this.treasury.total_operating_cost += op;
-    if (op > 0n) this.ledgerRows.unshift({ at, kind: "operating", amount: op, simulated: true, taskId: id });
+    if (op > 0n) this.book({ at, kind: "operating", amount: op, simulated: true, taskId: id });
     const s = (x: bigint) => x.toString();
     task.alloc = {
       income: s(income),
@@ -667,7 +718,7 @@ export class SimSource implements StateSource {
     for (const w of passers) {
       const sub = task.subs.get(w)!;
       if (sub.pay === 0n || w === SIM_PLAYER) continue;
-      const bot = this.bots.find((b) => b.wallet === w);
+      const bot = this.botOf.get(w);
       const t = at + 2000 + 10_000 * unit(this.seed, w, id, "claim");
       if (bot?.profile === "dumper") {
         // Sells a quarter before claiming (the claim forfeits), buys back before the next opening.
@@ -730,14 +781,14 @@ export class SimSource implements StateSource {
       this.treasury.total_paid += s.pay;
       const emp = this.employees.get(wallet);
       if (emp) emp.total_earned += s.pay;
-      this.ledgerRows.unshift({ at, kind: "salary", amount: s.pay, simulated: true, wallet, taskId: id });
+      this.book({ at, kind: "salary", amount: s.pay, simulated: true, wallet, taskId: id });
       this.emit("salary_paid", at, { task_id: id, account_id: wallet, amount });
       return { status: "paid", amount };
     }
     s.claim = "forfeited";
     this.treasury.reserve += s.pay;
     this.treasury.total_forfeited += s.pay;
-    this.ledgerRows.unshift({ at, kind: "forfeit", amount: s.pay, simulated: true, wallet, taskId: id });
+    this.book({ at, kind: "forfeit", amount: s.pay, simulated: true, wallet, taskId: id });
     this.emit("salary_forfeited", at, { task_id: id, account_id: wallet, amount, snapshot_balance: s.balance.toString(), current_balance: (h?.balance ?? 0n).toString() });
     return { status: "forfeited", amount };
   }
@@ -746,20 +797,34 @@ export class SimSource implements StateSource {
     this.treasury.income_accrued += amount;
     this.treasury.total_income += amount;
     this.treasury.income_by_tag[tag] += amount;
-    this.ledgerRows.unshift({ at, kind: "income", amount, tag, simulated: true });
-    if (this.ledgerRows.length > 200) this.ledgerRows.length = 200;
+    this.book({ at, kind: "income", amount, tag, simulated: true });
     this.emit("income_deposited", at, { from: "income-bot.sim", amount: amount.toString(), tag });
   }
 
   private emit<N extends ReorgEvent["event"]>(event: N, at: number, data: Extract<ReorgEvent, { event: N }>["data"]): void {
     const e = { seq: ++this.eventSeq, at: msToNs(at), event, data } as ReorgEvent;
     const f = feedFromEvent(e, { bossCovers: true, nowMs: at });
-    if (f) this.feedLog.add(f);
+    if (f) this.feedBuf.push(f);
     if (this.replaying) return;
     for (const fn of this.eventListeners) fn(e);
   }
 
+  /** Newest first, the last 200 rows (a big company's payday is thousands of claims). */
+  private book(row: LedgerRow): void {
+    this.ledgerRows.unshift(row);
+    if (this.ledgerRows.length > 200) this.ledgerRows.length = 200;
+  }
+
+  private flushFeed(): void {
+    if (this.feedBuf.length === 0) return;
+    const items = this.feedBuf;
+    this.feedBuf = [];
+    // In chunks: a spread of 100k arguments overflows the stack.
+    for (let i = 0; i < items.length; i += 2000) this.feedLog.add(...items.slice(i, i + 2000));
+  }
+
   private changed(): void {
+    this.flushFeed();
     this.dirty = true;
     if (this.replaying) return;
     const snap = this.snapshot();
@@ -863,7 +928,7 @@ export class SimSource implements StateSource {
     const boss: BossTask | null = task
       ? { task_id: task.id, cipher_label: task.params.cipher, level: task.params.level, task_text: task.text, written_by: "template", warmup: false }
       : null;
-    const nextOpen = this.queue.find((a) => a.kind === "open");
+    const nextOpen = this.queue.reduce<Action | undefined>((m, a) => (a.kind === "open" && (!m || SimSource.before(a, m)) ? a : m), undefined);
     return {
       kind: "sim",
       network: "simulated",

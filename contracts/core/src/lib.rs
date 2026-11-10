@@ -23,5 +23,9 @@ pub use events::{Event, EventEntry};
 /// Basis-point denominator.
 pub const BPS: u128 = 10_000;
 
+/// Parts-per-million denominator (tier thresholds, §6.1: finer than bps so the lowest tier can sit
+/// below 0.01% of supply).
+pub const PPM: u128 = 1_000_000;
+
 /// Task id. Every "day" field holds a task id, never a calendar date (§2).
 pub type TaskId = u64;

@@ -18,11 +18,11 @@
     ]
   },
   "config": {
-    "tier_thresholds_bps": [
-      300,
-      100,
-      25,
-      5
+    "tier_thresholds_ppm": [
+      30000,
+      10000,
+      2500,
+      10
     ],
     "tier_bucket_bps": [
       3500,
@@ -281,11 +281,11 @@
     }
   ],
   "tier": {
-    "thresholds_bps": [
-      300,
-      100,
-      25,
-      5
+    "thresholds_ppm": [
+      30000,
+      10000,
+      2500,
+      10
     ],
     "cases": [
       {
@@ -342,14 +342,35 @@
         "total_supply": "1000000000000000000000000000",
         "tier": 3,
         "tier_name": "intern",
-        "note": "exactly 0.05%"
+        "note": "0.05%: an Intern"
       },
       {
-        "balance": "499999999999999999999999",
+        "balance": "10000000000000000000000",
+        "total_supply": "1000000000000000000000000000",
+        "tier": 3,
+        "tier_name": "intern",
+        "note": "exactly 0.001%"
+      },
+      {
+        "balance": "9999999999999999999999",
         "total_supply": "1000000000000000000000000000",
         "tier": null,
         "tier_name": "visitor",
-        "note": "0.05% minus one unit (visitor)"
+        "note": "0.001% minus one unit (visitor)"
+      },
+      {
+        "balance": "10000000000000000000000",
+        "total_supply": "1000000000000000000000000007",
+        "tier": null,
+        "tier_name": "visitor",
+        "note": "supply S+7: 0.001% boundary rounds up (visitor)"
+      },
+      {
+        "balance": "10000000000000000000001",
+        "total_supply": "1000000000000000000000000007",
+        "tier": 3,
+        "tier_name": "intern",
+        "note": "supply S+7: first Intern balance"
       },
       {
         "balance": "0",

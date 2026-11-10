@@ -14,7 +14,7 @@ import { ANIM, Plan, standPose, type Pose } from "../agents/track";
 import { Life, type Home, type LifeAgent, type LifeTask } from "../life";
 import { POINTS, WALK, type Nav } from "../nav";
 import { bossFace } from "../render/derive";
-import { RIG } from "../render/geometry";
+import { CHAR, RIG } from "../render/geometry";
 import { effectiveStatus, nsToMs, type Snapshot } from "../state/types";
 
 const S = RIG.building.street;
@@ -67,9 +67,22 @@ export function homesOf(layout: TowerLayout, nav: Nav): Map<string, LifeAgent> {
       out.set(c.wallet, { wallet: c.wallet, home: { kind: "seat", band: f.key, x: nav.seatX(f.tier, room) }, submitted: c.submitted });
     }),
   );
-  layout.bench.forEach((c, i) => out.set(c.wallet, { wallet: c.wallet, home: i < 4 ? { kind: "bench", x: S.bench.seats[i]! + 8 } : { kind: "away" }, submitted: c.submitted }));
-  layout.visitors.forEach((c, i) => out.set(c.wallet, { wallet: c.wallet, home: i < 5 ? { kind: "queue", x: S.queue.spots[i]! + 8 } : { kind: "away" }, submitted: false }));
+  layout.bench.forEach((c, i) => out.set(c.wallet, { wallet: c.wallet, home: i < 4 ? { kind: "bench", x: S.bench.seats[i]! + CHAR.w / 2 } : { kind: "away" }, submitted: c.submitted }));
+  layout.visitors.forEach((c, i) => out.set(c.wallet, { wallet: c.wallet, home: i < 5 ? { kind: "queue", x: S.queue.spots[i]! + CHAR.w / 2 } : { kind: "away" }, submitted: false }));
   return out;
+}
+
+/**
+ * Whether a character missing from the previous picture was there all along, out of sight: on a
+ * floor the previous layout folded, or a visitor past the drawn queue. Such a character must not
+ * play a hire or an arrival (design §1: movement may only imply true state).
+ */
+export function hiddenBefore(prev: TowerLayout, next: TowerLayout, c: TowerCharacter): boolean {
+  if (c.tier === null) return prev.visitorCount > prev.visitors.length;
+  const ref = next.desks.get(c.wallet);
+  if (!ref) return false;
+  const index = next.floors[ref.floor]!.index;
+  return prev.folds.some((f) => f.tier === c.tier && index >= f.from && index <= f.to);
 }
 
 export function lifeTask(snap: Snapshot): LifeTask | null {
@@ -204,7 +217,9 @@ export class Director {
       const b = before.get(w);
       const tierDelay = (c.tier ?? 3) * STAGGER_MS;
       if (!old || !b) {
-        this.arrive(w, a, plan, t);
+        // Unfolded, not hired: they already worked here, so they are simply at home (design §4.3).
+        if (!old && hiddenBefore(prev.layout, next.layout, c)) this.fx.deskAt(w, t);
+        else this.arrive(w, a, plan, t);
         continue;
       }
       // Results, streaks and pay (finalize).

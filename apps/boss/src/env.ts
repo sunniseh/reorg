@@ -39,6 +39,7 @@ const EnvSchema = z.object({
   FAUCET_NEAR_AMOUNT: z.string().regex(/^\d+$/).default("2000000000000000000000000"),
   FAUCET_TOKEN_AMOUNT: z.string().regex(/^\d+$/).default("600000000000000000000000"),
   FAUCET_RATE_LIMIT_PER_IP: num(5).pipe(z.number().int().min(1)),
+  TOWER_REFRESH_SECONDS: num(15).pipe(z.number().min(0)),
 });
 
 export interface BossEnv {
@@ -55,6 +56,8 @@ export interface BossEnv {
   llm: { apiKey: string; baseUrl: string; model: string } | null;
   /** Demo faucet (D-09); null when off. */
   faucet: { accountId: string; key: string; nativeAmount: bigint; tokenAmount: bigint; perIpPerHour: number } | null;
+  /** `GET /api/tower` re-reads the chain this often (ms); 0 turns the route off. */
+  towerRefreshMs: number;
 }
 
 export function loadEnv(env: Record<string, string | undefined> = process.env): BossEnv {
@@ -104,6 +107,7 @@ export function loadEnv(env: Record<string, string | undefined> = process.env): 
     },
     llm: e.NEAR_AI_API_KEY ? { apiKey: e.NEAR_AI_API_KEY, baseUrl: e.NEAR_AI_BASE_URL!, model: e.NEAR_AI_MODEL! } : null,
     faucet: faucetOf(e),
+    towerRefreshMs: Math.round(e.TOWER_REFRESH_SECONDS * 1000),
   };
 }
 

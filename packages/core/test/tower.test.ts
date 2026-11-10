@@ -4,6 +4,10 @@ import {
   antidumpMinimum,
   appearanceOf,
   buildTower,
+  decodeTower,
+  encodeTower,
+  DRAWN_FLOORS,
+  DRAWN_VISITORS,
   buildingStateOf,
   layoutTower,
   ROOMS_PER_FLOOR,
@@ -18,13 +22,13 @@ import {
 
 const SUPPLY = 1_000_000_000n * 10n ** 18n;
 const CONFIG = {
-  tier_thresholds_bps: [300, 100, 25, 5] as [number, number, number, number],
+  tier_thresholds_ppm: [30_000, 10_000, 2_500, 10] as [number, number, number, number],
   excluded_accounts: ["deployer.test", "reorg.test"],
   streak_milestones: [3, 7, 14],
 };
 /** Balance at `mille`/1000 of a tier's threshold (tier 4 = a visitor at 40% of the Intern threshold). */
 const bal = (tier: 0 | 1 | 2 | 3 | 4, mille: number): bigint =>
-  (SUPPLY * BigInt([300, 100, 25, 5, 5][tier]!) * BigInt(tier === 4 ? 400 : mille)) / 10_000_000n;
+  (SUPPLY * BigInt([30_000, 10_000, 2_500, 10, 10][tier]!) * BigInt(tier === 4 ? 400 : mille)) / 1_000_000_000n;
 
 function emp(account_id: string, status: EmployeeStatus, last_tier: TierIndex, extra: Partial<EmployeeView> = {}): EmployeeView {
   return {
@@ -185,6 +189,9 @@ describe("towerCharacters (PROTOCOL §6.5)", () => {
   });
 });
 
+/** Intern rooms per floor. */
+const I = ROOMS_PER_FLOOR[3];
+
 describe("layoutTower (W-02, design §4.3)", () => {
   it("an empty company still has one floor per tier", () => {
     const l = buildTower(company(0));
@@ -206,11 +213,11 @@ describe("layoutTower (W-02, design §4.3)", () => {
     expect(l.desks.get("b.test")).toEqual({ floor: 3, room: 2 });
   });
 
-  it("adds a floor when a tier fills (4/6/8/12 rooms)", () => {
-    const holders = Array.from({ length: 13 }, (_, i) => ({ account_id: `i${i}.test`, balance: bal(3, 1100 + i).toString() }));
+  it("adds a floor when a tier fills (6/9/12/18 rooms)", () => {
+    const holders = Array.from({ length: I + 1 }, (_, i) => ({ account_id: `i${i}.test`, balance: bal(3, 1100 + i).toString() }));
     const l = buildTower({ config: CONFIG, totalSupply: SUPPLY, holders, employees: [], task: null, submissions: [] });
     const interns = l.floors.filter((f) => f.tier === 3);
-    expect(interns.map((f) => f.desks.filter(Boolean).length)).toEqual([12, 1]);
+    expect(interns.map((f) => f.desks.filter(Boolean).length)).toEqual([I, 1]);
   });
 
   it("is independent of holder order", () => {
@@ -245,7 +252,86 @@ describe("buildingStateOf (design §12.2, no hysteresis)", () => {
     [251, "skyscraper"],
     [1000, "skyscraper"],
     [1001, "megacorp"],
+    [5000, "megacorp"],
+    [5001, "campus"],
+    [25_000, "campus"],
+    [25_001, "conglomerate"],
   ] as const)("%i employees → %s", (n, s) => expect(buildingStateOf(n)).toBe(s));
+});
+
+describe("folding past DRAWN_FLOORS (design §4.3, §12)", () => {
+  /** `n` Interns (I per floor), `v` visitors; every 3rd intern passed, every 5th missed, every 7th laid off. */
+  function interns(n: number, v = 0): TowerInput {
+    const holders = [];
+    const employees: EmployeeView[] = [];
+    const submissions: SubmissionView[] = [];
+    for (let i = 0; i < n; i++) {
+      const w = `i${String(i).padStart(5, "0")}.test`;
+      // Strictly descending balances, so desk order is the index order.
+      holders.push({ account_id: w, balance: (bal(3, 1000) + BigInt(n - i) * 10n ** 18n).toString() });
+      employees.push(emp(w, i % 7 === 0 ? "laid_off" : "active", 3));
+      if (i % 3 === 0) submissions.push(sub(w, 6, true, "1000"));
+      else if (i % 5 === 0) submissions.push(sub(w, 6, false, "0"));
+    }
+    for (let i = 0; i < v; i++) holders.push({ account_id: `v${String(i).padStart(5, "0")}.test`, balance: bal(4, 0).toString() });
+    return { config: CONFIG, totalSupply: SUPPLY, holders, employees, task: { id: 6, status: "finalized" }, submissions };
+  }
+
+  it("draws every floor up to DRAWN_FLOORS per tier", () => {
+    const l = buildTower(interns(DRAWN_FLOORS * I));
+    expect(l.folds).toEqual([]);
+    expect(l.foldedFloors).toBe(0);
+    expect(l.floors.filter((f) => f.tier === 3)).toHaveLength(DRAWN_FLOORS);
+  });
+
+  it("folds the rest with exact counts, and keeps the totals", () => {
+    const n = I * 50 + 5; // 51 Intern floors
+    const D = DRAWN_FLOORS;
+    const drawn = I * D;
+    const l = buildTower(interns(n, 120));
+    expect(l.employees).toBe(n);
+    expect(l.tierCounts[3]).toBe(n);
+    expect(l.floors.filter((f) => f.tier === 3).map((f) => f.index)).toEqual(Array.from({ length: D }, (_, i) => i));
+    expect(l.folds).toHaveLength(1);
+    const f = l.folds[0]!;
+    expect(f).toMatchObject({ key: `t3f${D}-50`, tier: 3, from: D, to: 50, before: l.floors.length });
+    expect(l.foldedFloors).toBe(51 - D);
+    const tail = Array.from({ length: n - drawn }, (_, j) => j + drawn);
+    expect(f.employees).toBe(tail.length);
+    expect(f.passed).toBe(tail.filter((i) => i % 3 === 0).length);
+    expect(f.missed).toBe(tail.filter((i) => i % 3 !== 0 && i % 5 === 0).length);
+    expect(f.laidOff).toBe(tail.filter((i) => i % 7 === 0).length);
+    // Only drawn characters reach the renderer; the counts stay whole.
+    expect(l.characters).toHaveLength(drawn + DRAWN_VISITORS);
+    expect(l.desks.size).toBe(drawn);
+    expect(l.visitorCount).toBe(120);
+    expect(l.visitors).toHaveLength(DRAWN_VISITORS);
+    expect(l.benchCount).toBe(Array.from({ length: n }, (_, i) => i).filter((i) => i % 7 === 0).length);
+    expect(l.bench.every((c) => l.desks.has(c.wallet))).toBe(true);
+  });
+
+  it("always draws the player's floor, splitting the fold around it", () => {
+    const input = interns(I * 50);
+    const you = `i${String(I * 45 + 5).padStart(5, "0")}.test`; // floor 45, room 5
+    const l = buildTower(input, { you });
+    // Floors 0..2 are the empty Director, Manager and Associate floors.
+    const yours = 3 + DRAWN_FLOORS;
+    expect(l.folds.map((f) => [f.key, f.before])).toEqual([
+      [`t3f${DRAWN_FLOORS}-44`, yours],
+      ["t3f46-49", yours + 1],
+    ]);
+    const ref = l.desks.get(you)!;
+    expect(ref).toEqual({ floor: yours, room: 5 });
+    expect(l.floors[ref.floor]).toMatchObject({ key: "t3f45", index: 45 });
+    expect(l.foldedFloors).toBe(50 - DRAWN_FLOORS - 1);
+    // A drawn player changes nothing.
+    expect(buildTower(input, { you: "i00001.test" }).folds.map((f) => f.key)).toEqual([`t3f${DRAWN_FLOORS}-49`]);
+  });
+
+  it("a fold that ends a tier sits before the next tier's first floor", () => {
+    const l = layoutTower(towerCharacters(interns(I * 3)), { drawnFloors: 1 });
+    expect(l.folds.map((f) => [f.key, f.before])).toEqual([["t3f1-2", l.floors.length]]);
+  });
 });
 
 describe("anti-dump mirror (PROTOCOL §7.4)", () => {
@@ -255,5 +341,19 @@ describe("anti-dump mirror (PROTOCOL §7.4)", () => {
     expect(antidumpMinimum(1000n, 9000)).toBe(900n);
     expect(antidumpMinimum(1001n, 9000)).toBe(901n);
     expect(antidumpAllows(antidumpMinimum(1001n, 9000), 1001n, 9000)).toBe(true);
+  });
+});
+
+describe("tower wire (boss GET /api/tower)", () => {
+  it("round-trips a folded layout through JSON, deriving looks and crowd labels locally", () => {
+    const input = company(150);
+    const l = layoutTower(towerCharacters({ ...input, isCrowd: (w: string) => w.startsWith("w00") }), { drawnFloors: 2, you: "w140.test" });
+    expect(l.folds.length).toBeGreaterThan(0);
+    const back = decodeTower(JSON.parse(JSON.stringify(encodeTower(l))), { isCrowd: (w) => w.startsWith("w00") });
+    expect(back).toEqual(l);
+  });
+
+  it("rejects an unknown payload", () => {
+    expect(() => decodeTower({ v: 2 } as never)).toThrow(/unknown payload/);
   });
 });

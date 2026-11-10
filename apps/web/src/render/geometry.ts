@@ -32,6 +32,8 @@ export interface FrameRig {
 }
 
 export interface Rig {
+  /** Employee frame size: seated frames end at the desk top, standing ones at the feet. */
+  character: { w: number; sit: number; stand: number };
   frames: Record<string, FrameRig>;
   hair: Record<string, { front: { y: number }; side: { y: number } }>;
   attach: { chairFront: XY; chairSide: XY; chairExecFront: XY; chairExecSide: XY };
@@ -52,7 +54,20 @@ export interface Rig {
       basement: { h: number };
       roof: { h: number };
     };
-    states: Record<"garage" | "office" | "tower", { sign: string; doors: string }>;
+    states: Record<BuildingStateKey, StateRig>;
+    surroundings: {
+      props: Record<string, { tile: string; x: number; w?: number }[]>;
+      blocks: { tile: string; lit: string; sets: string[] };
+      clouds: { tiles: string[]; speed: number; sets: string[] };
+      blimp: { tile: string; panel: { x: number; y: number; w: number; h: number }; sets: string[] };
+      twin: { facade: string; lit: string; parapet: string; bridge: string; gap: number; columns: number; sets: string[] };
+    };
+    construction: {
+      crane: { mast: string; jib: string; hook: string; x: number; hookX: number };
+      ribbon: { tile: string; half: string; x: number; y: number };
+      forLease: { tile: string };
+    };
+    closed: { tile: string };
     core: {
       landing: XY | { x: number; y: number };
       outlet: { x: number; y: number; mouth: XY };
@@ -106,15 +121,33 @@ export interface Rig {
   };
 }
 
+/** The shells the art kit draws; Campus and Conglomerate use the Megacorp shell (design §12.2). */
+export type BuildingStateKey = "garage" | "office" | "tower" | "skyscraper" | "megacorp";
+
+export interface StateRig {
+  employees: [number, number];
+  sign: string;
+  doors: string;
+  /** The reserve's art for this state (design §12.2). */
+  vault: { tile: string; x: number; y: number };
+  /** Extra roof tiles standing on the parapet line. */
+  roof: { tile: string; x: number }[];
+  /** Surroundings set (RIG.building.surroundings). */
+  surroundings: string;
+}
+
 export const RIG = (atlas as unknown as { meta: { rig: Rig } }).meta.rig;
 export const G = RIG.building.geometry;
+/** Employee frame size (art/sprites.mjs; the boss is bigger). */
+export const CHAR = RIG.character;
 export const TIER_KEYS = ["directors", "managers", "associates", "interns"] as const;
 export const roomOf = (tier: TierIndex): RoomAnchor => RIG.building.rooms[TIER_KEYS[tier]];
 
 /** Ground below the basement slab, drawn as earth. */
 export const GROUND_H = 10;
 
-export type BandKind = "roof" | "penthouse" | "floor" | "lobby" | "street" | "basement";
+/** `fold`: a run of folded floors (design §4.3), drawn as one floor-tall band the core passes through. */
+export type BandKind = "roof" | "penthouse" | "floor" | "fold" | "lobby" | "street" | "basement";
 
 export interface Band {
   key: string;
@@ -127,6 +160,8 @@ export interface Band {
   interior: number;
   /** For tier floors: index into `layout.floors`. */
   floor?: number;
+  /** For folds: index into `layout.folds`. */
+  fold?: number;
   tier?: TierIndex;
 }
 
@@ -137,8 +172,11 @@ export interface BandStack {
   byKey: Map<string, Band>;
 }
 
-/** The bands top to bottom (design §4.3): roof, penthouse, tier floors, lobby, street, basement. */
-export function bandsOf(layout: Pick<TowerLayout, "floors">): BandStack {
+/**
+ * The bands top to bottom (design §4.3): roof, penthouse, tier floors (with a fold band where
+ * floors are folded), lobby, street, basement.
+ */
+export function bandsOf(layout: Pick<TowerLayout, "floors"> & { folds?: TowerLayout["folds"] }): BandStack {
   const bands: Band[] = [];
   let y = 0;
   const add = (b: Omit<Band, "y">) => {
@@ -147,7 +185,14 @@ export function bandsOf(layout: Pick<TowerLayout, "floors">): BandStack {
   };
   add({ key: "roof", kind: "roof", h: G.roof.h, interior: G.roof.h });
   add({ key: "penthouse", kind: "penthouse", h: G.penthouse.h + G.floor.slab, interior: G.penthouse.h });
-  layout.floors.forEach((f, i) => add({ key: f.key, kind: "floor", h: G.floor.pitch, interior: G.floor.h, floor: i, tier: f.tier }));
+  const folds = layout.folds ?? [];
+  const fold = (j: number) => add({ key: folds[j]!.key, kind: "fold", h: G.floor.pitch, interior: G.floor.h, fold: j, tier: folds[j]!.tier });
+  let j = 0;
+  layout.floors.forEach((f, i) => {
+    for (; j < folds.length && folds[j]!.before <= i; j++) fold(j);
+    add({ key: f.key, kind: "floor", h: G.floor.pitch, interior: G.floor.h, floor: i, tier: f.tier });
+  });
+  for (; j < folds.length; j++) fold(j);
   add({ key: "lobby", kind: "lobby", h: G.lobby.h + G.floor.slab, interior: G.lobby.h });
   add({ key: "street", kind: "street", h: G.street.h, interior: G.street.h });
   add({ key: "basement", kind: "basement", h: G.basement.h + G.floor.slab, interior: G.basement.h });

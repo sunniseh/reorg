@@ -3,16 +3,48 @@
  * Day = task id. The countdown ticks every second from the corrected clock.
  */
 import type { TowerLayout } from "@reorg/core";
-import { countdown, payout, plural, TIER_PLURALS } from "../format";
+import { count, countdown, payout, plural, shortName, TIER_PLURALS } from "../format";
 import { vaultModel } from "../render/derive";
 import { effectiveStatus, nsToMs, type Snapshot } from "../state/types";
 import { h, render, setText } from "./dom";
+import { icon, portrait } from "./sprites";
 
-export const PREVIEW_SIZES = [8, 24, 60] as const;
+/**
+ * Preview sizes in holders (~10% are visitors), one per building state (design §12.2): Garage,
+ * Small office, Office tower, Skyscraper, Megacorp, Campus, Conglomerate.
+ */
+export const PREVIEW_SIZES = [8, 24, 60, 400, 2000, 10_000, 50_000] as const;
+
+const STATE_NAMES = ["Garage startup", "Small office", "Office tower", "Skyscraper", "Megacorp", "Campus", "Conglomerate"] as const;
+
+/** Short button label: 400, 2k, 10k, 50k. */
+export function sizeLabel(n: number): string {
+  return n >= 1000 ? `${n / 1000}k` : String(n);
+}
+
+function sizeTitle(n: number): string {
+  const i = PREVIEW_SIZES.indexOf(n as (typeof PREVIEW_SIZES)[number]);
+  return `Preview ${i >= 0 ? `${STATE_NAMES[i]}: ` : ""}${count(n)} holders${n >= 10_000 ? " (takes a few seconds to open)" : ""}`;
+}
 
 export interface TopBarHandlers {
   preview(on: boolean, size: number): void;
   goToDesk(): void;
+  follow(on: boolean): void;
+  /** Opens the employee list (W-18). */
+  staff(): void;
+  /** Opens the badge-in (login) dialog. */
+  badgeIn(): void;
+  /** Opens the player's own card and centers the camera on them. */
+  myCard(): void;
+}
+
+/** The badged-in player as the top bar shows them: name and badge photo. */
+export interface TopBarYou {
+  wallet: string;
+  tier: number | null;
+  visitor: boolean;
+  label: string;
 }
 
 export interface TopBarModel {
@@ -24,6 +56,12 @@ export interface TopBarModel {
   standalone: boolean;
   previewSize: number;
   badged: boolean;
+  /** The badged-in player, or null. */
+  you: TopBarYou | null;
+  /** Badging in is possible here (a wallet is configured, not the live deployment's preview). */
+  canBadgeIn: boolean;
+  /** Follow me is on. */
+  following: boolean;
 }
 
 export function statusText(snap: Snapshot, now: number): { text: string; cls: string } {
@@ -47,16 +85,23 @@ export class RgTopBar {
   private readonly previewBtn = h("button", { class: "btn small wide-only", "aria-pressed": "false" }, "Preview growth");
   private readonly sizes = h("span", { class: "preview-sizes wide-only", role: "group", "aria-label": "Preview size" });
   private readonly deskBtn = h("button", { class: "btn small" }, "Go to my desk");
+  private readonly followBtn = h("button", { class: "btn small wide-only", "aria-pressed": "false" }, "Follow me");
+  /** The employee list (design §3, §11): the keyboard and screen-reader path to every card. */
+  readonly staffBtn = h("button", { class: "btn small wide-only", "aria-haspopup": "dialog", "aria-expanded": "false" }, "Staff list");
   private readonly popover = h("div", { class: "popover surface", role: "dialog", "aria-label": "Company", hidden: true });
+  /** Login: Badge in when nobody is, your ID badge (photo and name) once you are. */
+  private readonly badgeInBtn = h("button", { class: "btn primary small badge-in", "aria-haspopup": "dialog" }, "Badge in");
+  private readonly idBtn = h("button", { class: "btn small id-chip", hidden: true });
   private model: TopBarModel | null = null;
   private sizesKey = "";
   private popoverKey = "";
+  private idKey = "";
 
   constructor(private readonly handlers: TopBarHandlers) {
     this.el = h(
       "header",
       { class: "topbar" },
-      h("span", { class: "mark", "aria-label": "REORG" }, "REORG", h("span", {}, ".")),
+      h("span", { class: "mark", role: "img", "aria-label": "REORG" }, icon("lobby.logo", { scale: 2, class: "logo" })),
       h("span", { class: "seg" }, this.day),
       h("span", { class: "seg grow" }, this.status),
       h("span", { class: "sep wide-only" }),
@@ -67,8 +112,14 @@ export class RgTopBar {
       this.sizes,
       this.previewBtn,
       this.deskBtn,
+      this.followBtn,
+      this.staffBtn,
       this.headcount,
+      this.badgeInBtn,
+      this.idBtn,
     );
+    this.badgeInBtn.addEventListener("click", () => handlers.badgeIn());
+    this.idBtn.addEventListener("click", () => handlers.myCard());
     this.headcount.addEventListener("click", (e) => {
       e.stopPropagation();
       this.togglePopover();
@@ -78,11 +129,17 @@ export class RgTopBar {
       if (m) handlers.preview(!m.preview, m.previewSize);
     });
     this.deskBtn.addEventListener("click", () => handlers.goToDesk());
+    this.followBtn.addEventListener("click", () => handlers.follow(!this.model?.following));
+    this.staffBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      handlers.staff();
+    });
     document.addEventListener("click", (e) => {
       if (!this.popover.hidden && !this.popover.contains(e.target as Node)) this.togglePopover(false);
     });
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && !this.popover.hidden) {
+      if (e.key === "Escape" && !this.popover.hidden && !e.defaultPrevented) {
+        e.preventDefault();
         this.togglePopover(false);
         this.headcount.focus();
       }
@@ -106,12 +163,13 @@ export class RgTopBar {
     const v = vaultModel(snap.treasury, snap.config.reserve_low);
     render(
       this.reserve,
+      icon("prop.coin.0", { scale: 2 }),
       h("span", { class: "wide-only" }, "Reserve "),
       h("b", {}, payout(v.reserve, { digits: 1 })),
       h("span", { class: "muted wide-only" }, v.noCosts ? " · no operating costs" : ` · runway ${plural(v.runway ?? 0, "task")}`),
       v.low ? h("span", { class: "chip bad" }, "LOW") : null,
     );
-    render(this.headcount, String(layout.employees), h("span", { class: "long" }, layout.employees === 1 ? " employee" : " employees"));
+    render(this.headcount, count(layout.employees), h("span", { class: "long" }, layout.employees === 1 ? " employee" : " employees"));
     this.headcount.setAttribute("aria-label", `${plural(layout.employees, "employee")}: company details`);
     const bots = layout.characters.filter((c) => c.crowd).length;
     this.crowd.hidden = m.preview || bots === 0;
@@ -127,13 +185,25 @@ export class RgTopBar {
       render(
       this.sizes,
       ...PREVIEW_SIZES.map((n) => {
-        const b = h("button", { class: "btn small", "aria-pressed": String(m.previewSize === n), title: `Preview with ${n} holders` }, String(n));
+        const b = h("button", { class: "btn small", "aria-pressed": String(m.previewSize === n), title: sizeTitle(n), "aria-label": sizeTitle(n) }, sizeLabel(n));
         b.addEventListener("click", () => this.handlers.preview(true, n));
         return b;
       }),
       );
     }
+    this.badgeInBtn.hidden = !!m.you || !m.canBadgeIn;
+    this.idBtn.hidden = !m.you;
+    const idKey = m.you ? `${m.you.wallet}|${m.you.tier}|${m.you.visitor}|${m.you.label}` : "";
+    if (m.you && idKey !== this.idKey) {
+      const y = m.you;
+      render(this.idBtn, portrait(y.wallet, { tier: y.tier, kind: y.visitor ? "visitor" : "employee", scale: 2 }), h("span", { class: "long" }, shortName(y.wallet)));
+      this.idBtn.title = `${y.wallet} · ${y.label}`;
+      this.idBtn.setAttribute("aria-label", `Badged in as ${y.wallet}: open your card`);
+    }
+    this.idKey = idKey;
     this.deskBtn.hidden = !m.badged;
+    this.followBtn.hidden = !m.badged;
+    this.followBtn.setAttribute("aria-pressed", String(m.following));
     this.tick(now);
     if (!this.popover.hidden) this.renderPopover(m);
   }
@@ -150,7 +220,7 @@ export class RgTopBar {
     const { snap, layout } = m;
     const v = vaultModel(snap.treasury, snap.config.reserve_low);
     const bots = layout.characters.filter((c) => c.crowd).length;
-    const key = [layout.tierCounts.join(","), layout.bench.length, layout.visitors.length, v.reserve, v.runway, m.preview, m.previewSize, bots, m.standalone].join("|");
+    const key = [layout.tierCounts.join(","), layout.benchCount, layout.visitorCount, v.reserve, v.runway, m.preview, m.previewSize, bots, m.standalone].join("|");
     if (key === this.popoverKey && this.popover.childElementCount) return;
     this.popoverKey = key;
     const row = (k: string, val: string | HTMLElement) => h("tr", {}, h("td", {}, k), h("td", {}, val));
@@ -160,9 +230,9 @@ export class RgTopBar {
       h(
         "table",
         {},
-        ...TIER_PLURALS.map((t, i) => row(t, String(layout.tierCounts[i]))),
-        row("Laid off", String(layout.bench.length)),
-        row("Visitors", String(layout.visitors.length)),
+        ...TIER_PLURALS.map((t, i) => row(t, count(layout.tierCounts[i]!))),
+        row("Laid off", count(layout.benchCount)),
+        row("Visitors", count(layout.visitorCount)),
         row("Reserve", payout(v.reserve, { digits: 2 })),
         row("Runway", v.noCosts ? "No operating costs" : plural(v.runway ?? 0, "task")),
         m.preview ? row("Data", h("span", { class: "chip sim" }, "SIMULATED PREVIEW")) : bots ? row("Crowd", h("span", { class: "chip sim" }, `simulated (${plural(bots, "bot")})`)) : null,
@@ -171,6 +241,15 @@ export class RgTopBar {
       h(
         "div",
         { class: "compact-only", style: "display:flex;gap:8px;flex-wrap:wrap;margin-top:10px" },
+        (() => {
+          const b = h("button", { class: "btn small", "aria-haspopup": "dialog" }, "Staff list");
+          b.addEventListener("click", (e) => {
+            e.stopPropagation();
+            this.togglePopover(false);
+            this.handlers.staff();
+          });
+          return b;
+        })(),
         m.standalone
           ? null
           : (() => {
@@ -180,7 +259,7 @@ export class RgTopBar {
             })(),
         ...(m.preview
           ? PREVIEW_SIZES.map((n) => {
-              const b = h("button", { class: "btn small", "aria-pressed": String(m.previewSize === n) }, `${n}`);
+              const b = h("button", { class: "btn small", "aria-pressed": String(m.previewSize === n), title: sizeTitle(n), "aria-label": sizeTitle(n) }, sizeLabel(n));
               b.addEventListener("click", () => this.handlers.preview(true, n));
               return b;
             })

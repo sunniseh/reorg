@@ -7,11 +7,12 @@
  *
  * Movement only implies true things (design §1.3): while a task is open, an employee who has not
  * submitted stays at the desk; results-pending keeps everyone seated; the laid off stay on the
- * bench and visitors in the queue. Pure: no Pixi.
+ * bench (P1: standing up to pace beside it now and then) and visitors in the queue. Pure: no Pixi.
  */
 import type { TaskStatus } from "@reorg/core";
 import { ANIM, Plan, sample, seatPose, standPose, type Anim, type Pose, type Track } from "../agents/track";
 import { CLIMB_MS, POINTS, STAIRS, WALK, type Nav } from "../nav";
+import { RIG } from "../render/geometry";
 import { hash32, unit } from "../state/rng";
 
 /** Slot length (design §5.6): a client display constant, not contract config. */
@@ -65,12 +66,13 @@ export interface LifeWorld {
 /** What the state allows over a slot (design §5.7). */
 export type Mode = "free" | "desk" | "bench" | "queue" | "away";
 
-export type ActivityKind = "stay" | "cooler" | "coffee" | "window" | "printer" | "chat" | "trip";
+export type ActivityKind = "stay" | "cooler" | "coffee" | "window" | "printer" | "chat" | "trip" | "pace";
 
 export const ALLOWED: Record<Mode, readonly ActivityKind[]> = {
   free: ["stay", "cooler", "coffee", "window", "printer", "chat", "trip"],
   desk: ["stay"],
-  bench: ["stay"],
+  /** Laid off: the bench, or pacing beside it (design §5.7, P1). Never off the sidewalk. */
+  bench: ["stay", "pace"],
   queue: ["stay"],
   away: ["stay"],
 };
@@ -84,7 +86,22 @@ const WEIGHTS: readonly [ActivityKind, number][] = [
   ["printer", 6],
   ["chat", 15],
   ["trip", 9],
+  // Only the bench draws it: about one slot in three, a laid-off employee paces (46 : 24).
+  ["pace", 24],
 ];
+
+const S = RIG.building.street;
+/** The bench tile is 52 px wide; its two left seats pace on the left, the two right ones on the right. */
+const BENCH_W = 52;
+const BENCH_MID = S.bench.x + BENCH_W / 2;
+/** Pacing stays beside the bench, on the sidewalk (feet x ranges, sprite px). */
+export const PACE = {
+  left: [S.bench.x - 56, S.bench.x - 10] as const,
+  /** Past the box and the lamp, short of the visitors' queue. */
+  right: [S.bench.x + BENCH_W + 12, S.queue.spots[S.queue.spots.length - 1]! - 16] as const,
+  /** How far one leg of pacing goes. */
+  stride: [12, 26] as const,
+};
 
 export interface Activity {
   kind: ActivityKind;
@@ -170,6 +187,7 @@ export class Life {
   activity(a: LifeAgent, slot: number): Activity {
     const t0 = slotStart(slot);
     const kind = this.draw(a, slot, this.mode(a, t0, t0 + SLOT_MS));
+    if (a.home.kind === "bench") return kind === "pace" && !this.world.reduced ? { kind: "pace" } : { kind: "stay" };
     if (kind === "stay" || a.home.kind !== "seat") return { kind: "stay" };
     if (kind === "chat") {
       const p = this.pairing(a.home.band, slot).get(a.wallet);
@@ -201,6 +219,7 @@ export class Life {
           return this.amenityTrack(a, act.kind, slot)!;
       }
     }
+    if (home.kind === "bench" && act.kind === "pace") return this.paceTrack(a, slot);
     const phase = unit(a.wallet, "phase") * 4;
     return new Plan(this.world.nav, t0, this.home(a, t0), null, phase).hold(SLOT_MS, this.world.reduced ? this.home(a, t0).frame : homeAnim(home)).build();
   }
@@ -323,7 +342,7 @@ export class Life {
     if (a.home.kind !== "seat") return null;
     const nav = this.world.nav;
     const here = nav.band(a.home.band);
-    const options = nav.bands.filter((b) => b.stairs && b.key !== here.key && Math.abs(b.level - here.level) <= MAX_TRIP_FLIGHTS);
+    const options = nav.bands.filter((b) => b.stairs && b.kind !== "fold" && b.key !== here.key && Math.abs(b.level - here.level) <= MAX_TRIP_FLIGHTS);
     if (options.length === 0) return null;
     return options[Math.floor(unit(a.wallet, slot, "trip") * options.length)]!.key;
   }
@@ -367,6 +386,36 @@ export class Life {
       .sit()
       .until(t0 + SLOT_MS, "emp.sit.front")
       .build();
+  }
+
+  /** Pacing beside the bench (P1): stand up, walk a few steps along the sidewalk and back twice, sit down. */
+  private paceTrack(a: LifeAgent, slot: number): Track {
+    const h = a.home as Extract<Home, { kind: "bench" }>;
+    const nav = this.world.nav;
+    const t0 = slotStart(slot);
+    const seat = standPose(nav, "street", h.x, "emp.bench.0");
+    const u = (k: string) => unit(a.wallet, slot, k);
+    // The two left seats pace on the left of the bench, the two right ones toward the lamp.
+    const [lo, hi] = h.x < BENCH_MID ? PACE.left : PACE.right;
+    const near = h.x < BENCH_MID ? hi : lo;
+    const x1 = Math.round(near + (h.x < BENCH_MID ? -1 : 1) * u("p1") * 10);
+    const stride = PACE.stride[0] + u("p2") * (PACE.stride[1] - PACE.stride[0]);
+    const x2 = Math.round(Math.min(hi, Math.max(lo, x1 + (h.x < BENCH_MID ? -stride : stride))));
+    const end = t0 + SLOT_MS - SLOT_MARGIN_MS;
+    const p = new Plan(nav, t0, seat, null, unit(a.wallet, "phase") * 4);
+    const lead = 1500 + Math.floor(u("lead") * 5000);
+    p.hold(lead, ANIM.bench).place(standPose(nav, "street", h.x)).hold(300, "emp.stand.front");
+    p.go({ band: "street", x: x1 }).hold(1200 + u("w1") * 1200, "emp.stand.side");
+    // Back and forth while the slot allows, then back to the seat before the margin.
+    let at = x1;
+    for (const [i, x] of [x2, x1, x2].entries()) {
+      const hold = 900 + u(`w${i + 2}`) * 900;
+      if (p.t + walkMs(x - at) + hold + walkMs(x - h.x) + 120 > end) break;
+      p.go({ band: "street", x }).hold(hold, "emp.stand.side");
+      at = x;
+    }
+    p.go({ band: "street", x: h.x }).hold(120, "emp.stand.front", { mirror: false }).place(seat);
+    return p.until(t0 + SLOT_MS, ANIM.bench).build();
   }
 }
 

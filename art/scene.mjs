@@ -11,6 +11,7 @@ import { gridToSvg } from "./lib.mjs";
 import { C, SPRITE } from "./palette.mjs";
 
 const B = RIG.building;
+const CH = RIG.character;
 const G = B.geometry;
 const FONT = "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
 const esc = (s) => String(s).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
@@ -87,7 +88,7 @@ export function buildingSvg(m, { px = 2, margin = 40, sky = true, plaques = true
     const { grid, top } = bakeCharacter(frame, lk);
     put(grid, sx, bottom - FRAMES[frame].h + top, { mirror });
   };
-  const shadow = (sx, bottom, w = 12) => rect(sx + (16 - w) / 2, bottom - 1, w, 1, C.bg, `opacity="0.45"`);
+  const shadow = (sx, bottom, w = CH.w - 2) => rect(sx + (CH.w - w) / 2, bottom - 1, w, 1, C.bg, `opacity="0.45"`);
 
   // --- Backdrop: sky, skyline at street level, ground below.
   const streetB = band("street");
@@ -139,8 +140,8 @@ export function buildingSvg(m, { px = 2, margin = 40, sky = true, plaques = true
         shadow(a.x, bottom);
         char(a.frame, a.x, bottom, a.look, { mirror: a.mirror });
         if (a.paper) {
-          const hand = RIG.frames[a.frame]?.hand ?? [6, 18];
-          const hx = a.mirror ? a.x + 15 - hand[0] - 4 : a.x + hand[0] - 1;
+          const hand = RIG.frames[a.frame]?.hand ?? [5, 13];
+          const hx = a.mirror ? a.x + CH.w - 1 - hand[0] - 4 : a.x + hand[0] - 1;
           put(bake("prop.paper"), hx, bottom - FRAMES[a.frame].h + hand[1] - 3);
         }
       });
@@ -214,7 +215,7 @@ export function buildingSvg(m, { px = 2, margin = 40, sky = true, plaques = true
         const side = pose === "type" || !seated;
         const exec = R.chair === "exec";
         const ca = RIG.attach[`chair${exec ? "Exec" : ""}${side ? "Side" : "Front"}`];
-        if (pose !== "laidoff") tile(`prop.chair.${exec ? "exec." : ""}${side ? "side" : "front"}`, seatX + ca[0], deskTop - 20 + ca[1]);
+        if (pose !== "laidoff") tile(`prop.chair.${exec ? "exec." : ""}${side ? "side" : "front"}`, seatX + ca[0], deskTop - CH.sit + ca[1]);
         if (seated) char(frame, seatX, deskTop, d.look);
         tile(`room.${tier}.front`, rx, b.y);
         tile(`prop.${R.screen}.${pose === "type" ? "on" : "off"}`, rx + R.monitor[0], b.y + R.monitor[1]);
@@ -229,7 +230,7 @@ export function buildingSvg(m, { px = 2, margin = 40, sky = true, plaques = true
         if (d.pay) effects.push(() => text(rx + R.dot[0] + 3, b.y + R.dot[1] - 3, `+${d.pay}`, { size: 4.5 * px, weight: 700, fill: C.good, anchor: "middle" }));
         if (d.you)
           labels.push(() => {
-            out.push(`<rect x="${X(seatX - 2)}" y="${Y(deskTop - 22)}" width="${20 * px}" height="${23 * px}" fill="none" stroke="${C.accent}" stroke-width="${px}" rx="${px}"/>`);
+            out.push(`<rect x="${X(seatX - 2)}" y="${Y(deskTop - CH.sit - 2)}" width="${(CH.w + 4) * px}" height="${(CH.sit + 3) * px}" fill="none" stroke="${C.accent}" stroke-width="${px}" rx="${px}"/>`);
             chip(rx + R.plate[0] - 6, b.y + R.plate[1] - 3, "You", { fill: C.accent, ink: C.bg });
           });
       }
@@ -287,9 +288,9 @@ export function buildingSvg(m, { px = 2, margin = 40, sky = true, plaques = true
     tile(S.bench.tile, S.bench.x, streetB.y + S.bench.y);
     const sitters = (m.bench ?? []).slice(0, 4);
     sitters.forEach((lk, i) => char(i % 2 ? "emp.bench.1" : "emp.bench.0", S.bench.seats[i], ground, lk));
-    if (sitters.length) tile("prop.box.full", S.bench.seats[sitters.length - 1] + 15, streetB.y + S.bench.y + 4 - 9);
+    if (sitters.length) tile("prop.box.full", S.bench.seats[sitters.length - 1] + CH.w - 1, streetB.y + S.bench.y + 4 - 9);
     tile(S.lamp.tile, S.lamp.x, streetB.y + S.lamp.y);
-    for (let i = 0; i < Math.min(5, m.visitors ?? 0); i++) put(bake(i % 2 ? "emp.visitor.1" : "emp.visitor"), S.queue.spots[i], ground - 26);
+    for (let i = 0; i < Math.min(5, m.visitors ?? 0); i++) put(bake(i % 2 ? "emp.visitor.1" : "emp.visitor"), S.queue.spots[i], ground - CH.stand);
     if ((m.visitors ?? 0) > 5) labels.push(() => text(S.queue.spots[4] - 3, ground - 13, `+${m.visitors - 5}`, { size: 11, anchor: "end" }));
     aisle("street", ground);
   }
@@ -366,10 +367,10 @@ export function buildingSvg(m, { px = 2, margin = 40, sky = true, plaques = true
 export function sampleModel(state = "office") {
   const S = (i, pose = "sit", extra = {}) => ({ look: look(i), pose, ...extra });
   const tiers = {
-    directors: [S(3, "cheer", { dot: "pass", streak: 7, pay: "0.90" }), S(6, "sit", { dot: "pass", streak: 3 }), S(12, "away", { dot: "pass" }), null],
-    managers: [S(1, "cheer", { dot: "pass", pay: "0.45" }), S(9, "slump", { dot: "miss" }), S(5, "sit", { dot: "pass", streak: 3 }), S(14, "away", { dot: "pass" }), S(2, "sit", { isNew: true }), null],
-    associates: [S(7, "sit", { dot: "pass", you: true, streak: 4 }), S(4, "laidoff"), S(10, "slump", { dot: "miss" }), S(15, "cheer", { dot: "pass", pay: "0.21" }), S(0, "sit", { dot: "pass" }), S(11, "away", { dot: "pass" }), S(13, "sit"), null],
-    interns: [S(8, "sit", { dot: "pass" }), S(16, "cheer", { dot: "pass", pay: "0.05" }), S(18, "slump", { dot: "miss" }), S(19, "away"), S(20, "sit", { isNew: true }), S(21, "sit", { dot: "pass" }), null, S(22, "sit"), S(23, "away", { dot: "pass" }), null, null, null],
+    directors: [S(3, "cheer", { dot: "pass", streak: 7, pay: "0.90" }), S(6, "sit", { dot: "pass", streak: 3 }), S(12, "away", { dot: "pass" }), S(27, "sit", { dot: "pass" }), null, null],
+    managers: [S(1, "cheer", { dot: "pass", pay: "0.45" }), S(9, "slump", { dot: "miss" }), S(5, "sit", { dot: "pass", streak: 3 }), S(14, "away", { dot: "pass" }), S(2, "sit", { isNew: true }), S(28, "sit", { dot: "pass" }), S(29, "cheer", { dot: "pass", pay: "0.45" }), null, null],
+    associates: [S(7, "sit", { dot: "pass", you: true, streak: 4 }), S(4, "laidoff"), S(10, "slump", { dot: "miss" }), S(15, "cheer", { dot: "pass", pay: "0.21" }), S(0, "sit", { dot: "pass" }), S(11, "away", { dot: "pass" }), S(13, "sit"), S(30, "sit", { dot: "pass" }), S(31, "slump", { dot: "miss" }), S(32, "sit"), null, null],
+    interns: [S(8, "sit", { dot: "pass" }), S(16, "cheer", { dot: "pass", pay: "0.05" }), S(18, "slump", { dot: "miss" }), S(19, "away"), S(20, "sit", { isNew: true }), S(21, "sit", { dot: "pass" }), null, S(22, "sit"), S(23, "away", { dot: "pass" }), S(33, "sit", { dot: "pass" }), S(34, "cheer", { dot: "pass", pay: "0.05" }), S(35, "sit"), S(36, "sit", { dot: "pass" }), null, S(37, "slump", { dot: "miss" }), S(38, "sit"), null, null],
   };
   if (state === "garage") {
     tiers.directors = tiers.directors.slice(0, 1);

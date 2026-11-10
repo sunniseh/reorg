@@ -1,11 +1,12 @@
 // Boss service entry point: `npm run boss` (env vars: see .env.example). Wires the store, the
 // NEAR adapter, flavor text, the scheduler and the HTTP API; Ctrl-C stops cleanly.
-import { NearChainAdapter, NearFaucet } from "@reorg/chain-near";
+import { NearChainAdapter, NearFaucet, NearReader } from "@reorg/chain-near";
 import { createApi } from "./api";
 import { loadEnv } from "./env";
 import { NearAiFlavor, TemplateFlavor } from "./flavor";
 import { Scheduler, type Logger } from "./scheduler";
 import { SqliteStore } from "./store";
+import { TowerService } from "./tower";
 
 const log: Logger = {
   info: (msg, fields) => console.log(JSON.stringify({ t: new Date().toISOString(), level: "info", msg, ...fields })),
@@ -41,7 +42,16 @@ async function main(): Promise<void> {
         perIpPerHour: env.faucet.perIpPerHour,
       }
     : undefined;
-  const api = createApi({ store, health: () => scheduler.health(), origins: env.origins, network: env.network, ...(faucet ? { faucet } : {}) });
+  // Big companies: one chain read per refresh serves every client's tower (tower.ts).
+  const tower =
+    env.towerRefreshMs > 0
+      ? new TowerService(new NearReader({ rpcUrl: env.rpcUrl, ...(env.rpcApiKey ? { rpcHeaders: { "x-api-key": env.rpcApiKey } } : {}), contractId: env.contractId }), {
+          refreshMs: env.towerRefreshMs,
+          log,
+        })
+      : null;
+  tower?.start();
+  const api = createApi({ store, health: () => scheduler.health(), origins: env.origins, network: env.network, ...(faucet ? { faucet } : {}), ...(tower ? { tower } : {}) });
   api.listen(env.port, () =>
     log.info("boss listening", {
       port: env.port,
@@ -58,6 +68,7 @@ async function main(): Promise<void> {
     stopping = true;
     log.info("shutting down", { signal });
     scheduler.stop();
+    tower?.stop();
   };
   process.on("SIGINT", () => shutdown("SIGINT"));
   process.on("SIGTERM", () => shutdown("SIGTERM"));

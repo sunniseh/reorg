@@ -33,6 +33,8 @@ export const C = {
   glass: "#2b5876",
   street: "#132339",
   ground: "#0d1c30",
+  // Day and night (W-15, Later): the sky by day; at night it is the Sky value above.
+  skyDay: "#1b3d63",
 };
 
 // Sprite-only colors: shades of tokens and the few props that need their own hue.

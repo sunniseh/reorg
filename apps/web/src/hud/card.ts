@@ -4,8 +4,25 @@
  * Crowd accounts carry a SIMULATED tag (design §12.5).
  */
 import type { TowerCharacter } from "@reorg/core";
+import type { EmployeeView } from "@reorg/core";
 import { payout, plural, share, shortName, TIER_TITLES } from "../format";
 import { h, render } from "./dom";
+import { icon, portrait } from "./sprites";
+
+/** The last results as the desk's pass and miss dots (oldest first), text in the label. */
+export function recentDots(results: EmployeeView["recent"]): HTMLElement {
+  return h(
+    "span",
+    { class: "recent", role: "img", "aria-label": results.map((r) => `day ${r.task_id}: ${r.result}`).join(", ") },
+    ...[...results].reverse().map((r) =>
+      r.result === "pass"
+        ? h("span", { class: "dot pass", title: `Day ${r.task_id}: pass` }, icon("fx.dot.pass"))
+        : r.result === "pending"
+          ? h("span", { class: "dot pending", title: `Day ${r.task_id}: pending` })
+          : h("span", { class: `dot ${r.result}`, title: `Day ${r.task_id}: ${r.result}` }, icon("fx.dot.miss")),
+    ),
+  );
+}
 
 const STATUS: Record<TowerCharacter["status"], string> = {
   new_hire: "New hire",
@@ -26,7 +43,11 @@ export class RgCard {
 
   constructor(private readonly onClose: () => void) {
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && this.wallet) this.close();
+      if (e.key === "Escape" && this.wallet && !e.defaultPrevented) {
+        // Handled: the staff list behind the card stays open for this Escape.
+        e.preventDefault();
+        this.close();
+      }
     });
   }
 
@@ -36,11 +57,12 @@ export class RgCard {
 
   private renderedKey = "";
 
-  open(c: TowerCharacter, simulated: boolean, layoffAfter: number): void {
+  /** `you`: this is the badged-in player's own card (the emphasized variant, design §15.2). */
+  open(c: TowerCharacter, simulated: boolean, layoffAfter: number, you = false): void {
     const first = this.wallet !== c.wallet;
     // Re-render only when something shown changed, so keyboard focus survives snapshots.
     const e0 = c.employee;
-    const key = [c.wallet, c.status, c.tier, c.sharePpm, c.streak, c.missesInRow, c.layoffTasksLeft, c.result, c.submitted, c.pay, e0?.total_earned, e0?.badges, JSON.stringify(e0?.recent ?? []), simulated].join("|");
+    const key = [c.wallet, c.status, c.tier, c.sharePpm, c.streak, c.missesInRow, c.layoffTasksLeft, c.result, c.submitted, c.pay, e0?.total_earned, e0?.badges, JSON.stringify(e0?.recent ?? []), simulated, you].join("|");
     if (!first && key === this.renderedKey && !this.el.hidden) return;
     this.renderedKey = key;
     this.wallet = c.wallet;
@@ -49,11 +71,23 @@ export class RgCard {
     const closeBtn = h("button", { class: "btn icon small close", "aria-label": "Close" }, "✕");
     closeBtn.addEventListener("click", () => this.close());
     const results = e?.recent ?? [];
+    this.el.classList.toggle("you", you);
+    this.el.setAttribute("aria-label", you ? "Your employee card" : "Employee card");
     render(
       this.el,
       closeBtn,
-      h("h2", {}, c.wallet),
-      h("div", { class: "title" }, `${titleOf(c)} · ${STATUS[c.status]}`),
+      h(
+        "div",
+        { class: "id" },
+        portrait(c.wallet, { tier: c.tier, kind: c.status === "visitor" ? "visitor" : "employee", scale: 3 }),
+        h(
+          "div",
+          { class: "id-text" },
+          h("h2", { title: c.wallet }, shortName(c.wallet), you ? h("span", { class: "chip accent" }, "You") : null),
+          h("div", { class: "title" }, `${titleOf(c)} · ${STATUS[c.status]}`),
+          shortName(c.wallet) !== c.wallet ? h("div", { class: "account" }, c.wallet) : null,
+        ),
+      ),
       h(
         "div",
         { class: "tags" },
@@ -75,19 +109,10 @@ export class RgCard {
         h("dt", {}, "Total earned"),
         h("dd", {}, payout(e?.total_earned ?? "0")),
         c.pay > 0n ? h("dt", {}, "Today’s pay") : null,
-        c.pay > 0n ? h("dd", { class: "good" }, payout(c.pay)) : null,
+        c.pay > 0n ? h("dd", { class: "good" }, icon("prop.coin.0"), " ", payout(c.pay)) : null,
       ),
       results.length
-        ? h(
-            "div",
-            {},
-            h("span", { class: "muted" }, "Last 7 days "),
-            h(
-              "span",
-              { class: "recent", style: "display:inline-flex;gap:3px;vertical-align:middle", role: "img", "aria-label": results.map((r) => `day ${r.task_id}: ${r.result}`).join(", ") },
-              ...[...results].reverse().map((r) => h("span", { class: `dot ${r.result}`, title: `Day ${r.task_id}: ${r.result}` }, r.result === "pass" ? "✓" : r.result === "pending" ? "·" : "✕")),
-            ),
-          )
+        ? h("div", { class: "last7" }, h("span", { class: "label" }, "Last 7 days"), recentDots(results))
         : h("div", { class: "muted" }, c.status === "visitor" ? "Holds too little to be on payroll." : "No results yet."),
     );
     this.el.hidden = false;

@@ -42,9 +42,9 @@ Title is based on percentage of total token supply held at the time of your subm
 | Director | at least 3% of supply | 35% |
 | Manager | at least 1% | 30% |
 | Associate | at least 0.25% | 20% |
-| Intern | at least 0.05% | 15% |
+| Intern | at least 0.001% | 15% |
 
-Holders below 0.05% are visitors, not employees. All thresholds are contract parameters. If a tier has no passers on a given day, its bucket goes to the reserve.
+Holders below 0.001% are visitors, not employees. All thresholds are contract parameters. If a tier has no passers on a given day, its bucket goes to the reserve.
 
 ## 4. Tasks
 
@@ -266,7 +266,7 @@ Directors sit highest and Interns lowest among the office floors, with the vault
 
 ### 9.3 Growth with holders
 
-The tower scales with the number of employees. At the default thresholds the company cannot exceed 2,000 employees (100% of supply divided by 0.05%), and Directors cannot exceed 33. Lower the thresholds to raise the ceiling. Visitors below the minimum are not counted and appear as a crowd in the lobby.
+The tower scales with the number of employees. At the default thresholds the company cannot exceed 100,000 employees (100% of supply divided by 0.001%), and Directors cannot exceed 33. Thresholds are in parts per million, so the ceiling can go to 1,000,000. Visitors below the minimum are not counted and appear as a crowd in the lobby. Past 40 floors per tier the headquarters folds the remaining floors into one band with their exact counts; those floors work in annex towers beside it (design spec §4.3, §12).
 
 | Stage | Employees | What the player sees |
 | --- | --- | --- |
@@ -274,7 +274,9 @@ The tower scales with the number of employees. At the default thresholds the com
 | Small office | 11 to 50 | A few floors per tier; a construction crane adds a floor when a tier's desks fill |
 | Office tower | 51 to 250 | A tall tower, the camera follows your character, elevators visible |
 | Skyscraper | 251 to 1,000 | Distant floors drawn as color strips showing the day's pass rate; only visible floors render in detail |
-| Megacorp | 1,001 to 2,000 | The tower reaches its cap; a second tower rises beside it for overflow |
+| Megacorp | 1,001 to 5,000 | A second tower rises beside it for the folded floors |
+| Campus | 5,001 to 25,000 | A row of annex towers |
+| Conglomerate | 25,001 and up | A skyline of annex towers |
 
 Floors are added when a tier's desks are full. They are never removed during a day: vacated desks go dark and fill again as new holders join.
 
@@ -368,7 +370,7 @@ On Fire Drill days the alarm is literal: characters run for the stairwells while
 
 | Parameter | Default |
 | --- | --- |
-| Tier thresholds | 3% / 1% / 0.25% / 0.05% |
+| Tier thresholds | 3% / 1% / 0.25% / 0.001% |
 | Tier bucket shares | 35 / 30 / 20 / 15 |
 | Income split | 60 payroll / 30 reserve / 10 jackpot |
 | Streak bonus | +10% per day, cap +50% |

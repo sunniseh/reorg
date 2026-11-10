@@ -12,8 +12,10 @@ import { RgCard, RgTooltip } from "./hud/card";
 import { RgDeskDock, type DockMessage } from "./hud/dock";
 import { h } from "./hud/dom";
 import { RgFeed } from "./hud/feed";
-import { ledgerContent, RgDialog, RgSimBanner, RgToast } from "./hud/overlays";
-import { RgTopBar } from "./hud/topbar";
+import { badgeInContent, ledgerContent, RgDialog, RgSimBanner, RgToast, type BadgeInChoice } from "./hud/overlays";
+import { preloadSprites } from "./hud/sprites";
+import { RgEmployeeList } from "./hud/staff";
+import { RgTopBar, type TopBarModel } from "./hud/topbar";
 import { Atlas } from "./render/atlas";
 import { passRateText } from "./render/derive";
 import { RgStage } from "./render/stage";
@@ -40,6 +42,11 @@ export interface AppOptions {
   accountUrl?: (account: string) => string | null;
   /** The REORG contract (the ledger links to its transactions). */
   contractId?: string;
+  /**
+   * Review only (W-15): the simulated preview turns bankrupt this long after it starts, to show
+   * the blackout. Never applied to live state; v1 has no bankruptcy.
+   */
+  reviewBankruptAfterMs?: number;
 }
 
 /** Building states as the boss says them (design §12.2). */
@@ -57,7 +64,9 @@ export class App {
   private readonly banner = new RgSimBanner();
   private readonly toast = new RgToast();
   private readonly dialog: RgDialog;
-  private readonly zoomOut = h("button", { class: "btn small surface zoom-out", hidden: true }, "Zoom out");
+  private readonly staff: RgEmployeeList;
+  /** The camera button (Overview / Back to building / Zoom out, `syncZoomButton`). */
+  private readonly zoomOut = h("button", { class: "btn small surface zoom-out", hidden: true }, "Overview");
 
   private source!: StateSource;
   private preview: SimSource | null = null;
@@ -87,26 +96,53 @@ export class App {
   private ariaKey = "";
   private statusKey = "";
   private pendingFocus = false;
+  private reviewBankrupt = false;
+  private reviewTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private readonly root: HTMLElement,
     private readonly opts: AppOptions,
   ) {
     this.previewSize = opts.previewSize;
-    this.topbar = new RgTopBar({ preview: (on, size) => this.setPreview(on, size), goToDesk: () => this.goToDesk() });
+    this.topbar = new RgTopBar({
+      preview: (on, size) => this.setPreview(on, size),
+      goToDesk: () => this.goToDesk(),
+      follow: (on) => this.setFollow(on),
+      staff: () => this.staff.toggle(),
+      badgeIn: () => void this.badgeIn(),
+      myCard: () => this.openMyCard(),
+    });
+    preloadSprites();
     this.dock = new RgDeskDock({
       primary: () => void this.onPrimary(),
       submit: (a) => void this.submit(a),
       disconnect: () => void this.disconnect(),
       goToDesk: () => this.goToDesk(),
+      follow: (on) => this.setFollow(on),
     });
     this.card = new RgCard(() => undefined);
+    this.staff = new RgEmployeeList({
+      open: (w) => {
+        this.stage.focus(w);
+        this.select(w);
+      },
+      cardOpen: () => this.card.current !== null,
+      onToggle: (open) => {
+        this.topbar.staffBtn.setAttribute("aria-expanded", String(open));
+        this.feedView.el.classList.toggle("staff-open", open);
+        if (open) this.updateStaff();
+        this.updateInsets();
+      },
+    });
     const hud = root.querySelector<HTMLElement>("#hud")!;
     this.dialog = new RgDialog(hud);
-    hud.append(this.topbar.el, this.topbar.popoverEl, this.banner.el, this.feedView.el, this.dock.el, this.card.el, this.tooltip.el, this.toast.el, this.zoomOut);
+    hud.append(this.topbar.el, this.topbar.popoverEl, this.banner.el, this.feedView.el, this.dock.el, this.staff.el, this.card.el, this.tooltip.el, this.toast.el, this.zoomOut);
+    // One camera button: back to the fit zoom when zoomed in or out, else the skyline overview.
     this.zoomOut.addEventListener("click", () => {
-      this.stage.resetZoom();
-      this.zoomOut.hidden = true;
+      const c = this.stage.camera;
+      if (c.zoomedIn || c.zoomedOut) this.stage.resetZoom();
+      else this.stage.overview();
+      this.syncZoomButton();
     });
   }
 
@@ -134,6 +170,7 @@ export class App {
       this.pushScene();
     });
     this.stage.onFrame(() => this.followCard());
+    this.stage.onFollowEnd = () => this.refreshFollow();
     if (this.opts.live) this.use(this.opts.live);
     else this.use(this.makePreview(this.previewSize));
     setInterval(() => this.everySecond(), 1000);
@@ -165,6 +202,7 @@ export class App {
     this.seenFeed = new Set(src.feed().map((f) => f.id));
     this.derived = [];
     this.card.close();
+    this.stage.setFollow(null);
     const sim = src.kind === "sim";
     this.banner.show(sim, this.opts.live ? "Bots and made-up numbers. Turn off Preview growth to see the live company." : "No chain is connected here: bots and made-up numbers, for a look around.");
     this.updateInsets();
@@ -173,6 +211,15 @@ export class App {
       src.onFeed((items) => this.onFeed(items)),
     ];
     src.start();
+    this.reviewBankrupt = false;
+    if (this.reviewTimer) clearTimeout(this.reviewTimer);
+    const after = this.opts.reviewBankruptAfterMs;
+    if (src.kind === "sim" && after !== undefined) {
+      this.reviewTimer = setTimeout(() => {
+        this.reviewBankrupt = true;
+        if (this.snap) this.onSnapshot(this.snap);
+      }, after);
+    }
     const s = src.snapshot();
     if (s) this.onSnapshot(s);
     this.updateFeed();
@@ -208,13 +255,14 @@ export class App {
   // ------------------------------------------------------------------ state → picture
 
   private onSnapshot(s: Snapshot): void {
+    if (this.reviewBankrupt && s.kind === "sim" && !s.bankrupt) s = { ...s, bankrupt: true };
     // An action's message belongs to the moment it was filed: a new task state clears it.
     const key = s.task ? `${s.task.id}|${s.task.status}` : "";
     if (this.snap && key !== this.statusKey && !this.busy) this.message = null;
     this.statusKey = key;
     this.snap = s;
     const prevLayout = this.layout;
-    this.layout = buildTower({
+    this.layout = s.tower ?? buildTower({
       config: s.config,
       totalSupply: s.totalSupply,
       holders: s.holders,
@@ -222,7 +270,7 @@ export class App {
       task: s.task,
       submissions: s.submissions,
       isCrowd: s.isCrowd,
-    });
+    }, { you: this.walletId() });
     if (prevLayout && !this.firstModel) this.deriveFeed(prevLayout, this.layout, s);
     // Hold the building while a task is Finalizing: every event of task N plays together once
     // `task_finalized` arrives (design §14.3.1). The HUD shows the newest state meanwhile.
@@ -234,19 +282,30 @@ export class App {
     this.updateAria(s);
     if (this.card.current) {
       const c = this.findChar(this.card.current);
-      if (c) this.card.open(c, this.source.kind === "sim", s.config.layoff_after);
+      if (c) this.card.open(c, this.source.kind === "sim", s.config.layoff_after, c.wallet === this.walletId());
       else this.card.close();
     }
     void this.refreshPlayer(false);
     this.renderDock();
+    this.updateStaff();
     this.tryPendingFocus();
+  }
+
+  private updateStaff(): void {
+    if (!this.staff.open || !this.layout || !this.snap) return;
+    this.staff.update(this.layout, { you: this.walletId(), simulated: this.source.kind === "sim", layoffAfter: this.snap.config.layoff_after });
   }
 
   private tryPendingFocus(): void {
     const w = this.walletId();
     if (!this.pendingFocus || !w || !this.findChar(w)) return;
     this.pendingFocus = false;
-    setTimeout(() => this.stage.focus(w), 50);
+    // Just badged in: center on your character and show your own card first.
+    setTimeout(() => {
+      if (this.walletId() !== w) return;
+      this.stage.focus(w);
+      this.select(w);
+    }, 50);
   }
 
   private pushScene(): void {
@@ -324,14 +383,19 @@ export class App {
     if (this.derived.length > 30) this.derived.length = 30;
   }
 
-  private topbarModel() {
+  private topbarModel(): TopBarModel {
+    const w = this.walletId();
+    const me = w ? this.findChar(w) : null;
     return {
       snap: this.snap!,
       layout: this.layout!,
       preview: this.source.kind === "sim",
       standalone: !this.opts.live,
       previewSize: this.previewSize,
-      badged: !!this.walletId(),
+      badged: !!w,
+      you: w ? { wallet: w, tier: me?.tier ?? null, visitor: !me || me.status === "visitor", label: this.wallet()?.label ?? "" } : null,
+      canBadgeIn: this.canBadgeIn(),
+      following: this.stage.following !== null,
     };
   }
 
@@ -366,13 +430,16 @@ export class App {
     const top = (this.topbar.el.getBoundingClientRect().height || 48) + banner;
     const wide = !window.matchMedia("(max-width: 820px)").matches;
     const right = wide ? this.dock.el.getBoundingClientRect().width + 24 : 0;
-    this.stage.setInsets({ top, bottom: this.dock.coveredHeight(), right });
+    const list = this.staff?.open ? this.staff.el.getBoundingClientRect() : null;
+    // The staff list covers the left on wide screens and the top under the bar on narrow ones.
+    this.stage.setInsets({ top: top + (list && !wide ? list.height : 0), bottom: this.dock.coveredHeight(), right, left: list && wide ? list.width + 24 : 0 });
   }
 
   // ------------------------------------------------------------------ player
 
   private async refreshPlayer(force: boolean): Promise<void> {
     const w = this.walletId();
+    this.source.focus?.(w);
     if (!w) {
       this.player = null;
       return;
@@ -444,6 +511,7 @@ export class App {
       busy: this.busy,
       message: this.message,
       previewNote,
+      following: this.stage.following !== null,
     });
     this.updateInsets();
   }
@@ -455,29 +523,37 @@ export class App {
     if (p.kind === "claim") return this.claim(p.taskId);
   }
 
+  /** Badging in is possible: a wallet exists here, and this is not the live deployment's preview. */
+  private canBadgeIn(): boolean {
+    if (this.source.kind === "sim") return !this.opts.live && !!this.source.wallet();
+    return this.opts.wallets.length > 0;
+  }
+
+  /** The login: one dialog listing every way in (design §3.1 "Badge in"). */
   private async badgeIn(): Promise<void> {
-    if (this.source.kind === "sim") {
-      if (this.opts.live) return; // the preview has no desk for you (design §12.4)
-      const sw = this.source.wallet();
-      if (sw) return this.connect(sw);
+    if (this.busy || this.walletId()) return;
+    if (this.source.kind === "sim" && this.opts.live) return; // the preview has no desk for you (design §12.4)
+    const pick = (create: () => WalletAdapter) => () => {
+      this.dialog.close();
+      void this.connect(create());
+    };
+    const sim = this.source.kind === "sim" ? this.source.wallet() : null;
+    const choices: BadgeInChoice[] = sim
+      ? [{ label: "Simulated player", description: "Badge in as a simulated Intern and play the preview's days. Nothing touches a chain.", simulated: true, pick: pick(() => sim) }]
+      : this.opts.wallets.map((o) => ({ label: o.label, description: o.description, simulated: false, pick: pick(() => o.create()) }));
+    this.dialog.show("Badge in", badgeInContent(COPY.badgeIn, choices));
+  }
+
+  /** Your own card, from the ID chip in the top bar: center on your character and open it. */
+  private openMyCard(): void {
+    const w = this.walletId();
+    if (!w) return;
+    if (!this.findChar(w)) {
+      this.toast.show("Your desk is not in this building yet.");
       return;
     }
-    const options = this.opts.wallets;
-    if (options.length === 0) {
-      this.toast.show("No wallet is configured for this deployment.");
-      return;
-    }
-    if (options.length === 1) return this.connect(options[0]!.create());
-    const choices = h("div", { class: "choices" });
-    for (const o of options) {
-      const b = h("button", { class: "btn" }, h("span", {}, h("b", {}, o.label), h("br"), h("span", { class: "muted" }, o.description)));
-      b.addEventListener("click", () => {
-        this.dialog.close();
-        void this.connect(o.create());
-      });
-      choices.append(b);
-    }
-    this.dialog.show("Badge in", h("p", { class: "muted", style: "margin:0" }, COPY.badgeIn), choices);
+    this.stage.focus(w);
+    this.select(w);
   }
 
   private async connect(wallet: WalletAdapter): Promise<void> {
@@ -490,6 +566,7 @@ export class App {
       await this.refreshPlayer(true);
       this.pushScene();
       this.topbar.update(this.topbarModel(), this.source.now());
+      this.updateStaff();
       // A fresh burner shows up in the next read; focus its desk as soon as it is drawn.
       this.pendingFocus = true;
       this.source.refresh();
@@ -523,11 +600,14 @@ export class App {
     const w = this.wallet();
     await w?.disconnect();
     if (this.source.kind !== "sim") this.liveWallet = null;
+    this.stage.setFollow(null);
     this.player = null;
     this.puzzle = null;
     this.message = null;
     this.pushScene();
     if (this.snap) this.topbar.update(this.topbarModel(), this.source.now());
+    this.updateStaff();
+    if (this.card.current && this.snap) this.select(this.card.current);
     this.renderDock();
   }
 
@@ -586,6 +666,19 @@ export class App {
     }
   }
 
+  /** Follow me (design §10, P1): the camera keeps the player's character centered until a manual pan. */
+  private setFollow(on: boolean): void {
+    const w = this.walletId();
+    if (on && w && !this.stage.setFollow(w)) this.toast.show("Your desk is not in this building yet.");
+    if (!on) this.stage.setFollow(null);
+    this.refreshFollow();
+  }
+
+  private refreshFollow(): void {
+    if (this.snap) this.topbar.update(this.topbarModel(), this.source.now());
+    this.renderDock();
+  }
+
   private goToDesk(): void {
     const w = this.walletId();
     if (w && !this.stage.focus(w)) this.toast.show("Your desk is not in this building yet.");
@@ -607,9 +700,8 @@ export class App {
     }
     const c = this.findChar(w);
     if (!c || !this.snap) return;
-    this.card.open(c, this.source.kind === "sim", this.snap.config.layoff_after);
+    this.card.open(c, this.source.kind === "sim", this.snap.config.layoff_after, w === this.walletId());
     this.followCard();
-    this.zoomOut.hidden = !this.stage.camera.zoomedIn;
   }
 
   private hover(w: WalletId | null, x: number, y: number): void {
@@ -618,8 +710,16 @@ export class App {
     if (c) this.tooltip.show(c, x, y);
   }
 
+  /** The camera button's label: Zoom out (zoomed in), Back to building (overview), Overview (more to see), else hidden. */
+  private syncZoomButton(): void {
+    const c = this.stage.camera;
+    const label = c.zoomedIn ? "Zoom out" : c.zoomedOut ? "Back to building" : c.canZoomOut ? "Overview" : "";
+    if (this.zoomOut.textContent !== label) this.zoomOut.textContent = label;
+    if (this.zoomOut.hidden !== !label) this.zoomOut.hidden = !label;
+  }
+
   private followCard(): void {
-    this.zoomOut.hidden = !this.stage.camera.zoomedIn;
+    this.syncZoomButton();
     const w = this.card.current;
     if (!w) return;
     const p = this.stage.screenOf(w);

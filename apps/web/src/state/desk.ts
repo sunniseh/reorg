@@ -54,7 +54,7 @@ export function deskModel(snap: Snapshot, player: PlayerView | null, nowMs: numb
   if (snap.config.excluded_accounts.includes(player.wallet)) return { ...base, state: "excluded", line: COPY.excluded };
 
   const balance = BigInt(player.holder.balance);
-  const tier = tierOf(balance, snap.totalSupply, snap.config.tier_thresholds_bps);
+  const tier = tierOf(balance, snap.totalSupply, snap.config.tier_thresholds_ppm);
   const emp = player.employee;
   const sub = player.submission && task && player.submission.task_id === task.id ? player.submission : null;
   const open = status === "open";

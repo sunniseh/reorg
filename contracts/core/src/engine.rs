@@ -185,7 +185,7 @@ pub fn accept_submission(
     if total_supply == 0 {
         return Err(Error::NoTotalSupply);
     }
-    let tier = tier_of(holder.balance, total_supply, &cfg.tier_thresholds_bps).ok_or(Error::Visitor)?;
+    let tier = tier_of(holder.balance, total_supply, &cfg.tier_thresholds_ppm).ok_or(Error::Visitor)?;
 
     let is_new_employee = employee.is_none();
     let mut employee = employee.unwrap_or_else(|| Employee::new(last_finalized));

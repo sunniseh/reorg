@@ -95,6 +95,10 @@ export class NearReader implements TowerReader {
     return this.view(TOKEN_METHODS.holders, { from_index: fromIndex, limit }, await this.token());
   }
 
+  async holdersCount(): Promise<number> {
+    return Number(await this.view<number | string>(TOKEN_METHODS.holdersCount, {}, await this.token()));
+  }
+
   async holderInfo(wallet: WalletId): Promise<HolderInfo> {
     return this.view(TOKEN_METHODS.holderInfo, { account_id: wallet }, await this.token());
   }

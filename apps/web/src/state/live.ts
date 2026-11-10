@@ -6,6 +6,7 @@
  * clock is corrected from the latest block timestamp (design §5.6).
  */
 import {
+  decodeTower,
   MAX_HOLDER_PAGE,
   readAll,
   type ContractConfig,
@@ -13,6 +14,7 @@ import {
   type ReorgEvent,
   type SubmissionView,
   type TaskView,
+  type TowerLayout,
   type TowerReader,
   type WalletAdapter,
   type WalletId,
@@ -37,6 +39,12 @@ export interface LiveOptions {
 }
 
 const HISTORY_EVENTS = 60;
+/**
+ * Up to this many holders every client reads the chain itself (trustless, as before); past it,
+ * the tower comes from the boss service's one shared read (`GET /api/tower`, design §12), while
+ * the player's own balance, record and submission are still read from the chain (`player()`).
+ */
+export const FULL_READ_MAX = 2000;
 
 export class LiveSource implements StateSource {
   readonly kind = "live" as const;
@@ -69,6 +77,9 @@ export class LiveSource implements StateSource {
   private readonly snapListeners = new Set<(s: Snapshot) => void>();
   private readonly eventListeners = new Set<(e: ReorgEvent) => void>();
   private readonly isCrowd: (w: WalletId) => boolean;
+  private you: WalletId | null = null;
+  /** The last read was a big company's (the boss's tower). */
+  private big = false;
 
   constructor(opts: LiveOptions) {
     this.reader = opts.reader;
@@ -271,14 +282,18 @@ export class LiveSource implements StateSource {
       this.configAt = Date.now();
     }
     const info = await r.getInfo();
+    // A big company: the boss's shared tower, or (boss down or too old) the full read anyway.
+    const count = this.boss ? await r.holdersCount().catch(() => 0) : 0;
+    const tower = count > FULL_READ_MAX ? await this.bossTower() : null;
+    this.big = tower !== null;
     const [task, holders, employees, treasury] = await Promise.all([
       info.current_task_id > 0 ? r.getTask(info.current_task_id) : Promise.resolve(null),
-      readAll((from, limit) => r.listHolders(from, limit), MAX_HOLDER_PAGE),
-      readAll((from, limit) => r.listEmployees(from, limit)),
+      tower ? Promise.resolve([]) : readAll((from, limit) => r.listHolders(from, limit), MAX_HOLDER_PAGE),
+      tower ? Promise.resolve([]) : readAll((from, limit) => r.listEmployees(from, limit)),
       r.getTreasury(),
     ]);
     const [submissions, lastFinalizedTask, bossTask] = await Promise.all([
-      task ? readAll((from, limit) => r.listSubmissions(task.id, from, limit)) : Promise.resolve([] as SubmissionView[]),
+      task && !tower ? readAll((from, limit) => r.listSubmissions(task.id, from, limit)) : Promise.resolve([] as SubmissionView[]),
       info.last_finalized === 0
         ? Promise.resolve(null)
         : task && task.id === info.last_finalized
@@ -304,9 +319,26 @@ export class LiveSource implements StateSource {
       isCrowd: this.isCrowd,
       stale: false,
       nextOpenAt: null,
+      ...(tower ? { tower } : {}),
     };
     this.lastOk = Date.now();
     this.emitSnap();
+  }
+
+  private async bossTower(): Promise<TowerLayout | null> {
+    try {
+      const t = await this.boss!.tower(this.you);
+      return t ? decodeTower(t.tower, { isCrowd: this.isCrowd }) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  focus(wallet: WalletId | null): void {
+    if (wallet === this.you) return;
+    this.you = wallet;
+    // Only a big company's picture depends on who is looking (their floor unfolds).
+    if (this.big) this.refresh();
   }
 
   private emitSnap(): void {

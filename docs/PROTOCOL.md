@@ -14,6 +14,7 @@ The protocol is chain-agnostic. It needs SHA-256, unsigned integer arithmetic an
 ## 1. Conventions
 
 - **bps**: basis points, denominator `BPS = 10000`.
+- **ppm**: parts per million, denominator `PPM = 1000000` (tier thresholds only, §6.1).
 - **Integer math only.** All amounts and weights are unsigned integers. `/` means floor division. Every product listed in §7 needs 256-bit intermediates (vector `pay/u256-overflow`). Every rounding remainder ("dust") has a named destination; none is lost.
 - **Amounts**: token amounts are in token base units (the token has 18 decimals). Payout amounts are in the payout currency's base unit (yoctoNEAR on NEAR, 10^24 per NEAR).
 - **Time**: nanoseconds since the Unix epoch (`u64`).
@@ -68,10 +69,10 @@ answer_hash = sha256( utf8(norm(answer)) ‖ 0x00 ‖ utf8(wallet) )      # 32 b
 ### 6.1 Tiers, D12
 
 ```
-tier(balance, total_supply) = smallest k in 0..4 with  balance × BPS ≥ tier_thresholds_bps[k] × total_supply
+tier(balance, total_supply) = smallest k in 0..4 with  balance × PPM ≥ tier_thresholds_ppm[k] × total_supply
                               else visitor
 ```
-Exact integer comparison: holding exactly the threshold qualifies. `total_supply > 0`. Thresholds are strictly descending.
+`PPM = 1,000,000`. Exact integer comparison: holding exactly the threshold qualifies. `total_supply > 0`. Thresholds are strictly descending, each in `1..=1,000,000`. They are in parts per million, not basis points, so the lowest tier can sit below 0.01% of supply: the default Intern threshold of 10 ppm (0.001%) allows up to 100,000 employees, where the old 5 bps capped the company at 2,000 (ROADMAP D22).
 
 ### 6.2 Records
 
@@ -236,7 +237,7 @@ Contract config, set at deploy and changeable only by the owner. Defaults are in
 
 | Key | Type | Default | Meaning |
 |---|---|---|---|
-| `tier_thresholds_bps` | u16[4] | 300, 100, 25, 5 | 3% / 1% / 0.25% / 0.05% of supply |
+| `tier_thresholds_ppm` | u32[4] | 30000, 10000, 2500, 10 | 3% / 1% / 0.25% / 0.001% of supply (parts per million, §6.1) |
 | `tier_bucket_bps` | u16[4] | 3500, 3000, 2000, 1500 | payroll share per tier, sums to 10000 |
 | `payroll_bps` / `reserve_bps` / `jackpot_bps` | u16 | 6000 / 3000 / 1000 | income split, sums to 10000 (reserve takes the rounding remainder, §7.3) |
 | `streak_step_bps` | u16 | 1000 | +10% per streak step |
@@ -252,7 +253,7 @@ Contract config, set at deploy and changeable only by the owner. Defaults are in
 | `max_passers_per_call` | u32 | 50 | finalize batch cap (tune with C-18 gas numbers) |
 | `excluded_accounts` | string[] | [] | never employees, hidden in the tower (deployer, contract, treasury/LP, crowd root) |
 
-Validation (contract `new` / `update_config` and core `ConfigSchema` must agree): thresholds strictly descending and > 0; both bps arrays and the split sum to 10000; every bps value ≤ 10000; `layoff_after ≥ 1`; milestones strictly ascending and > 0; `max_passers_per_call ≥ 1`; `min_window_ns > 0`.
+Validation (contract `new` / `update_config` and core `ConfigSchema` must agree): thresholds strictly descending, > 0 and ≤ 1000000; both bps arrays and the split sum to 10000; every bps value ≤ 10000; `layoff_after ≥ 1`; milestones strictly ascending and > 0; `max_passers_per_call ≥ 1`; `min_window_ns > 0`.
 
 Contract-level identities (not config): `owner`, `boss`, `token`, cached `total_supply`.
 

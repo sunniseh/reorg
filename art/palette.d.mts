@@ -29,6 +29,7 @@ export declare const C: {
   glass: string;
   street: string;
   ground: string;
+  skyDay: string;
 };
 export declare const SPRITE: Record<string, string> & { hair: readonly string[] };
 export declare const TINT_BASE: string;

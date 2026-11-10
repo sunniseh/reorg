@@ -14,6 +14,7 @@ import type {
   TaskId,
   TaskStatus,
   TaskView,
+  TowerLayout,
   TreasuryView,
   WalletAdapter,
   WalletId,
@@ -97,6 +98,16 @@ export interface Snapshot {
   stale: boolean;
   /** When the next task is expected to open (ms), if anyone knows. */
   nextOpenAt: number | null;
+  /**
+   * A big company (design §4.3, §12): the boss service's prebuilt layout (`GET /api/tower`),
+   * drawn instead of building one from `holders`/`employees`/`submissions` (left empty then).
+   */
+  tower?: TowerLayout;
+  /**
+   * The company is bankrupt (design §14.3, Later). No v1 source sets it: the contract reserves
+   * `bankruptcy_empty_tasks` but has no bankruptcy (PROTOCOL.md). The renderer is ready for it.
+   */
+  bankrupt?: boolean;
 }
 
 /** Everything the my-desk dock needs about the connected wallet. */
@@ -141,6 +152,8 @@ export interface StateSource {
   puzzle(wallet: WalletId): Promise<Puzzle | null>;
   /** Income, salaries, forfeits and operating costs seen so far, newest first. */
   ledger(): readonly LedgerRow[];
+  /** The badged-in player, so a big company's tower unfolds their floor (null: nobody). */
+  focus?(wallet: WalletId | null): void;
   /** A wallet that plays in this source (the sim's own; live sources use the real one). */
   wallet(): WalletAdapter | null;
 }

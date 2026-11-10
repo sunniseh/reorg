@@ -6,6 +6,7 @@ import type { TreasuryView } from "@reorg/core";
 import { payout, plural, shortName } from "../format";
 import type { LedgerRow } from "../state/types";
 import { h, render } from "./dom";
+import { icon, portrait } from "./sprites";
 
 export class RgSimBanner {
   readonly el = h("div", { class: "sim-banner", role: "note", hidden: true });
@@ -49,7 +50,11 @@ export class RgDialog {
     const scrim = h("div", { class: "scrim" }, box);
     scrim.addEventListener("click", (e) => e.target === scrim && this.close());
     scrim.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") this.close();
+      if (e.key === "Escape") {
+        // Handled here: the card and the staff list behind the dialog stay open.
+        e.preventDefault();
+        this.close();
+      }
       if (e.key === "Tab") {
         const f = [...box.querySelectorAll<HTMLElement>("button, a[href], input")].filter((x) => !x.hasAttribute("disabled"));
         if (!f.length) return;
@@ -75,6 +80,44 @@ export class RgDialog {
     this.scrim = null;
     this.returnFocus?.focus?.({ preventScroll: true });
   }
+}
+
+/** One way to badge in, as the login dialog lists it. */
+export interface BadgeInChoice {
+  label: string;
+  description: string;
+  simulated: boolean;
+  pick(): void;
+}
+
+/**
+ * The badge-in (login) dialog's body: the blank visitor badge you are about to fill in, then one
+ * button per wallet. Holding $REORG is the job; badging in only tells the building who you are.
+ */
+export function badgeInContent(intro: string, choices: readonly BadgeInChoice[]): HTMLElement {
+  const list = h("div", { class: "choices" });
+  for (const c of choices) {
+    const b = h(
+      "button",
+      { class: "btn choice" },
+      h("span", {}, h("b", {}, c.label), c.simulated ? h("span", { class: "chip sim", style: "margin-left:8px" }, "SIMULATED") : null, h("br"), h("span", { class: "muted" }, c.description)),
+    );
+    b.addEventListener("click", () => c.pick());
+    list.append(b);
+  }
+  return h(
+    "div",
+    { class: "login" },
+    h(
+      "div",
+      { class: "badge-card", "aria-hidden": "true" },
+      portrait("visitor", { tier: null, kind: "visitor", scale: 3 }),
+      h("div", { class: "badge-lines" }, icon("lobby.logo", { scale: 1 }), h("b", {}, "VISITOR"), h("span", { class: "muted" }, "Name: ________"), h("span", { class: "muted" }, "Desk: ________")),
+    ),
+    h("p", { class: "muted", style: "margin:0" }, intro),
+    choices.length ? list : h("p", { class: "bad" }, "No wallet is configured for this deployment."),
+    h("p", { class: "muted fine" }, "Hold $REORG to get a desk. Badging in never moves your tokens."),
+  );
 }
 
 /** The ledger (design §3): income by tag (simulated marked), salaries, forfeits, operating costs. */

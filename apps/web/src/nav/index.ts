@@ -6,7 +6,7 @@
  * from the roof's top); a location is a band and an x on its aisle (the character's center).
  */
 import type { TierIndex } from "@reorg/core";
-import { G, RIG, roomOf, type Band, type BandStack } from "../render/geometry";
+import { CHAR, G, RIG, roomOf, type Band, type BandStack } from "../render/geometry";
 
 const B = RIG.building;
 
@@ -83,7 +83,8 @@ export class Nav {
         floorY: b.kind === "street" ? b.y + B.street.standY : b.y + b.interior,
         seatY: b.y + G.floor.deskTop,
         ...(b.tier !== undefined ? { tier: b.tier } : {}),
-        stairs: b.kind === "floor" || b.kind === "lobby",
+        // A fold is passed through on the stairs and in the elevator, never stopped at.
+        stairs: b.kind === "floor" || b.kind === "fold" || b.kind === "lobby",
         elevator: b.kind === "floor" || b.kind === "lobby" || b.kind === "penthouse",
       };
       this.byKey.set(b.key, nb);
@@ -109,7 +110,7 @@ export class Nav {
   /** Center x of a seat on a tier floor. */
   seatX(tier: TierIndex, room: number): number {
     const R = roomOf(tier);
-    return G.rooms.x + room * R.w + R.seat + 8;
+    return G.rooms.x + room * R.w + R.seat + CHAR.w / 2;
   }
 
   /** Floors between two stair-connected bands (0 = same band). */

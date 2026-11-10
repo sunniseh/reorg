@@ -24,11 +24,20 @@ export interface Appearance {
   hairColor: number;
 }
 
+/** Memo: the tower model is rebuilt on every snapshot, and a big company has many wallets. */
+const looks = new Map<WalletId, Appearance>();
+const LOOKS_MAX = 250_000;
+
 export function appearanceOf(wallet: WalletId): Appearance {
+  const hit = looks.get(wallet);
+  if (hit) return hit;
   const h = sha256(utf8ToBytes(wallet));
-  return {
+  const look: Appearance = Object.freeze({
     body: h[0]! % BODY_COLOR_COUNT,
     hairStyle: HAIR_STYLES[h[1]! % HAIR_STYLES.length]!,
     hairColor: h[2]! % HAIR_COLOR_COUNT,
-  };
+  });
+  if (looks.size >= LOOKS_MAX) looks.clear();
+  looks.set(wallet, look);
+  return look;
 }

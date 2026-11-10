@@ -2,14 +2,14 @@
 //! same keys, same JSON encoding, same validation.
 
 use crate::wire::dec;
-use crate::BPS;
+use crate::{BPS, PPM};
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Config {
-    pub tier_thresholds_bps: [u16; 4],
+    pub tier_thresholds_ppm: [u32; 4],
     pub tier_bucket_bps: [u16; 4],
     pub payroll_bps: u16,
     pub reserve_bps: u16,
@@ -38,7 +38,7 @@ impl Default for Config {
     /// Same values as `protocol/config.default.json` (checked by a test).
     fn default() -> Self {
         Self {
-            tier_thresholds_bps: [300, 100, 25, 5],
+            tier_thresholds_ppm: [30_000, 10_000, 2_500, 10],
             tier_bucket_bps: [3500, 3000, 2000, 1500],
             payroll_bps: 6000,
             reserve_bps: 3000,
@@ -64,13 +64,16 @@ impl Config {
     pub fn validate(&self) -> Result<(), &'static str> {
         let bps = BPS as u32;
         let scalars = [self.payroll_bps, self.reserve_bps, self.jackpot_bps, self.streak_step_bps, self.antidump_bps];
-        let mut all_bps = self.tier_thresholds_bps.iter().chain(&self.tier_bucket_bps).chain(&scalars);
+        let mut all_bps = self.tier_bucket_bps.iter().chain(&scalars);
         if all_bps.any(|&v| v as u32 > bps) {
             return Err("config: every bps value must be <= 10000");
         }
-        let t = &self.tier_thresholds_bps;
+        let t = &self.tier_thresholds_ppm;
+        if t.iter().any(|&v| v as u128 > PPM) {
+            return Err("config: tier_thresholds_ppm must be <= 1000000");
+        }
         if t.contains(&0) || t.windows(2).any(|w| w[0] <= w[1]) {
-            return Err("config: tier_thresholds_bps must be > 0 and strictly descending");
+            return Err("config: tier_thresholds_ppm must be > 0 and strictly descending");
         }
         if self.tier_bucket_bps.iter().map(|&x| x as u32).sum::<u32>() != bps {
             return Err("config: tier_bucket_bps must sum to 10000");

@@ -178,7 +178,7 @@ section(
 );
 section("Props and effects", by(/^(prop|fx)\./).map((n) => ({ grid: bake(n), name: short(n, /^(prop|fx)\./) })), 4, 14);
 section("Shell per building state (§12.2): wall, window, slab, parapet; signs; roof", [
-  ...["garage", "office", "tower"].flatMap((s) => ["wall", "window", "slab", "parapet"].map((p) => ({ grid: bake(`shell.${s}.${p}`), name: `${s} ${p}` }))),
+  ...["garage", "office", "tower", "skyscraper", "megacorp"].flatMap((s) => ["wall", "window", "slab", "parapet"].map((p) => ({ grid: bake(`shell.${s}.${p}`), name: `${s} ${p}` }))),
   ...by(/^(sign|roof)\./).map((n) => ({ grid: bake(n), name: n })),
 ], 3, 14);
 section("Street fronts for the lobby, per state", by(/^shell\..*\.front$/).map((n) => ({ grid: bake(n), name: n })), 2);
@@ -187,7 +187,9 @@ section("Back wall", by(/^wall\./).map((n) => ({ grid: bake(n), name: short(n, /
 section("Rooms per tier: back, front, empty", by(/^room\./).map((n) => ({ grid: bake(n), name: short(n, /^room\./) })), 2, 14);
 section("Amenity bay, lobby, street", by(/^(bay|furn|lobby|street)/).map((n) => ({ grid: bake(n), name: n })), 2, 14);
 section("Basement and penthouse", by(/^(vault|server|pent)\./).map((n) => ({ grid: bake(n), name: n })), 2, 14);
-section("Backdrop", [{ grid: bake("sky.skyline"), name: "sky.skyline (tiles horizontally)" }], 2);
+section("Backdrop: skyline and city blocks (tile horizontally; .lit = night), clouds, the blimp", by(/^sky\./).map((n) => ({ grid: bake(n), name: n })), 2, 14);
+section("Surroundings per state, the second Megacorp tower (W-15, §12.2)", by(/^(surr|twin)\./).map((n) => ({ grid: bake(n), name: n })), 2, 14);
+section("Construction sequence, For lease (W-15, §12.3)", by(/^build\./).map((n) => ({ grid: bake(n), name: n })), 2, 14);
 
 const H = py;
 const sheetSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${SHEET_W}" height="${H}" viewBox="0 0 ${SHEET_W} ${H}" shape-rendering="crispEdges"><rect width="${SHEET_W}" height="${H}" fill="${C.bg}"/>${sheet}</svg>\n`;

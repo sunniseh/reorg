@@ -57,6 +57,8 @@ export interface ChainAdapter extends ChainReader {
 export interface TowerReader extends ChainReader {
   /** The token's holders with a positive balance, in registry order (page size ≤ 200). */
   listHolders(fromIndex: number, limit: number): Promise<HolderEntry[]>;
+  /** Holders with a positive balance (`ft_holders_count`): picks the full read or the boss's tower. */
+  holdersCount(): Promise<number>;
   holderInfo(wallet: WalletId): Promise<HolderInfo>;
   getEmployee(wallet: WalletId): Promise<EmployeeView | null>;
   getSubmission(taskId: TaskId, wallet: WalletId): Promise<SubmissionView | null>;

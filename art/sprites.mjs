@@ -19,11 +19,224 @@ import { layers, stack, paint, pad, shift, outline, blank } from "./pixmap.mjs";
 import { TILES, BUILDING } from "./building.mjs";
 
 // ---------------------------------------------------------------------------
-// Employee: 16 px wide. The head sits in rows 0-11 of every pose (row 0 is
-// empty); a pose that moves the head says so in RIG.frames[name].headY, and the
-// hair sprite moves with it. Faces right in profile; mirror to face left.
+// Employee: 12 px wide, 20 tall standing, 15 seated (ROADMAP D23: small enough
+// for 6/9/12/18 desks a floor). The head sits in rows 0-8 of every pose (row 0
+// is empty); a pose that moves the head says so in RIG.frames[name].headY, and
+// the hair sprite moves with it. Faces right in profile; mirror to face left.
+
+const CHAR_W = 12;
+const SIT_H = 15;
+const STAND_H = 20;
 
 const HEAD_FRONT = [
+  "............",
+  "...SSSSSS...",
+  "..SSSSSSSS..",
+  "..SSSSSSSS..",
+  ".sSkSSSSkSs.",
+  ".sSkSSSSkSs.",
+  "..SSSkkSSS..",
+  "...sSSSSs...",
+  "....ssss....",
+];
+
+// Looking down: eyes closed, a small frown (slump, the bench).
+const HEAD_DOWN = paint(HEAD_FRONT, [".sSSSSSSSSs.", ".sSkkSSkkSs.", "..SSSSSSSS..", "...sSkkSs..."], 4);
+
+// Eyes shut, mouth open: the yawn of a stretch.
+const HEAD_YAWN = paint(HEAD_FRONT, [".sSSSSSSSSs.", ".sSkkSSkkSs.", "..SSSkkSSS..", "...sSkkSs..."], 4);
+
+// Big open smile (cheer).
+const HEAD_JOY = paint(HEAD_FRONT, ["..SSkkkkSS..", "...skkkks..."], 6);
+
+const HEAD_SIDE = [
+  "............",
+  "...SSSSS....",
+  "..SSSSSSS...",
+  "..SSSSSSSS..",
+  "..SSsSSSkS..",
+  "..SSsSSSkSS.",
+  "..SSSSSSSkS.",
+  "...sSSSSSS..",
+  "....sssss...",
+];
+const HEAD_SIDE_TALK = paint(HEAD_SIDE, ["..SSSSSSSSkk"], 6);
+
+// Seated, facing the viewer. Rows 9-14; the desk covers everything below.
+const TORSO_SIT_FRONT = [
+  "..wWcsscWw..",
+  ".wWWWkkWWWw.",
+  "wWwWWkkWWwWw",
+  "wWwWWkkWWwWw",
+  "wWwWWWWWWwWw",
+  "SSwWWWWWWwSS",
+];
+
+// Seated front with the arms lifted off the sides (cheer, stretch).
+const TORSO_SIT_ARMS_UP = [
+  "..wWcsscWw..",
+  ".wWWWkkWWWw.",
+  ".wWWWkkWWWw.",
+  ".wWWWkkWWWw.",
+  ".wWWWWWWWWw.",
+  ".wWWWWWWWWw.",
+];
+
+// Seated in profile, typing (two frames).
+const TORSO_TYPE = [
+  ["...wWWWcc...", "..wWWWWWck..", "..wWwWWWWW..", "..wWwWWWWWSS", "..wWWwwwww..", "..wWWWWWWW.."],
+  ["...wWWWcc...", "..wWWWWWck..", "..wWwWWWW.SS", "..wWwWWWWWW.", "..wWWwwwww..", "..wWWWWWWW.."],
+];
+
+// Seated in profile, leaning back, hand at the chin: thinking (P1).
+const TORSO_THINK = ["..wWWWcc....", ".wWWWWWck...", ".wWWWWWWW...", ".wWWWwwwSS..", ".wWWWWWwW...", ".wWWWWWWW..."];
+
+// Standing in profile: torso rows 9-14 (the last row is the belt).
+const TORSO_STAND_SIDE = ["...wWWWcc...", "..wWWWWWck..", "..wWWWWWWW..", "..wWWWWWWW..", "..wWWWWWWW..", "..PPPPPPPP.."];
+
+// The near arm, painted over the torso at row 10 (row 9 when the body bobs up).
+const ARM = {
+  down: [".....w......", ".....w......", ".....w......", ".....SS....."],
+  fwd: [".....w......", "......w.....", ".......w....", "........wSS."],
+  back: [".....w......", "....w.......", "..ww........", "SS.........."],
+  // Bent, holding a cup at the chest (drink).
+  cup: [".....w......", ".....w..cc..", ".....wwwSc..", "............"],
+  // Raised to the mouth: starts at row 5, not at the shoulder.
+  sip: { row: 5, rows: ["..........cc", ".........Scc", "........w...", ".......w....", "......w.....", ".....w......"] },
+  // Talking hand, palm up, two heights (chat).
+  talk0: [".....w......", ".....w......", ".....wwwSS..", "........S..."],
+  talk1: [".....w......", ".....w...SS.", ".....w..wS..", ".....www...."],
+};
+
+// Legs: the near leg is P, the far leg is p (a shade darker), so the stride reads.
+// Contact frames are 5 rows (body low); passing frames are 6 rows (body up 1 px).
+const LEGS = {
+  // Near leg forward, far leg back.
+  contactA: ["..ppPPPPP...", "..pp...PP...", ".pp.....PP..", ".pp......PP.", "kk.......kkk"],
+  // Near leg back, far leg forward.
+  contactB: ["..PPpppppp..", "..PP...pp...", ".PP.....pp..", ".PP......pp.", "kk.......kkk"],
+  passA: ["..PPPPPPPP..", "...ppPPPP...", "...ppPPP....", "..ppkPPP....", "..kk.PPP....", ".....kkkkk.."],
+  passB: ["..PPPPPPPP..", "...PPpppp...", "...PPppp....", "..PPkppp....", "..kk.ppp....", ".....kkkkk.."],
+  stand: ["...ppPPPP...", "...ppPPP....", "...ppPPP....", "...ppPPP....", "...kkkkkkk.."],
+  // Climbing: the near knee up onto the next step, or the far one.
+  climbA: ["..ppPPPPPP..", "..pp....PP..", ".ppp....kkk.", ".pp.........", "kkk........."],
+  climbB: ["..PPpppppp..", "..PP....pp..", ".PPP....kkk.", ".PP.........", "kkk........."],
+};
+
+/** A standing profile frame: STAND_H rows, bottom at the feet. `up` lifts the body 1 px. */
+function standSide({ arm = "down", legs = "stand", head = HEAD_SIDE, up = false }) {
+  const body = stack(head, TORSO_STAND_SIDE);
+  const rows = up ? stack(body.slice(1), LEGS[legs]) : stack(body, LEGS[legs]);
+  if (rows.length !== STAND_H) throw new Error(`standSide: ${rows.length} rows`);
+  const a = ARM[arm];
+  return paint(rows, a.rows ?? a, (a.row ?? 10) - (up ? 1 : 0));
+}
+
+// Holding the box on the way out: arms forward, a plant in the box.
+const CARRY = [".........gG.", "........gGgG", ".......BBBBB", ".......bBBBB", ".....wwSBBBB", ".......BBBBB", ".......bbbbb"];
+function carrySide(legs, up) {
+  const body = stack(HEAD_SIDE, TORSO_STAND_SIDE);
+  const rows = up ? stack(body.slice(1), LEGS[legs]) : stack(body, LEGS[legs]);
+  return paint(rows, CARRY, up ? 7 : 8);
+}
+
+// Standing, facing the viewer: idle, waiting, riding the elevator; and the
+// source of the visitor outline.
+const STAND_FRONT_BODY = [
+  "..wWcsscWw..",
+  ".wWWWkkWWWw.",
+  "wWwWWkkWWwWw",
+  "wWwWWkkWWwWw",
+  "SwwWWWWWWwwS",
+  "S.PPPPPPPP.S",
+  "..PPPPPPPP..",
+  "..PPP..PPP..",
+  "..PPP..PPP..",
+  "..PPP..PPP..",
+  ".kkkk..kkkk.",
+];
+const STAND_FRONT = stack(HEAD_FRONT, STAND_FRONT_BODY);
+// Weight on one leg, hip out: the visitor's shuffle.
+const STAND_FRONT_SHIFT = stack(shift(stack(HEAD_FRONT, STAND_FRONT_BODY.slice(0, 7)), 1, 0), [
+  "..PPP..PPP..",
+  "..PPP...PPP.",
+  "..PPP...PPP.",
+  ".kkkk...kkkk",
+]);
+
+// Seated on the street bench, legs showing, box beside (laid off).
+const BENCH_BODY = [
+  "..wWcsscWw..",
+  ".wWWWkkWWWw.",
+  "wWwWWkkWWwWw",
+  "wWwWWWWWWwWw",
+  "wSSPPPPPPSSw",
+  ".PPPPPPPPPP.",
+  ".pPPPPPPPPp.",
+  "..PPP..PPP..",
+  "..PPP..PPP..",
+  "..PPP..PPP..",
+  ".kkkk..kkkk.",
+];
+
+// ---------------------------------------------------------------------------
+// Seated front variants (12 x 15, ending at the desk top).
+
+const SIT_FRONT = stack(HEAD_FRONT, TORSO_SIT_FRONT);
+
+/** Head lowered by dy rows, sunk into the shoulders. */
+const headDown = (head, dy) => stack(blank(CHAR_W, dy), head, TORSO_SIT_FRONT.slice(dy));
+
+// Cheer: arms bent up, then straight up (2 frames, 0.6 s, once).
+const CHEER = [
+  paint(stack(HEAD_JOY, TORSO_SIT_ARMS_UP), ["S..........S", "W..........W", "W..........W", "Ww........wW", "Ww........wW", ".w........w."], 5),
+  paint(stack(HEAD_JOY, TORSO_SIT_ARMS_UP), ["S..........S", ...Array(8).fill("W..........W"), "Ww........wW", ".w........w."], 0),
+];
+
+// Stretch (P1): arms out, then up, eyes shut.
+const STRETCH = [
+  paint(stack(HEAD_YAWN, TORSO_SIT_ARMS_UP), ["S..........S", "W..........W", ".W........W.", "..w......w.."], 6),
+  paint(stack(HEAD_YAWN, TORSO_SIT_ARMS_UP), [".SS......SS.", ".Ww......wW.", ".Ww......wW."], 0),
+];
+
+// Sitting down: one squashed frame, head down 1 px, shoulders out (§14.1).
+const SIT_LAND = stack(blank(CHAR_W, 1), HEAD_FRONT, [".wWWcsscWWw.", "wWWWWkkWWWWw", "wWwWWkkWWwWw", "wWwWWWWWWwWw", "SSwWWWWWWwSS"]);
+
+// ---------------------------------------------------------------------------
+// Hair. Same 12 px grid as the heads; `y` is the row offset from the head
+// origin (negative = above the frame top). "none" draws nothing.
+
+const HAIR = {
+  short: {
+    front: { y: 0, rows: ["...HHHHHH...", "..HHHHHHHH..", ".HHHhHHHHHH.", ".HH......HH."] },
+    side: { y: 0, rows: ["...HHHHH....", "..HHHHHHH...", ".HHHHHHHHh..", ".HHHH.......", ".HHH........", "..hH........"] },
+  },
+  long: {
+    front: {
+      y: 0,
+      rows: ["...HHHHHH...", "..HHHHHHHH..", ".HHHhHHhHHH.", ".HH......HH.", ".HH......HH.", ".HH......HH.", ".hH......Hh.", ".hh......hh.", ".hh......hh."],
+    },
+    side: { y: 0, rows: ["...HHHHH....", "..HHHHHHH...", ".HHHHHHHHh..", ".HHHHH......", ".HHHH.......", ".HHHH.......", ".HHHh.......", ".hHh........", ".hh........."] },
+  },
+  bun: {
+    front: { y: -2, rows: ["....HHHH....", "....HhhH....", "...HHHHHH...", "..HHHHHHHH..", ".HHHHHHHHHH.", ".HH......HH."] },
+    side: { y: -2, rows: [".HH.........", "HhhH........", ".HHHHHH.....", "..HHHHHHH...", ".HHHHHHHHh..", ".HHH........", ".HH........."] },
+  },
+  curly: {
+    front: { y: -1, rows: ["..H.HH.HH.H.", ".HhHHhHHhHH.", "HHHHHHHHHHHH", "HhHHHHHHHHhH", "HHH......HHH", ".hH......Hh.", "..h......h.."] },
+    side: { y: -1, rows: ["...H.HH.H...", "..HhHHhHH...", ".HHHHHHHHH..", "HHhHHHHHHHH.", "HHHHHhHHHh..", "HhHHH.......", "HHHH........", ".hH........."] },
+  },
+};
+
+
+export const HAIR_STYLES = ["short", "long", "bun", "curly", "none"];
+
+// ---------------------------------------------------------------------------
+// The boss: 18 px wide, accent blazer, silver hair, lanyard, mug.
+// Three faces (spec §17.1): smug >= 90% pass rate, forced smile 50-89%, twitchy below.
+// He keeps the original 16 px head and legs, so he stands a head taller than the
+// 12 px staff (and the brand icon, drawn from him, does not change).
+const BIG_HEAD_FRONT = [
   "................",
   "....SSSSSSSS....",
   "...SSSSSSSSSS...",
@@ -38,28 +251,7 @@ const HEAD_FRONT = [
   "......ssss......",
 ];
 
-// Looking down: eyes closed, a small frown (slump, the bench).
-const HEAD_DOWN = paint(HEAD_FRONT, [
-  "..sSSSSSSSSSSs..",
-  "..sSkkSSSSkkSs..",
-  "...SSSSSSSSSS...",
-  "...SSSSSSSSSS...",
-  "....sSSkkSSs....",
-], 5);
-
-// Eyes shut, mouth open: the yawn of a stretch.
-const HEAD_YAWN = paint(HEAD_FRONT, [
-  "..sSSSSSSSSSSs..",
-  "..sSkkSSSSkkSs..",
-  "...SSSSSSSSSS...",
-  "...SSSSkkSSSS...",
-  "....sSSkkSSs....",
-], 5);
-
-// Big open smile (cheer).
-const HEAD_JOY = paint(HEAD_FRONT, ["...SSSkkkkSSS...", "....sSkkkkSs...."], 8);
-
-const HEAD_SIDE = [
+const BIG_HEAD_SIDE = [
   "................",
   "....SSSSSSS.....",
   "...SSSSSSSSS....",
@@ -73,97 +265,8 @@ const HEAD_SIDE = [
   ".....sssssss....",
   "......sss.......",
 ];
-const HEAD_SIDE_TALK = paint(HEAD_SIDE, ["...SSSSSSSSkk..."], 8);
 
-// Seated, facing the viewer. Rows 12-19; the desk covers everything below row 19.
-const TORSO_SIT_FRONT = [
-  "...wWWcsscWWw...",
-  "..wWWWckkcWWWw..",
-  ".wWWWWWkkWWWWWw.",
-  ".wWwWWWkkWWWwWw.",
-  ".wWwWWWkkWWWwWw.",
-  ".wWwWWWWWWWWwWw.",
-  ".wWwWWWWWWWWwWw.",
-  ".SSwWWWWWWWWwSS.",
-];
-
-// Seated front with the arms lifted off the sides (cheer, stretch).
-const TORSO_SIT_ARMS_UP = [
-  "...wWWcsscWWw...",
-  "..wWWWckkcWWWw..",
-  "..wWWWWkkWWWWw..",
-  "..wWWWWkkWWWWw..",
-  "..wWWWWkkWWWWw..",
-  "..wWWWWWWWWWWw..",
-  "..wWWWWWWWWWWw..",
-  "..wWWWWWWWWWWw..",
-];
-
-// Seated in profile, typing (two frames).
-const TORSO_TYPE = [
-  [
-    "....wWWWWcc.....",
-    "...wWWWWWWck....",
-    "...wWWWWWWWW....",
-    "...wWwWWWWWW....",
-    "...wWwWWWWWWWSS.",
-    "...wWWwwwwwww...",
-    "...wWWWWWWWW....",
-    "...wWWWWWWWW....",
-  ],
-  [
-    "....wWWWWcc.....",
-    "...wWWWWWWck....",
-    "...wWWWWWWWW....",
-    "...wWwWWWWWW.SS.",
-    "...wWwWWWWWWWW..",
-    "...wWWwwwwwww...",
-    "...wWWWWWWWW....",
-    "...wWWWWWWWW....",
-  ],
-];
-
-// Seated in profile, leaning back, hand at the chin: thinking (P1).
-const TORSO_THINK = [
-  "...wWWWWcc......",
-  "..wWWWWWWck.....",
-  "..wWWWWWWWW.....",
-  "..wWWWWWwwwSS...",
-  "..wWWWWWWWwW....",
-  "..wWWWWWWWw.....",
-  "..wWWWWWWWW.....",
-  "..wWWWWWWWW.....",
-];
-
-// Standing in profile: torso rows 12-19 (the last row is the belt).
-const TORSO_STAND_SIDE = [
-  "....wWWWWcc.....",
-  "...wWWWWWWck....",
-  "...wWWWWWWWW....",
-  "...wWWWWWWWW....",
-  "...wWWWWWWWW....",
-  "...wWWWWWWWW....",
-  "...wWWWWWWWW....",
-  "...PPPPPPPPP....",
-];
-
-// The near arm, painted over the torso at row 13 (row 12 when the body bobs up).
-const ARM = {
-  down: ["......w.........", "......w.........", "......w.........", "......w.........", "......w.........", "......SS........"],
-  fwd: ["......w.........", ".......w........", "........w.......", ".........w......", "..........wSS...", "................"],
-  back: ["......w.........", ".....w..........", "....w...........", "..ww............", "SS..............", "................"],
-  // Bent, holding a cup at the chest / at the mouth (drink).
-  cup: ["......w.........", "......w....cc...", "......w....cc...", "......wwwwSSc...", "................", "................"],
-  // Raised to the mouth: starts at row 7, not at the shoulder.
-  sip: { row: 7, rows: ["............cc..", "............cc..", "...........Scc..", "..........w.....", ".........w......", "........w.......", ".......w........"] },
-  // Talking hand, palm up, two heights (chat).
-  talk0: ["......w.........", "......w.........", "......w.........", "......wwwwSS....", "..........S.....", "................"],
-  talk1: ["......w.........", "......w....SS...", "......w...wS....", "......wwww......", "................", "................"],
-};
-
-// Legs: the near leg is P, the far leg is p (a shade darker), so the stride reads.
-// Contact frames are 6 rows (body low); passing frames are 7 rows (body up 1 px).
-const LEGS = {
+const BIG_LEGS = {
   // Near leg forward, far leg back.
   contactA: [
     "...pppPPPPPP....",
@@ -208,289 +311,12 @@ const LEGS = {
     "....ppPPPP......",
     "....kkkkkkkk....",
   ],
-  // Climbing: the near knee up onto the next step, or the far one.
-  climbA: [
-    "...ppPPPPPPPP...",
-    "...pp.....PPP...",
-    "..ppp.....PPP...",
-    "..pp......kkkk..",
-    ".ppp............",
-    "kkk.............",
-  ],
-  climbB: [
-    "...PPpppppppp...",
-    "...PP.....ppp...",
-    "..PPP.....ppp...",
-    "..PP......kkkk..",
-    ".PPP............",
-    "kkk.............",
-  ],
 };
-
-/** A standing profile frame: 26 rows, bottom at the feet. `up` lifts the body 1 px. */
-function standSide({ arm = "down", legs = "stand", head = HEAD_SIDE, up = false }) {
-  const body = stack(head, TORSO_STAND_SIDE);
-  const rows = up ? stack(body.slice(1), LEGS[legs]) : stack(body, LEGS[legs]);
-  if (rows.length !== 26) throw new Error(`standSide: ${rows.length} rows`);
-  const a = ARM[arm];
-  return paint(rows, a.rows ?? a, (a.row ?? 13) - (up ? 1 : 0));
-}
-
-// Holding the box on the way out: arms forward, a plant in the box.
-const CARRY = [
-  "...........gG...",
-  "..........gGgG..",
-  ".........BBBBBBB",
-  ".........bBBBBBB",
-  "......wwwSBBBBBB",
-  ".........BBBBBBB",
-  ".........BBBBBBB",
-  ".........bbbbbbb",
-];
-function carrySide(legs, up) {
-  const body = stack(HEAD_SIDE, TORSO_STAND_SIDE);
-  const rows = up ? stack(body.slice(1), LEGS[legs]) : stack(body, LEGS[legs]);
-  return paint(rows, CARRY, up ? 10 : 11);
-}
-
-// Standing, facing the viewer: idle, waiting, riding the elevator; and the
-// source of the visitor outline.
-const STAND_FRONT_BODY = [
-  "...wWWcsscWWw...",
-  "..wWWWckkcWWWw..",
-  ".wWWWWWkkWWWWWw.",
-  ".wWwWWWkkWWWwWw.",
-  ".wWwWWWkkWWWwWw.",
-  ".wWwWWWWWWWWwWw.",
-  ".SwwWWWWWWWWwwS.",
-  ".S.PPPPPPPPPP.S.",
-  "...PPPPPPPPPP...",
-  "...PPPP..PPPP...",
-  "...PPPP..PPPP...",
-  "...PPPP..PPPP...",
-  "...PPPP..PPPP...",
-  "..kkkkk..kkkkk..",
-];
-const STAND_FRONT = stack(HEAD_FRONT, STAND_FRONT_BODY);
-// Weight on one leg, hip out: the visitor's shuffle.
-const STAND_FRONT_SHIFT = stack(shift(stack(HEAD_FRONT, STAND_FRONT_BODY.slice(0, 9)), 1, 0), [
-  "...PPPP..PPPP...",
-  "...PPPP...PPPP..",
-  "...PPPP...PPPP..",
-  "...PPPP...PPPP..",
-  "..kkkkk...kkkkk.",
-]);
-
-// Seated on the street bench, legs showing, box beside (laid off).
-const BENCH_BODY = [
-  "...wWWcsscWWw...",
-  "..wWWWckkcWWWw..",
-  ".wWWWWWkkWWWWWw.",
-  ".wWwWWWkkWWWwWw.",
-  ".wWwWWWkkWWWwWw.",
-  ".wWwWWWWWWWWwWw.",
-  ".wSSPPPPPPPPSSw.",
-  "..PPPPPPPPPPPP..",
-  "..pPPPPPPPPPPp..",
-  "...PPPP..PPPP...",
-  "...PPPP..PPPP...",
-  "...PPPP..PPPP...",
-  "..kkkkk..kkkkk..",
-];
-
-// ---------------------------------------------------------------------------
-// Seated front variants (16 x 20, ending at the desk top).
-
-const SIT_FRONT = stack(HEAD_FRONT, TORSO_SIT_FRONT);
-
-/** Head lowered by dy rows, sunk into the shoulders. */
-const headDown = (head, dy) => stack(blank(16, dy), head, TORSO_SIT_FRONT.slice(dy));
-
-// Cheer: arms bent up, then straight up (2 frames, 0.6 s, once).
-const CHEER = [
-  paint(stack(HEAD_JOY, TORSO_SIT_ARMS_UP), [
-    "SS............SS",
-    "SSs..........sSS",
-    "Ww............wW",
-    "Ww............wW",
-    "Ww............wW",
-    "Ww............wW",
-    "wW............Ww",
-    ".ww..........ww.",
-  ], 4),
-  paint(stack(HEAD_JOY, TORSO_SIT_ARMS_UP), [
-    "SS............SS",
-    "SS............SS",
-    "Ww............wW",
-    "Ww............wW",
-    "Ww............wW",
-    "Ww............wW",
-    "Ww............wW",
-    "Ww............wW",
-    "Ww............wW",
-    "Ww............wW",
-    "Ww............wW",
-    "Ww............wW",
-    ".ww..........ww.",
-  ], 0),
-];
-
-// Stretch (P1): arms out, then up, eyes shut.
-const STRETCH = [
-  paint(stack(HEAD_YAWN, TORSO_SIT_ARMS_UP), [
-    "SS............SS",
-    ".Ww..........wW.",
-    "..Ww........wW..",
-    "...w........w...",
-  ], 9),
-  paint(stack(HEAD_YAWN, TORSO_SIT_ARMS_UP), [
-    "..SS........SS..",
-    "..Ww........wW..",
-    "..Ww........wW..",
-  ], 0),
-];
-
-// Sitting down: one squashed frame, head down 1 px, shoulders out (§14.1).
-const SIT_LAND = stack(blank(16, 1), HEAD_FRONT, [
-  "..wWWWcsscWWWw..",
-  ".wWWWWWkkWWWWWw.",
-  "wWWwWWWkkWWWwWWw",
-  "wWWwWWWkkWWWwWWw",
-  "wWWwWWWWWWWWwWWw",
-  "wWWwWWWWWWWWwWWw",
-  "SSSwWWWWWWWWwSSS",
-]);
-
-// ---------------------------------------------------------------------------
-// Hair. Same 16 px grid as the heads; `y` is the row offset from the head
-// origin (negative = above the frame top). "none" draws nothing.
-
-const HAIR = {
-  short: {
-    front: {
-      y: 0,
-      rows: [
-        "....HHHHHHHH....",
-        "...HHHHHHHHHH...",
-        "..HHHHHHHHHHHH..",
-        "..HHHhHHHHHHHH..",
-        "..HH.......hHH..",
-      ],
-    },
-    side: {
-      y: 0,
-      rows: [
-        "....HHHHHHH.....",
-        "...HHHHHHHHH....",
-        "..HHHHHHHHHHH...",
-        "..HHHHHHHHHHh...",
-        "..HHHHH.........",
-        "..HHHH..........",
-        "...hH...........",
-      ],
-    },
-  },
-  long: {
-    front: {
-      y: 0,
-      rows: [
-        "....HHHHHHHH....",
-        "...HHHHHHHHHH...",
-        "..HHHHHHHHHHHH..",
-        "..HHHHhHHhHHHH..",
-        "..HHH......HHH..",
-        "..HH........HH..",
-        "..HH........HH..",
-        "..HH........HH..",
-        "..hH........Hh..",
-        "..hh........hh..",
-        "..hh........hh..",
-      ],
-    },
-    side: {
-      y: 0,
-      rows: [
-        "....HHHHHHH.....",
-        "...HHHHHHHHH....",
-        "..HHHHHHHHHHH...",
-        "..HHHHHHHHHHh...",
-        "..HHHHHH........",
-        "..HHHHH.........",
-        "..HHHH..........",
-        "..HHHH..........",
-        "..HHHh..........",
-        "..hHh...........",
-        "..hh............",
-      ],
-    },
-  },
-  bun: {
-    front: {
-      y: -2,
-      rows: [
-        "......HHHH......",
-        "......HhhH......",
-        "....HHHHHHHH....",
-        "...HHHHHHHHHH...",
-        "..HHHHHHHHHHHH..",
-        "..HHH......HHH..",
-        "..HH........HH..",
-      ],
-    },
-    side: {
-      y: -2,
-      rows: [
-        "..HHH...........",
-        ".HhhH...........",
-        "..HHHHHHHH......",
-        "..HHHHHHHHH.....",
-        "..HHHHHHHHHHH...",
-        "..HHHHHHHHHHh...",
-        "..HHHH..........",
-        "..HHH...........",
-      ],
-    },
-  },
-  curly: {
-    front: {
-      y: -1,
-      rows: [
-        "...H.HH..HH.H...",
-        "..HhHHhHHhHHhH..",
-        ".HHHHHHHHHHHHHH.",
-        ".HhHHHHHHHHHHhH.",
-        ".HHHhHHhHHhHHHH.",
-        ".HH..........HH.",
-        ".hH..........Hh.",
-        "..h..........h..",
-      ],
-    },
-    side: {
-      y: -1,
-      rows: [
-        "....H.HH.H......",
-        "...HhHHhHHH.....",
-        "..HHHHHHHHHH....",
-        ".HHhHHHHHHHHH...",
-        ".HHHHHHhHHHh....",
-        ".HhHHHH.........",
-        ".HHHH...........",
-        "..hH............",
-      ],
-    },
-  },
-};
-
-export const HAIR_STYLES = ["short", "long", "bun", "curly", "none"];
-
-// ---------------------------------------------------------------------------
-// The boss: 18 px wide, accent blazer, silver hair, lanyard, mug.
-// Three faces (spec §17.1): smug >= 90% pass rate, forced smile 50-89%, twitchy below.
 
 const mirror18 = (halves) => halves.map((h) => h + [...h].reverse().join(""));
 
 const BOSS_BODY = stack(
-  pad(HEAD_FRONT, 1, 1),
+  pad(BIG_HEAD_FRONT, 1, 1),
   mirror18([
     "....AAAcs",
     "...AAAAck",
@@ -586,7 +412,7 @@ const BOSS_HAIR_SIDE = [
   "...mmmm...........",
   "....mm............",
 ];
-const BOSS_HEAD_SIDE = paint(paint(pad(HEAD_SIDE, 1, 1), BOSS_HAIR_SIDE, 0), ["...........kk....."], 4);
+const BOSS_HEAD_SIDE = paint(paint(pad(BIG_HEAD_SIDE, 1, 1), BOSS_HAIR_SIDE, 0), ["...........kk....."], 4);
 const BOSS_TORSO_SIDE = [
   ".....AAAAAcc......",
   "....AAAAAAAck.....",
@@ -611,7 +437,7 @@ const pad18 = (rows) => pad(rows, 1, 1);
 function bossSide(arm, legs, up = false) {
   // 12 head + 10 torso + 6 legs = 28; passing legs are 7 rows with the body 1 px up.
   const body = stack(BOSS_HEAD_SIDE, BOSS_TORSO_SIDE);
-  const rows = up ? stack(body.slice(1), pad18(LEGS[legs])) : stack(body, pad18(LEGS[legs]));
+  const rows = up ? stack(body.slice(1), pad18(BIG_LEGS[legs])) : stack(body, pad18(BIG_LEGS[legs]));
   if (rows.length !== 28) throw new Error(`bossSide: ${rows.length} rows`);
   const a = BOSS_ARM[arm];
   return paint(rows, a.rows ?? a, (a.row ?? 13) - (up ? 1 : 0));
@@ -620,80 +446,32 @@ function bossSide(arm, legs, up = false) {
 // ---------------------------------------------------------------------------
 // Props and effects
 
-const CHAIR_FRONT = [
-  "..llllllllllllll..",
-  ".llllllllllllllll.",
-  ".llllllllllllllll.",
-  ".llllllllllllllll.",
-  ".llllllllllllllll.",
-  ".llllllllllllllll.",
-  ".llllllllllllllll.",
-  ".llllllllllllllll.",
-  ".llllllllllllllll.",
-];
+const CHAIR_FRONT = ["..llllllllll..", ...Array(6).fill(".llllllllllll.")];
 
-const CHAIR_SIDE = [
-  ".ll...",
-  "lll...",
-  "lll...",
-  "lll...",
-  "lll...",
-  "lll...",
-  "lll...",
-  "lll...",
-  "llllll",
-];
+const CHAIR_SIDE = [".ll..", ...Array(5).fill("lll.."), "lllll"];
 
 // Executive chair: taller, leather (Directors and the boss).
 const CHAIR_EXEC_FRONT = [
-  "...eeeeeeeeeeee...",
-  "..eeeeeeeeeeeeee..",
-  ".eeeeeeeeeeeeeeee.",
-  ".eebeeeeeeeeeebee.",
-  ".eeeeeeeeeeeeeeee.",
-  ".eebeeeeeeeeeebee.",
-  ".eeeeeeeeeeeeeeee.",
-  ".eeeeeeeeeeeeeeee.",
-  ".eeeeeeeeeeeeeeee.",
-  ".eeeeeeeeeeeeeeee.",
-  ".eeeeeeeeeeeeeeee.",
-  ".eeeeeeeeeeeeeeee.",
+  "...eeeeeeee...",
+  "..eeeeeeeeee..",
+  ".eeeeeeeeeeee.",
+  ".eebeeeeeebee.",
+  ".eeeeeeeeeeee.",
+  ".eebeeeeeebee.",
+  ".eeeeeeeeeeee.",
+  ".eeeeeeeeeeee.",
+  ".eeeeeeeeeeee.",
 ];
-const CHAIR_EXEC_SIDE = [
-  "ee....",
-  "eee...",
-  "eee...",
-  "eee...",
-  "eee...",
-  "eee...",
-  "eee...",
-  "eee...",
-  "eee...",
-  "eee...",
-  "eee...",
-  "eeeeee",
-];
+const CHAIR_EXEC_SIDE = ["ee...", ...Array(7).fill("eee.."), "eeeee"];
 
 // Monitor in profile: the screen faces left, toward the seated character.
-const monitor = (q) =>
-  [
-    "QZZ...",
-    "QQZZ..",
-    "QQTZZ.",
-    "QQTZZ.",
-    "QQTZZ.",
-    "QQTZZ.",
-    "QQZZ..",
-    "..TZ..",
-    "..TZ..",
-    ".TTTZ.",
-  ].map((r) => r.replaceAll("Q", q));
+const monitor = (q) => ["QZZ..", "QQZZ.", "QQTZ.", "QQTZ.", "QQZZ.", "..TZ.", ".TTTZ"].map((r) => r.replaceAll("Q", q));
 
 // Interns get laptops: lid open toward the seated character.
-const laptop = (q) => ["....TT", "...QT.", "...QT.", "..QT..", "ttttT."].map((r) => r.replaceAll("Q", q));
+const laptop = (q) => ["...TT", "..QT.", "..QT.", ".QT..", "tttT."].map((r) => r.replaceAll("Q", q));
 
-// Submitted: a sheet with a muted RECEIVED stamp. 6 x 7.
-const PAPER = ["cccccc", "cllllc", "cccccc", "cllccc", "cmmmcc", "cmccmc", "cmmmcc"];
+// Submitted: a sheet with a muted RECEIVED stamp. 5 x 6.
+const PAPER = ["ccccc", "clllc", "ccccc", "cmmmc", "cmcmc", "cmmmc"];
 const SWEAT = [".c.", "ccc", "ccc", ".c."];
 // The laid-off desk: the box outline (spec §5.3).
 const BOX = ["cccccccc", "c.c..c.c", "cccccccc", "c......c", "c......c", "cccccccc"];
@@ -859,19 +637,21 @@ for (const a of ["walk", "carry", "climb"])
 // Hand attach points for carried paper (§5.2 "Carry paper"), from the frame's
 // top-left. Walking swings the hand; the sheet swings with it.
 const hand = {
-  "emp.stand.side": [6, 18],
-  "emp.walk.0": [0, 17],
-  "emp.walk.1": [6, 17],
-  "emp.walk.2": [11, 17],
-  "emp.walk.3": [6, 17],
-  "emp.climb.0": [0, 17],
-  "emp.climb.1": [6, 17],
-  "emp.climb.2": [11, 17],
-  "emp.climb.3": [6, 17],
+  "emp.stand.side": [5, 13],
+  "emp.walk.0": [0, 13],
+  "emp.walk.1": [5, 12],
+  "emp.walk.2": [10, 13],
+  "emp.walk.3": [5, 12],
+  "emp.climb.0": [0, 13],
+  "emp.climb.1": [5, 12],
+  "emp.climb.2": [10, 13],
+  "emp.climb.3": [5, 12],
 };
 
 export const RIG = {
   units: "Sprite pixels. Anchor every character frame at its bottom center.",
+  // Employee frame size: seated frames end at the desk top, standing ones at the feet.
+  character: { w: CHAR_W, sit: SIT_H, stand: STAND_H },
   tint: {
     shirt: "body token: sha256(utf8(wallet))[0] mod 8 (spec §5.1)",
     hair: "hair color: sha256(utf8(wallet))[2] mod 6; style: sha256(utf8(wallet))[1] mod 5 in hairStyles order ('none' draws no hair)",
@@ -908,12 +688,12 @@ export const RIG = {
   ),
   attach: {
     // Offsets from the character frame's top-left, in sprite pixels.
-    sweat: { "emp.sit.front": [13, 1], "emp.type": [1, 2] },
-    flame: "centered on the character, the flame's bottom on the character's row 12 (shoulders), drawn behind the character",
-    chairFront: [-1, 11],
-    chairSide: [0, 11],
-    chairExecFront: [-1, 8],
-    chairExecSide: [0, 8],
+    sweat: { "emp.sit.front": [10, 1], "emp.type": [1, 2] },
+    flame: "centered on the character, the flame's bottom on the character's row 9 (shoulders), drawn behind the character",
+    chairFront: [-1, 8],
+    chairSide: [0, 8],
+    chairExecFront: [-1, 6],
+    chairExecSide: [0, 6],
     bench: "emp.bench frames stand on the ground line like standing frames; prop.box.full sits on the bench seat beside them",
   },
   desk: "Seated frames end at the desk top. Draw the room back, the chair, the character, then room.<tier>.front.",

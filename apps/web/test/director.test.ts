@@ -1,8 +1,8 @@
-import { buildTower, type TowerLayout } from "@reorg/core";
+import { buildTower, DRAWN_FLOORS, type TowerLayout } from "@reorg/core";
 import { describe, expect, it } from "vitest";
 import { Cast } from "../src/agents/cast";
 import { sample, type Pose } from "../src/agents/track";
-import { Director, homesOf, lifeOf, type DirectorFx, type DirectorModel } from "../src/director";
+import { Director, hiddenBefore, homesOf, lifeOf, type DirectorFx, type DirectorModel } from "../src/director";
 import { Nav, POINTS } from "../src/nav";
 import { bandsOf } from "../src/render/geometry";
 import { SimSource } from "../src/state/sim";
@@ -89,7 +89,7 @@ describe("director (W-08)", () => {
   it("keeps every character inside its band, also when floors are added or removed", () => {
     expect(outside).toEqual([]);
     // The player joining spills the Interns onto a second floor: everything below shifts down.
-    const r = run(4, 24, "grow", 20);
+    const r = run(4, 37, "grow", 20); // 18 Interns: one full floor
     expect(r.outside).toEqual([]);
     expect(r.floorChanges).toBeGreaterThan(0);
   });
@@ -201,5 +201,30 @@ describe("director (W-08)", () => {
         prev = p;
       }
     }
+  });
+});
+
+describe("unfolding (design §4.3)", () => {
+  it("a floor that unfolds for the player was there all along: nobody on it arrives", () => {
+    let now = 1_800_000_000_000;
+    const sim = new SimSource({ size: 1200, seed: "fold", epochMs: EPOCH, history: 1, firstOpenInMs: 4000, clock: () => now, manual: true });
+    const s = sim.snapshot();
+    const input = { config: s.config, totalSupply: s.totalSupply, holders: s.holders, employees: s.employees, task: s.task, submissions: s.submissions };
+    const before = buildTower(input);
+    expect(before.folds.length).toBeGreaterThan(0);
+    // Someone deep in the folded Intern floors badges in.
+    const f = before.folds[0]!;
+    const all = buildTower(input, { drawnFloors: 100_000 });
+    const target = all.floors.find((fl) => fl.tier === 3 && fl.index === f.to)!;
+    const you = target.desks.find((c) => c)!.wallet;
+    const after = buildTower(input, { you });
+    const yours = after.floors[after.desks.get(you)!.floor]!;
+    expect(yours.index).toBe(f.to);
+    expect(yours.index).toBeGreaterThanOrEqual(DRAWN_FLOORS);
+    for (const c of yours.desks) if (c) expect(hiddenBefore(before, after, c)).toBe(true);
+    // A drawn floor's people were never hidden.
+    const first = after.floors.find((fl) => fl.tier === 3)!.desks.find((c) => c)!;
+    expect(hiddenBefore(before, after, first)).toBe(false);
+    now += 1;
   });
 });

@@ -31,7 +31,7 @@ fn wasm(name: &str) -> Vec<u8> {
 
 pub fn default_config() -> Value {
     json!({
-        "tier_thresholds_bps": [300, 100, 25, 5],
+        "tier_thresholds_ppm": [30000, 10000, 2500, 10],
         "tier_bucket_bps": [3500, 3000, 2000, 1500],
         "payroll_bps": 6000, "reserve_bps": 3000, "jackpot_bps": 1000,
         "streak_step_bps": 1000, "streak_max_steps": 5, "streak_milestones": [3, 7, 14],

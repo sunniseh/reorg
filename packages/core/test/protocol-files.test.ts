@@ -26,8 +26,9 @@ describe("config (P-04)", () => {
   it.each([
     ["bucket shares not summing to 10000", { tier_bucket_bps: [3500, 3000, 2000, 1000] }],
     ["split not summing to 10000", { jackpot_bps: 0 }],
-    ["thresholds not descending", { tier_thresholds_bps: [300, 300, 25, 5] }],
-    ["zero threshold", { tier_thresholds_bps: [300, 100, 25, 0] }],
+    ["thresholds not descending", { tier_thresholds_ppm: [30_000, 30_000, 2_500, 10] }],
+    ["zero threshold", { tier_thresholds_ppm: [30_000, 10_000, 2_500, 0] }],
+    ["threshold above 100%", { tier_thresholds_ppm: [1_000_001, 10_000, 2_500, 10] }],
     ["bps above 10000", { antidump_bps: 10_001 }],
     ["layoff_after zero", { layoff_after: 0 }],
     ["milestones not ascending", { streak_milestones: [7, 3] }],

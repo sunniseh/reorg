@@ -5,14 +5,14 @@ import { CROWD_ROLES, crowdDistribution, crowdSplit, tierOf, type Tuple4 } from 
 
 const root = new URL("../../../", import.meta.url);
 const vectors = JSON.parse(readFileSync(new URL("protocol/vectors.json", root), "utf8"));
-const thresholds = vectors.config.tier_thresholds_bps as Tuple4<number>;
+const thresholds = vectors.config.tier_thresholds_ppm as Tuple4<number>;
 const SUPPLY = 1_000_000_000n * 10n ** 18n;
 
 type TierCase = { balance: string; total_supply: string; tier: number | null; note: string };
 
 describe("tierOf (§6.1)", () => {
   it.each(vectors.tier.cases as TierCase[])("$note", (c) => {
-    expect(tierOf(BigInt(c.balance), BigInt(c.total_supply), vectors.tier.thresholds_bps)).toBe(c.tier);
+    expect(tierOf(BigInt(c.balance), BigInt(c.total_supply), vectors.tier.thresholds_ppm)).toBe(c.tier);
   });
   it("zero supply is never a tier", () => expect(tierOf(1n, 0n, thresholds)).toBeNull());
 });
@@ -63,7 +63,7 @@ describe("crowdDistribution (C-02)", () => {
   });
 
   it("throws when the supply can't hold the crowd or thresholds are too close", () => {
-    expect(() => crowdDistribution(400, SUPPLY, [3000, 1000, 250, 50])).toThrow(/supply/);
-    expect(() => crowdDistribution(20, SUPPLY, [300, 290, 25, 5])).toThrow(/thresholds too close/);
+    expect(() => crowdDistribution(400, SUPPLY, [300_000, 100_000, 25_000, 5_000])).toThrow(/supply/);
+    expect(() => crowdDistribution(20, SUPPLY, [30_000, 29_000, 2_500, 10])).toThrow(/thresholds too close/);
   });
 });

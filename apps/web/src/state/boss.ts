@@ -3,7 +3,7 @@
  * flavor text, the player's puzzle, the announcement feed (SSE with a polling fallback) and
  * /healthz (STALLED, the boss clock). The boss never sees an answer.
  */
-import type { TaskId } from "@reorg/core";
+import type { TaskId, TowerWire } from "@reorg/core";
 import type { BossTask, FeedItem, FeedKind, Puzzle } from "./types";
 
 export interface BossFeedEntry {
@@ -72,6 +72,12 @@ export class BossClient {
     if (r.status === 404 || r.status === 409) return null;
     if (r.status !== 200 || !r.body) throw new Error(r.body?.error ?? `boss returned ${r.status}`);
     return r.body;
+  }
+
+  /** The big-company tower as `you` sees it; null when the route is off or not read yet. */
+  async tower(you: string | null): Promise<{ at: number; task_id: number; tower: TowerWire } | null> {
+    const r = await this.get<{ at: number; task_id: number; tower: TowerWire }>(`/api/tower${you ? `?you=${encodeURIComponent(you)}` : ""}`);
+    return r.status === 200 ? r.body : null;
   }
 
   async feed(since = 0, limit = 50): Promise<BossFeedEntry[]> {

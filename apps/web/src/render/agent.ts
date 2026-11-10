@@ -10,7 +10,7 @@ import type { Appearance } from "@reorg/core";
 import { Container, Graphics, Sprite, Texture } from "pixi.js";
 import { TOKENS } from "../theme/tokens";
 import type { Atlas } from "./atlas";
-import { RIG } from "./geometry";
+import { CHAR, RIG } from "./geometry";
 
 export class RgAgent extends Container {
   private readonly shadow = new Sprite(Texture.WHITE);
@@ -36,8 +36,8 @@ export class RgAgent extends Container {
     // A 1 px ground shadow under standing characters (art/scene.mjs).
     this.shadow.tint = TOKENS.bg;
     this.shadow.alpha = 0.45;
-    this.shadow.setSize(12, 1);
-    this.shadow.position.set(-6, -1);
+    this.shadow.setSize(CHAR.w - 2, 1);
+    this.shadow.position.set(-(CHAR.w - 2) / 2, -1);
     this.prop.visible = false;
     this.flame.visible = false;
     this.sweat.visible = false;
@@ -84,7 +84,7 @@ export class RgAgent extends Container {
       this.hair.position.set(-w / 2 + (info.headX ?? 0), -h + hy);
     }
     // Standing frames cast the ground shadow; seated ones are behind a desk.
-    this.shadow.visible = h >= 24 && !frame.startsWith("emp.visitor");
+    this.shadow.visible = h >= CHAR.stand && !frame.startsWith("emp.visitor");
     this.placeProp();
     if (this.ring) this.drawRing();
   }
@@ -101,7 +101,7 @@ export class RgAgent extends Container {
   private placeProp(): void {
     if (!this.propName || !this.frameName) return;
     const tex = this.base.texture;
-    const hand = RIG.frames[this.frameName]?.hand ?? [6, 18];
+    const hand = RIG.frames[this.frameName]?.hand ?? [5, 13];
     const pw = this.prop.texture.frame.width;
     const ph = this.prop.texture.frame.height;
     this.prop.position.set(-tex.frame.width / 2 + hand[0] - Math.floor(pw / 2) + 1, -tex.frame.height + hand[1] - ph + 2);
@@ -126,7 +126,7 @@ export class RgAgent extends Container {
       this.sweat.texture = this.atlas.tex("fx.sweat");
       // A drop that slides down the temple and starts again, every 1.6 s.
       const k = (now % 1600) / 1600;
-      this.sweat.position.set(side ? -6 : 5, -h + 3 + Math.floor(k * 4));
+      this.sweat.position.set(side ? -5 : 4, -h + 3 + Math.floor(k * 4));
       this.sweat.alpha = k < 0.8 ? 1 : 1 - (k - 0.8) / 0.2;
     }
   }
@@ -147,9 +147,10 @@ export class RgAgent extends Container {
 
   private drawRing(): void {
     const h = this.base.texture.frame.height + 3;
+    const w = this.base.texture.frame.width;
     if (!this.ring || h === this.ringH) return;
     this.ringH = h;
-    this.ring.clear().rect(-10, -h + 1, 20, h).stroke({ color: TOKENS.accent, width: 1, alignment: 1 });
+    this.ring.clear().rect(-(w / 2) - 2, -h + 1, w + 4, h).stroke({ color: TOKENS.accent, width: 1, alignment: 1 });
   }
 
   private applyTints(): void {

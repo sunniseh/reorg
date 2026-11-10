@@ -24,7 +24,7 @@ Edit the `.mjs` sources, never the outputs. `npm run art` fails if the rig names
 
 ## The cast (A-02)
 
-**Employees.** 16 px wide; standing frames are 26 tall, seated frames 20. The head sits in rows 0 to 11. A pose that moves the head says so in `RIG.frames[frame].headY` (and `headX`), and the hair moves with it: the walk bobs up 1 px on its passing frames, the slump sinks 1 and 2 px. The far leg is a shade darker than the near leg, so a stride reads.
+**Employees.** 12 px wide; standing frames are 20 tall, seated frames 15 (`RIG.character`; ROADMAP D23). The head sits in rows 0 to 8. The boss keeps the earlier 16 px head and legs in an 18 × 28 frame, so he stands a head taller. A pose that moves the head says so in `RIG.frames[frame].headY` (and `headX`), and the hair moves with it: the walk bobs up 1 px on its passing frames, the slump sinks 1 and 2 px. The far leg is a shade darker than the near leg, so a stride reads.
 
 | Frames (animation) | Use | Design Spec |
 | --- | --- | --- |
@@ -54,7 +54,7 @@ Carried paper: `prop.paper` at the frame's hand point, `RIG.frames[frame].hand` 
 
 ## The building (A-01)
 
-All geometry is in `RIG.building` (sprite pixels, Design Spec §4.2): the building is 380 wide = outer wall 4 + stairs 20 + tube 4 + elevator shaft 20 + rooms 288 + amenity bay 40 + outer wall 4. A floor is 48 tall plus a 4 px slab; feet stand on the slab's first row; desk tops are at row 36.
+All geometry is in `RIG.building` (sprite pixels, Design Spec §4.2): the building is 380 wide = outer wall 4 + stairs 20 + tube 4 + elevator shaft 20 + rooms 288 + amenity bay 40 + outer wall 4. A floor is 48 tall plus a 4 px slab; feet stand on the slab's first row; desk tops are at row 38. Rooms are 48 / 32 / 24 / 16 wide, 6 / 9 / 12 / 18 per floor (must match `ROOMS_PER_FLOOR` in `packages/core/src/tower.ts`).
 
 | Group | Tiles |
 | --- | --- |
@@ -64,7 +64,9 @@ All geometry is in `RIG.building` (sprite pixels, Design Spec §4.2): the buildi
 | Rooms (§4.3) | `room.<tier>.back`, `.front`, `.empty` for directors (private office, door swung open), managers (glass front), associates (cubicle), interns (one seat of the long table); `room.directors.wall`; anchors in `RIG.building.rooms` |
 | Bay, lobby, street (§4.5) | `bay` (cooler, printer and outbox tray, coffee machine), `lobby.cafe`, `.stool`, `.table`, `.door.hr`, `.reception` (the bell nobody answers), `.logo`, `.plant`, `lobby.door.glass.0`–`.2`, `lobby.rollup.0`–`.2` (garage), `street.pavement`, `.bench`, `.lamp` |
 | Basement, penthouse (§4.6) | `vault.door`, `vault.pile.0`–`.5`, `vault.bar` (the fill is drawn into it), `vault.boxes`, `server.rack`, `server.rack.stalled`; `pent.desk`, `pent.shelf`, `pent.orgchart` |
-| Backdrop | `sky.skyline`, tiles horizontally behind the street line |
+| Backdrop | `sky.skyline`, tiles horizontally behind the street line; `sky.skyline.lit` (night) |
+| Later states and surroundings (W-15, §12.2) | Shell tiles for `skyscraper` and `megacorp`; `sign.skyscraper` and `sign.megacorp` (LED tickers reading $REORG), `roof.antenna`, `roof.helipad`; vault art per state in `RIG.building.states[].vault` (`vault.cashbox`, `vault.safe`, `vault.door`, `vault.walkin`, `vault.double`); `sky.blocks` (+ `.lit`), `sky.cloud.0`–`.1`, `sky.blimp` (the panel carries the boss's line); `surr.fence`, `surr.tree`, `surr.car.0`–`.2`, `surr.parking`, `surr.cart`; `twin.facade` (+ `.lit`), `twin.parapet`, `twin.bridge`; placements in `RIG.building.surroundings` |
+| Ceremonies (W-15, §12.3, §14.3) | `build.scaffold`, `build.crane.mast`, `.jib`, `.hook`, `build.beam`, `build.ribbon` (+ `.half`), `build.forlease`; `sign.closed` for bankruptcy; geometry in `RIG.building.construction` |
 
 **The street.** The sidewalk is the band below the lobby, in front of it: street characters stand on `RIG.building.street.standY` and overlap the lobby's street front a little, which reads as standing outside a raised lobby. Leaving means walking out of the doors in the bay and down onto the sidewalk (toward the viewer); the visitors queue under the doors, the bench and the lamp stand to the left.
 

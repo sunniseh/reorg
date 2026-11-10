@@ -3,17 +3,17 @@
 use crate::config::Config;
 use crate::math::{mul_div, mul_wide};
 use crate::model::{Allocation, Employee, Tier};
-use crate::{TaskId, BPS};
+use crate::{TaskId, BPS, PPM};
 use serde::Serialize;
 
-/// §6.1: smallest k with `balance × BPS ≥ thresholds[k] × total_supply`, else visitor (`None`).
+/// §6.1: smallest k with `balance × PPM ≥ thresholds[k] × total_supply`, else visitor (`None`).
 /// Compared on 256-bit products, so no input can overflow.
-pub fn tier_of(balance: u128, total_supply: u128, thresholds_bps: &[u16; 4]) -> Option<Tier> {
+pub fn tier_of(balance: u128, total_supply: u128, thresholds_ppm: &[u32; 4]) -> Option<Tier> {
     if total_supply == 0 {
         return None;
     }
-    let lhs = mul_wide(balance, BPS);
-    thresholds_bps
+    let lhs = mul_wide(balance, PPM);
+    thresholds_ppm
         .iter()
         .position(|&t| lhs >= mul_wide(t as u128, total_supply))
         .map(|k| k as Tier)

@@ -2,79 +2,71 @@
 
 exports[`layoutTower (W-02, design §4.3) > golden layout with 0 holders 1`] = `
 "state=garage employees=0 tiers=0/0/0/0
-t0f0 ---- ---- ---- ----
-t1f0 ---- ---- ---- ---- ---- ----
-t2f0 ---- ---- ---- ---- ---- ---- ---- ----
-t3f0 ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+t0f0 ---- ---- ---- ---- ---- ----
+t1f0 ---- ---- ---- ---- ---- ---- ---- ---- ----
+t2f0 ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+t3f0 ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 bench 
 queue "
 `;
 
 exports[`layoutTower (W-02, design §4.3) > golden layout with 1 holders 1`] = `
 "state=garage employees=1 tiers=0/0/0/1
-t0f0 ---- ---- ---- ----
-t1f0 ---- ---- ---- ---- ---- ----
-t2f0 ---- ---- ---- ---- ---- ---- ---- ----
-t3f0 w000a ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+t0f0 ---- ---- ---- ---- ---- ----
+t1f0 ---- ---- ---- ---- ---- ---- ---- ---- ----
+t2f0 ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+t3f0 w000a ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 bench 
 queue "
 `;
 
 exports[`layoutTower (W-02, design §4.3) > golden layout with 8 holders 1`] = `
 "state=garage employees=8 tiers=0/1/2/5
-t0f0 ---- ---- ---- ----
-t1f0 w006a ---- ---- ---- ---- ----
-t2f0 w005ax w003N ---- ---- ---- ---- ---- ----
-t3f0 w007s+ w004L+ w002s+ w001ax w000a ---- ---- ---- ---- ---- ---- ----
+t0f0 ---- ---- ---- ---- ---- ----
+t1f0 w006a ---- ---- ---- ---- ---- ---- ---- ----
+t2f0 w005ax w003N ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+t3f0 w007s+ w004L+ w002s+ w001ax w000a ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 bench w004
 queue "
 `;
 
 exports[`layoutTower (W-02, design §4.3) > golden layout with 24 holders 1`] = `
 "state=office employees=23 tiers=2/2/7/12
-t0f0 w019a+ w009a ---- ----
-t1f0 w016a+ w006a ---- ---- ---- ----
-t2f0 w008a+ w015L w023a+ w005ax w013ax w003N w018a ----
-t3f0 w007s+ w014a+ w022s+ w021a w004L+ w020a+ w011a+ w002s+ w010N w001ax w017N w000a
+t0f0 w019a+ w009a ---- ---- ---- ----
+t1f0 w016a+ w006a ---- ---- ---- ---- ---- ---- ----
+t2f0 w008a+ w015L w023a+ w005ax w013ax w003N w018a ---- ---- ---- ---- ----
+t3f0 w007s+ w014a+ w022s+ w021a w004L+ w020a+ w011a+ w002s+ w010N w001ax w017N w000a ---- ---- ---- ---- ---- ----
 bench w015 w004
 queue w012"
 `;
 
 exports[`layoutTower (W-02, design §4.3) > golden layout with 60 holders 1`] = `
 "state=tower employees=56 tiers=6/6/16/28
-t0f0 w039a w029ax w019a+ w059N
-t0f1 w009a w049ax ---- ----
-t1f0 w016a+ w056a+ w006a w046a+ w036a w026L+
-t2f0 w008a+ w048L w015L w023a+ w055a+ w005ax w013ax w045N
-t2f1 w053ax w028a+ w003N w035a+ w043a+ w018a w058a+ w033a
-t3f0 w024N w032s+ w040a+ w007s+ w031N w047s+ w014a+ w022s+ w030a w054a w021a w037Lx
-t3f1 w004L+ w020a+ w044a+ w052N w011a+ w027s w002s+ w010N w034a+ w042s w050a+ w001ax
-t3f2 w017N w041ax w057s w000a ---- ---- ---- ---- ---- ---- ---- ----
+t0f0 w039a w029ax w019a+ w059N w009a w049ax
+t1f0 w016a+ w056a+ w006a w046a+ w036a w026L+ ---- ---- ----
+t2f0 w008a+ w048L w015L w023a+ w055a+ w005ax w013ax w045N w053ax w028a+ w003N w035a+
+t2f1 w043a+ w018a w058a+ w033a ---- ---- ---- ---- ---- ---- ---- ----
+t3f0 w024N w032s+ w040a+ w007s+ w031N w047s+ w014a+ w022s+ w030a w054a w021a w037Lx w004L+ w020a+ w044a+ w052N w011a+ w027s
+t3f1 w002s+ w010N w034a+ w042s w050a+ w001ax w017N w041ax w057s w000a ---- ---- ---- ---- ---- ---- ---- ----
 bench w026 w048 w015 w037 w004
 queue w012 w025 w038 w051"
 `;
 
 exports[`layoutTower (W-02, design §4.3) > golden layout with 150 holders 1`] = `
 "state=tower employees=139 tiers=14/14/42/69
-t0f0 w089ax w039a w079a+ w119a+
-t0f1 w029ax w069a w109ax w149ax
-t0f2 w019a+ w059N w099a w139a+
-t0f3 w009a w049ax ---- ----
-t1f0 w016a+ w056a+ w096a w136N w006a w046a+
-t1f1 w086a+ w126a w036a w076a+ w026L+ w066N
-t1f2 w106a+ w146a+ ---- ---- ---- ----
-t2f0 w008a+ w105a w113ax w048L w145ax w088a+ w015L w023a+
-t2f1 w128a+ w055a+ w063a w095a+ w135a w143N w078a w005ax
-t2f2 w013ax w118a+ w045N w053ax w085ax w093a w028a+ w125Lx
-t2f3 w133ax w068a+ w003N w108N w035a+ w043a+ w148a+ w075a
-t2f4 w083a+ w018a w115N w123a w058a+ w098a+ w033a w138a
-t2f5 w065ax w073N ---- ---- ---- ---- ---- ----
-t3f0 w081L w097sx w024N w032s+ w040a+ w121ax w137sx w072s w080N w007s+ w104a+ w031N
-t3f1 w112s+ w120a w047s+ w144a w071a+ w087N w014a+ w022s+ w030a w111a w127s+ w054a
-t3f2 w062s+ w070L+ w094N w021a w102s w110a+ w037Lx w134a+ w061ax w004L+ w020a+ w101N
-t3f3 w117s w044a+ w052N w060a w141a w084a w011a+ w092L+ w100a+ w027s w124a+ w132s
-t3f4 w140a+ w067s+ w002s+ w010N w091a+ w107s+ w034a+ w042s w050a+ w131a+ w147L w074a+
-t3f5 w001ax w082s+ w017N w114L w041ax w122N w130a+ w057s w000a ---- ---- ----
+t0f0 w089ax w039a w079a+ w119a+ w029ax w069a
+t0f1 w109ax w149ax w019a+ w059N w099a w139a+
+t0f2 w009a w049ax ---- ---- ---- ----
+t1f0 w016a+ w056a+ w096a w136N w006a w046a+ w086a+ w126a w036a
+t1f1 w076a+ w026L+ w066N w106a+ w146a+ ---- ---- ---- ----
+t2f0 w008a+ w105a w113ax w048L w145ax w088a+ w015L w023a+ w128a+ w055a+ w063a w095a+
+t2f1 w135a w143N w078a w005ax w013ax w118a+ w045N w053ax w085ax w093a w028a+ w125Lx
+t2f2 w133ax w068a+ w003N w108N w035a+ w043a+ w148a+ w075a w083a+ w018a w115N w123a
+t2f3 w058a+ w098a+ w033a w138a w065ax w073N ---- ---- ---- ---- ---- ----
+t3f0 w081L w097sx w024N w032s+ w040a+ w121ax w137sx w072s w080N w007s+ w104a+ w031N w112s+ w120a w047s+ w144a w071a+ w087N
+t3f1 w014a+ w022s+ w030a w111a w127s+ w054a w062s+ w070L+ w094N w021a w102s w110a+ w037Lx w134a+ w061ax w004L+ w020a+ w101N
+t3f2 w117s w044a+ w052N w060a w141a w084a w011a+ w092L+ w100a+ w027s w124a+ w132s w140a+ w067s+ w002s+ w010N w091a+ w107s+
+t3f3 w034a+ w042s w050a+ w131a+ w147L w074a+ w001ax w082s+ w017N w114L w041ax w122N w130a+ w057s w000a ---- ---- ----
 bench w026 w048 w015 w125 w081 w070 w037 w004 w092 w147 w114
 queue w012 w025 w038 w051 w064 w077 w090 w103 w116 w129 w142"
 `;

@@ -12,25 +12,32 @@
  * each desk shows; the director (W-08) turns model changes into scripts and timed effects; the
  * cast and the idle schedule (W-21) say where each character is at any moment.
  */
-import type { TierIndex, TowerCharacter, TowerLayout, WalletId } from "@reorg/core";
+import { BUILDING_STATES, type BuildingState, type TierIndex, type TowerCharacter, type TowerLayout, type WalletId } from "@reorg/core";
 import { Container, Graphics, Rectangle, Sprite, Text, Texture, TilingSprite, type FederatedPointerEvent } from "pixi.js";
 import { Cast } from "../agents/cast";
 import { ANIM, type Layer, type Pose } from "../agents/track";
 import { Director, homesOf, lifeOf, type DirectorModel } from "../director";
-import { payout, plural, TIER_PLURALS } from "../format";
+import { count, payout, plural, TIER_PLURALS } from "../format";
 import { Nav } from "../nav";
 import { effectiveStatus, type Snapshot } from "../state/types";
 import { TOKENS } from "../theme/tokens";
 import { RgAgent } from "./agent";
 import type { Atlas } from "./atlas";
+import { Ceremonies } from "./ceremony";
 import { clockHand, vaultModel } from "./derive";
-import { bandsOf, G, RIG, roomOf, TIER_KEYS, type Band, type BandStack } from "./geometry";
+import { bandsOf, CHAR, G, RIG, roomOf, TIER_KEYS, type Band, type BandStack, type BuildingStateKey } from "./geometry";
+import { RgSurroundings, SIDE } from "./surroundings";
 
 const B = RIG.building;
 const FONT = "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
-/** Sky and street reach this far past the building on each side (sprite px). */
-export const SIDE = 1200;
-type ShellState = "garage" | "office" | "tower";
+/** The five building states (design §12.2); P0 drew the first three, W-15 adds the last two. */
+type ShellState = BuildingStateKey;
+/** Bankruptcy blackout (design §14.3, Later): floors go dark this far apart, all within 3 s. */
+const DARK_STEP_MS = 120;
+const DARK_TOTAL_MS = 2400;
+const DARK_ALPHA = 0.72;
+/** Below this zoom (the skyline overview) screen-size labels shrink with the building. */
+const LABEL_MIN_ZOOM = 0.6;
 
 export interface SceneModel {
   layout: TowerLayout;
@@ -141,6 +148,7 @@ interface AgentView {
 export class RgBuilding extends Container {
   private stack: BandStack | null = null;
   private shell: ShellState | null = null;
+  private state: BuildingState | null = null;
   private floorKeys = "";
   private bands = new Map<string, BandView>();
   private readonly tweens = new Tweens();
@@ -173,6 +181,15 @@ export class RgBuilding extends Container {
   private bubbleText: string | null = null;
   private bubbleShown = 0;
   private viewY: [number, number] = [-Infinity, Infinity];
+  // W-15: surroundings, ceremonies, bankruptcy.
+  private surr: RgSurroundings | null = null;
+  private readonly ceremonies: Ceremonies;
+  /** The roof sign of the current state (roof band coordinates); the crane lowers it in. */
+  roofSign: Sprite | null = null;
+  /** The boss's latest line (the Megacorp blimp carries it). */
+  private bossLine = "Per my last memo: synergy is up.";
+  /** When the bankruptcy blackout started (-Infinity: already dark on load), or null. */
+  private darkStart: number | null = null;
 
   constructor(
     readonly atlas: Atlas,
@@ -191,14 +208,36 @@ export class RgBuilding extends Container {
     this.layer.cab.addChild(this.cab, this.riders, this.cabDoors);
     this.bossView = new RgAgent(atlas, null);
     this.layer.aisle.addChild(this.bossView);
+    const self = this;
+    this.ceremonies = new Ceremonies({
+      atlas,
+      fx: this.layer.fx,
+      addTween: (d, st, done, delay) => this.addTween(d, st, done, delay),
+      get roofSign() {
+        return self.roofSign;
+      },
+    });
   }
 
   get worldHeight(): number {
     return this.stack?.height ?? 0;
   }
 
+  /** World px the roof's tallest tile rises above the roof band (the antenna), for the camera. */
+  get headroom(): number {
+    if (!this.shell || !this.stack) return 0;
+    const roof = this.stack.byKey.get("roof")!;
+    const tall = Math.max(0, ...B.states[this.shell].roof.map((r) => this.atlas.tex(r.tile).frame.height));
+    return Math.max(0, tall - (roof.h - 6) + 4);
+  }
+
   get bandStack(): BandStack | null {
     return this.stack;
+  }
+
+  /** World x range of the headquarters and its annex towers (the camera's overview frames it). */
+  get span(): [number, number] {
+    return this.surr && this.model ? this.surr.span(this.model.layout.foldedFloors) : [0, G.width];
   }
 
   /** Registers a screen-size label (scaled 1/zoom). */
@@ -209,9 +248,12 @@ export class RgBuilding extends Container {
     return l;
   }
 
-  /** Screen-size labels shrink a little when the building is drawn small (phones, design §10). */
+  /**
+   * Screen-size labels shrink a little when the building is drawn small (phones, design §10). In
+   * the overview (well below 1×) they shrink with the building, so plaques never overlap.
+   */
   private labelScale(): number {
-    return (this.zoom < 1.5 ? 0.8 : 1) / this.zoom;
+    return (this.zoom < 1.5 ? 0.8 : 1) / Math.max(LABEL_MIN_ZOOM, this.zoom);
   }
 
   setZoom(z: number): void {
@@ -219,6 +261,7 @@ export class RgBuilding extends Container {
     this.zoom = z;
     const k = this.labelScale();
     for (const l of this.labels) l.scale.set(k);
+    this.surr?.setZoom(z);
   }
 
   /** Shows only the bands (and characters) that intersect [y0, y1] (world px). */
@@ -241,9 +284,13 @@ export class RgBuilding extends Container {
   update(m: SceneModel): void {
     const prev = this.model;
     this.model = m;
+    if (m.bubble) this.bossLine = m.bubble;
+    // Bankruptcy (design §14.3, Later): the blackout plays once when seen live, else it is dark at once.
+    if (m.snap.bankrupt && this.darkStart === null) this.darkStart = m.animate && !m.reducedMotion ? m.now : -Infinity;
+    if (!m.snap.bankrupt) this.darkStart = null;
     const shell = shellOf(m.layout.state);
-    const keys = m.layout.floors.map((f) => f.key).join(",");
-    if (!this.stack || keys !== this.floorKeys || shell !== this.shell) this.rebuild(m, shell, keys);
+    const keys = [...m.layout.floors, ...m.layout.folds].map((f) => f.key).join(",");
+    if (!this.stack || keys !== this.floorKeys || m.layout.state !== this.state) this.rebuild(m, shell, keys);
     this.chars = new Map(m.layout.characters.map((c) => [c.wallet, c]));
     // The director first: it sets the desk and outbox times the bands read.
     this.director!.apply(prev ? dm(prev) : null, dm(m), this.nav!);
@@ -263,7 +310,33 @@ export class RgBuilding extends Container {
     this.cabDoors.texture = this.atlas.tex(`core.cab.door.${this.cabState.doors}`);
     this.tickAgents(now, m);
     this.tickBubble(now, m);
+    this.surr?.tick(now, { reduced: m.reducedMotion, bossLine: this.bossLine, folded: m.layout.foldedFloors });
+    this.tickDark(now);
     for (const v of this.bands.values()) if (v.visible) v.tick(now, m);
+  }
+
+  /** The indoor bands top to bottom: the ones that go dark on bankruptcy. */
+  private darkBands(): Band[] {
+    return this.stack?.bands.filter((b) => b.kind !== "roof" && b.kind !== "street") ?? [];
+  }
+
+  private darkStep(): number {
+    return Math.min(DARK_STEP_MS, DARK_TOTAL_MS / Math.max(1, this.darkBands().length));
+  }
+
+  /** Floors go dark one by one, 120 ms apart (fewer ms with many floors, so it fits in 3 s). */
+  private tickDark(now: number): void {
+    const start = this.darkStart;
+    const step = this.darkStep();
+    this.darkBands().forEach((b, i) => {
+      const a = start === null ? 0 : DARK_ALPHA * Math.min(1, Math.max(0, (now - (start + i * step)) / 200));
+      this.bands.get(b.key)?.setDark(a);
+    });
+  }
+
+  /** After the blackout the vault empties and the sign flips to CLOSED (null: not bankrupt). */
+  get closedAt(): number | null {
+    return this.darkStart === null ? null : this.darkStart + this.darkBands().length * this.darkStep() + 200;
   }
 
   addTween(dur: number, step: (p: number) => void, done?: () => void, delay = 0): void {
@@ -363,7 +436,8 @@ export class RgBuilding extends Container {
     const sprite = new RgAgent(this.atlas, null);
     sprite.eventMode = "static";
     sprite.cursor = "pointer";
-    sprite.hitArea = new Rectangle(-8, -26, 16, 26);
+    // A pixel of slack around the 12 px frame, so small characters stay easy to tap.
+    sprite.hitArea = new Rectangle(-CHAR.w / 2 - 1, -CHAR.stand - 1, CHAR.w + 2, CHAR.stand + 1);
     sprite.on("pointertap", (e: FederatedPointerEvent) => {
       e.stopPropagation();
       this.handlers.select(w);
@@ -514,13 +588,16 @@ export class RgBuilding extends Container {
   // ---------------------------------------------------------------- structure
 
   private rebuild(m: SceneModel, shell: ShellState, keys: string): void {
-    const oldShell = this.shell;
+    const oldState = this.state;
+    const state = m.layout.state;
     this.shell = shell;
+    this.state = state;
     this.floorKeys = keys;
     this.stack = bandsOf(m.layout);
+    const oldKeys = new Set(this.bands.keys());
     for (const v of this.bands.values()) v.destroy();
     this.bands.clear();
-    this.drawBackdrop(this.stack);
+    this.drawBackdrop(this.stack, shell, state);
     for (const b of this.stack.bands) this.bands.set(b.key, makeBand(this, b, shell));
     // The life system follows the geometry.
     this.nav = new Nav(this.stack);
@@ -537,31 +614,33 @@ export class RgBuilding extends Container {
         caughtUp: (n) => this.handlers.caughtUp?.(n),
       });
     }
-    // Building state change seen live: a 300 ms crossfade (design §12.3).
-    if (oldShell && oldShell !== shell && m.animate && !m.reducedMotion) {
+    // Building state change seen live: a 300 ms crossfade (design §12.3), then the construction
+    // sequence on the way up or the For lease banners on the way down (W-15). Under reduced motion
+    // it is a still frame; the boss's line is the caption.
+    const live = m.animate && !m.reducedMotion;
+    if (oldState && oldState !== state && live) {
       for (const n of ["backs", "fronts", "lobbyFront"] as const) {
         const c = this.layer[n];
         c.alpha = 0.4;
         this.addTween(300, (p) => (c.alpha = 0.4 + 0.6 * p));
       }
+      if (STATE_ORDER.indexOf(state) > STATE_ORDER.indexOf(oldState)) this.ceremonies.grow(this.stack);
+      else this.ceremonies.shrink(this.stack);
+    } else if (oldState === state && live) {
+      // A tier filled and got a new floor (design §9 "Crane"): the crane brings it.
+      const added = this.stack.bands.find((b) => b.kind === "floor" && !oldKeys.has(b.key));
+      const view = added && this.bands.get(added.key);
+      if (added && view && oldKeys.size > 0) this.ceremonies.newFloor(this.stack, added, (a) => view.setAlpha(a));
     }
   }
 
-  private drawBackdrop(stack: BandStack): void {
+  /** Sky, skyline, day and night, and the state's surroundings (W-15, surroundings.ts). */
+  private drawBackdrop(stack: BandStack, shell: ShellState, state: BuildingState): void {
     const layer = this.layer.backdrop;
-    layer.removeChildren().forEach((c) => c.destroy());
-    const street = stack.byKey.get("street")!;
-    const sky = new Sprite(Texture.WHITE);
-    sky.tint = TOKENS.sky;
-    sky.position.set(-SIDE, -400);
-    sky.setSize(G.width + SIDE * 2, street.y + 400);
-    const skyline = new TilingSprite({ texture: this.atlas.tex("sky.skyline"), width: G.width + SIDE * 2, height: 48 });
-    skyline.position.set(-SIDE, street.y - 48);
-    const ground = new Sprite(Texture.WHITE);
-    ground.tint = TOKENS.ground;
-    ground.position.set(-SIDE, street.y + 14);
-    ground.setSize(G.width + SIDE * 2, stack.height - street.y - 14 + 600);
-    layer.addChild(sky, skyline, ground);
+    layer.removeChildren().forEach((c) => c.destroy({ children: true }));
+    this.surr = new RgSurroundings(this.atlas, stack, shell, state);
+    this.surr.setZoom(this.zoom);
+    layer.addChild(this.surr);
   }
 }
 
@@ -571,8 +650,11 @@ function dm(m: SceneModel): DirectorModel {
   return { layout: m.layout, snap: m.snap, now: m.now, animate: m.animate, reducedMotion: m.reducedMotion };
 }
 
+const STATE_ORDER: readonly BuildingState[] = BUILDING_STATES.map((s) => s.id);
+
+/** The shell the art kit draws for a state: Campus and Conglomerate keep the Megacorp's (§12.2). */
 function shellOf(state: TowerLayout["state"]): ShellState {
-  return state === "garage" ? "garage" : state === "office" ? "office" : "tower";
+  return state === "campus" || state === "conglomerate" ? "megacorp" : state;
 }
 
 function makeBand(b: RgBuilding, band: Band, shell: ShellState): BandView {
@@ -583,6 +665,8 @@ function makeBand(b: RgBuilding, band: Band, shell: ShellState): BandView {
       return new PenthouseView(b, band, shell);
     case "floor":
       return new FloorView(b, band, shell);
+    case "fold":
+      return new FoldView(b, band, shell);
     case "lobby":
       return new LobbyView(b, band, shell);
     case "street":
@@ -621,6 +705,24 @@ abstract class BandView {
     if (v === this.visible) return;
     this.visible = v;
     for (const c of this.subs.values()) c.visible = v;
+  }
+
+  private dark: Sprite | null = null;
+
+  /** Bankruptcy (W-15): a dark cover over the band, characters included (alpha 0 = none). */
+  setDark(alpha: number): void {
+    if (alpha <= 0 && !this.dark) return;
+    if (!this.dark) {
+      this.dark = this.rect(this.sub("fx"), 0, 0, G.width, this.band.h, TOKENS.bg, 0);
+      this.dark.eventMode = "none";
+    }
+    this.dark.alpha = alpha;
+    this.dark.visible = alpha > 0;
+  }
+
+  /** Fades the whole band (a new floor arriving on the crane). */
+  setAlpha(a: number): void {
+    for (const c of this.subs.values()) if (!c.destroyed) c.alpha = a;
   }
 
   destroy(): void {
@@ -707,20 +809,42 @@ abstract class BandView {
 }
 
 class RoofView extends BandView {
+  private readonly sign: Sprite;
+  private closed = false;
+
   constructor(bld: RgBuilding, band: Band, shell: ShellState) {
     super(bld, band, shell);
     const back = this.sub("backs");
     const parapetY = band.h - 6;
     this.tile(back, `shell.${shell}.parapet`, 0, parapetY, G.width, 6);
-    const sign = this.atlas.tex(B.states[shell].sign);
-    this.spr(back, B.states[shell].sign, G.rooms.x + Math.round((G.rooms.w - sign.frame.width) / 2), parapetY - sign.frame.height);
     const tank = this.atlas.tex("roof.tank");
     this.spr(back, "roof.tank", B.roof.tank.x, parapetY - tank.frame.height);
     const mach = this.atlas.tex("roof.machine");
     this.spr(back, "roof.machine", B.roof.machine.x, parapetY - mach.frame.height);
+    // Skyscraper and Megacorp: the antenna and the helipad (design §12.2).
+    for (const r of B.states[shell].roof) this.spr(back, r.tile, r.x, parapetY - this.atlas.tex(r.tile).frame.height);
     back.cacheAsTexture({ scaleMode: "nearest" });
+    // The sign stays live: the construction crane lowers it in, bankruptcy flips it to CLOSED.
+    this.sign = this.spr(this.sub("tops"), B.states[shell].sign, 0, 0);
+    this.placeSign();
+    bld.roofSign = this.sign;
   }
+
+  private placeSign(): void {
+    const f = this.sign.texture.frame;
+    this.sign.position.set(G.rooms.x + Math.round((G.rooms.w - f.width) / 2), this.band.h - 6 - f.height);
+  }
+
   update(): void {}
+
+  override tick(now: number): void {
+    const at = this.bld.closedAt;
+    const closed = at !== null && now >= at;
+    if (closed === this.closed) return;
+    this.closed = closed;
+    this.sign.texture = this.atlas.tex(closed ? B.closed.tile : B.states[this.shell].sign);
+    this.placeSign();
+  }
 }
 
 class PenthouseView extends BandView {
@@ -930,7 +1054,13 @@ class FloorView extends BandView {
       // Streak pop (design §14.3): a quick swell, step 2 of the finalize choreography.
       const s = d.streak;
       const base = s.scale.x;
-      this.bld.addTween(400, (p) => s.scale.set(base * (1 + 0.5 * Math.sin(p * Math.PI))), () => s.scale.set(base), reduced ? 0 : 1300);
+      // The label can be replaced (destroyed) before the delayed pop runs: then there is nothing to swell.
+      this.bld.addTween(
+        400,
+        (p) => !s.destroyed && s.scale.set(base * (1 + 0.5 * Math.sin(p * Math.PI))),
+        () => !s.destroyed && s.scale.set(base),
+        reduced ? 0 : 1300,
+      );
     }
     if (c.status === "laid_off" && old.status !== "laid_off") {
       d.dim.alpha = 0;
@@ -1013,19 +1143,89 @@ class FloorView extends BandView {
       if (s.submitted && this.bld.inOutbox(s.wallet, now)) sheets++;
       if (s.status === "laid_off") return;
       const rx = G.rooms.x + i * R.w;
-      const seatX = rx + R.seat + 8;
+      const seatX = rx + R.seat + CHAR.w / 2;
       // The chair turns with its sitter; the monitor is on while someone works at it.
       const pose = this.bld.poseOf(s.wallet);
       const seated = !!pose && pose.layer === "seat" && pose.band === band && Math.abs(pose.x - seatX) < 1;
       const side = seated && RIG.frames[pose!.frame]?.view === "side";
       const ca = side ? (exec ? RIG.attach.chairExecSide : RIG.attach.chairSide) : exec ? RIG.attach.chairExecFront : RIG.attach.chairFront;
       d.chair.texture = this.atlas.tex(`prop.chair.${exec ? "exec." : ""}${side ? "side" : "front"}`);
-      d.chair.position.set(rx + R.seat + ca[0], G.floor.deskTop - 20 + ca[1]);
+      d.chair.position.set(rx + R.seat + ca[0], G.floor.deskTop - CHAR.sit + ca[1]);
       const screen = now < d.flashUntil ? "flash" : seated && (side || (open && !s.submitted)) ? "on" : "off";
       d.monitor.texture = this.atlas.tex(`prop.${R.screen}.${screen}`);
     });
     this.sheets.visible = sheets > 0;
     if (sheets > 0) this.sheets.texture = this.atlas.tex(`prop.sheets.${Math.min(6, sheets)}`);
+  }
+}
+
+/**
+ * Folded floors (design §4.3): one floor-tall band standing for a run of floors that work in the
+ * annexes. The core passes through it (stairs, shaft, tube); the band shows the tier, the floor
+ * numbers and the run's exact counts, with a bar of today's results. No characters, no desks.
+ */
+class FoldView extends BandView {
+  private readonly tier: TierIndex;
+  private sig = "";
+  private label: ScreenLabel | null = null;
+  private readonly bar: Graphics;
+
+  constructor(bld: RgBuilding, band: Band, shell: ShellState) {
+    super(bld, band, shell);
+    this.tier = band.tier!;
+    const ih = band.interior;
+    const back = this.sub("backs");
+    this.rect(back, 4, 0, G.width - 8, ih, TOKENS.floor[TIER_KEYS[this.tier]]);
+    // The rooms area: stacked thin floors seen far away, so the band reads as many floors.
+    const x0 = G.rooms.x;
+    const w = G.rooms.w + G.bay.w - 4;
+    for (let y = 3; y < ih - 2; y += 5) this.rect(back, x0, y, w, 1, TOKENS.deskEdge, 0.55);
+    this.core(back, { outlet: false });
+    back.cacheAsTexture({ scaleMode: "nearest" });
+    this.bar = new Graphics();
+    this.bar.position.set(x0 + 8, ih - 9);
+    this.sub("tops").addChild(this.bar);
+    const front = this.sub("fronts");
+    this.walls(front, ih);
+    this.slab(front, ih);
+    front.cacheAsTexture({ scaleMode: "nearest" });
+  }
+
+  update(m: SceneModel): void {
+    const f = m.layout.folds[this.band.fold!];
+    if (!f) return;
+    const sig = `${f.from}|${f.to}|${f.employees}|${f.submitted}|${f.passed}|${f.missed}|${f.laidOff}`;
+    if (sig === this.sig) return;
+    this.sig = sig;
+    const floors = f.to - f.from + 1;
+    const range = floors === 1 ? `floor ${count(f.from + 1)}` : `floors ${count(f.from + 1)}–${count(f.to + 1)}`;
+    const parts = [plural(f.employees, "employee")];
+    if (f.passed + f.missed > 0) parts.push(`${count(f.passed)} passed`, `${count(f.missed)} missed`);
+    if (f.submitted > 0) parts.push(`${count(f.submitted)} filed`);
+    if (f.laidOff > 0) parts.push(`${count(f.laidOff)} laid off`);
+    this.label?.destroy({ children: true });
+    const l = new ScreenLabel();
+    const t = text(`${TIER_PLURALS[this.tier]} · ${range} · in the annexes`, 11, { weight: "600" });
+    const sub = text(parts.join(" · "), 10, { weight: "400", fill: TOKENS.muted });
+    const bw = Math.max(t.width, sub.width) + 10;
+    l.addChild(new Graphics().roundRect(0, 0, bw, 31, 3).fill({ color: TOKENS.bg, alpha: 0.78 }), t, sub);
+    t.position.set(5, 2);
+    sub.position.set(5, 16);
+    this.label = this.screenLabel(l, G.rooms.x + 8, 4);
+    // Today's results across the run: passed, missed, filed, the rest (no result yet).
+    const w = G.rooms.w - 16;
+    const n = Math.max(1, f.employees);
+    this.bar.clear().rect(0, 0, w, 4).fill({ color: TOKENS.bg, alpha: 0.5 });
+    let x = 0;
+    for (const [k, color] of [
+      [f.passed, TOKENS.good],
+      [f.missed, TOKENS.bad],
+      [f.submitted, TOKENS.ink],
+    ] as const) {
+      const segW = (k / n) * w;
+      if (segW > 0) this.bar.rect(x, 0, segW, 4).fill({ color });
+      x += segW;
+    }
   }
 }
 
@@ -1123,23 +1323,25 @@ class StreetView extends BandView {
     const S = B.street;
     const bench = m.layout.bench;
     const queue = m.layout.visitors;
-    const sig = `${bench.length}|${queue.length}`;
+    const benchN = m.layout.benchCount;
+    const queueN = m.layout.visitorCount;
+    const sig = `${bench.length}|${benchN}|${queueN}`;
     if (sig === this.sig) return;
     this.sig = sig;
     const n = Math.min(4, bench.length);
     this.box.visible = n > 0;
-    if (n > 0) this.box.position.set(S.bench.seats[n - 1]! + 15, S.bench.y + 4 - 9);
+    if (n > 0) this.box.position.set(S.bench.seats[n - 1]! + CHAR.w - 1, S.bench.y + 4 - 9);
     this.benchMore?.destroy({ children: true });
     this.queueMore?.destroy({ children: true });
     this.benchMore = this.queueMore = null;
-    if (bench.length > 4) {
+    if (benchN > n) {
       const l = new ScreenLabel();
-      l.addChild(text(`+${bench.length - 4}`, 11));
+      l.addChild(text(`+${count(benchN - n)}`, 11));
       this.benchMore = this.screenLabel(l, S.bench.x - 12, S.standY - 14);
     }
-    if (queue.length > 5) {
+    if (queueN > Math.min(5, queue.length)) {
       const l = new ScreenLabel();
-      const t = text(`+${queue.length - 5}`, 11);
+      const t = text(`+${count(queueN - Math.min(5, queue.length))}`, 11);
       t.anchor.set(1, 0);
       l.addChild(t);
       this.queueMore = this.screenLabel(l, S.queue.spots[4]! - 3, S.standY - 14);
@@ -1175,7 +1377,10 @@ class BasementView extends BandView {
     this.tile(back, "bldg.slab", 0, ih, G.width, G.floor.slab);
     back.cacheAsTexture({ scaleMode: "nearest" });
     const live = this.sub("tops");
-    this.door = this.spr(live, V.vaultDoor.tile, V.vaultDoor.x, V.vaultDoor.y);
+    // The reserve's art follows the building state (design §12.2): cash box, wall safe, round door,
+    // walk-in, double doors.
+    const vault = B.states[shell].vault;
+    this.door = this.spr(live, vault.tile, vault.x, vault.y);
     this.fill = this.rect(live, V.bar.x + V.bar.fill.x, V.bar.y + V.bar.fill.y, 1, V.bar.fill.h, TOKENS.coin);
     this.pile = this.spr(live, "vault.pile.0", V.pile.x, V.pile.bottom - 18);
     this.rack0 = this.spr(live, V.racks[0]!.tile, V.racks[0]!.x, V.racks[0]!.y);
@@ -1199,7 +1404,7 @@ class BasementView extends BandView {
     const V = B.basement;
     const v = vaultModel(m.snap.treasury, m.snap.config.reserve_low);
     const sig = `${v.reserve}|${v.runway}|${v.low}|${m.snap.stalled}`;
-    if (sig === this.sig) return;
+    if (sig === this.sig || this.emptied) return;
     this.sig = sig;
     this.low = v.low;
     this.fill.width = Math.max(0, Math.round(V.bar.fill.w * v.fill));
@@ -1227,7 +1432,20 @@ class BasementView extends BandView {
     this.stalledL = m.snap.stalled ? this.screenLabel(chip("STALLED", TOKENS.bad, TOKENS.bg), V.racks[0]!.x, V.racks[0]!.y + 6) : null;
   }
 
+  private emptied = false;
+
   override tick(now: number, m: SceneModel): void {
+    // Bankruptcy (W-15): after the blackout the vault empties.
+    const at = this.bld.closedAt;
+    const empty = at !== null && now >= at - 200;
+    if (empty !== this.emptied) {
+      this.emptied = empty;
+      if (empty) {
+        this.fill.width = 0;
+        this.pile.texture = this.atlas.tex("vault.pile.0");
+        this.pile.y = B.basement.pile.bottom - this.pile.texture.frame.height;
+      } else this.sig = "";
+    }
     // reserve_low (design §14.3): three pulses, then the steady low state. Never > 3 flashes/s.
     const a = now - this.bld.vaultPulseStart;
     const pulsing = !m.reducedMotion && a >= 0 && a < 1500;

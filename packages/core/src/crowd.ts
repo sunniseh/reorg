@@ -4,7 +4,7 @@
  * turn them into accounts and transfers.
  */
 import { TIER_NAMES, type TierName, type Tuple4 } from "./abi";
-import { BPS } from "./config";
+import { PPM } from "./config";
 import { tierOf } from "./tier";
 
 export type CrowdRole = TierName | "visitor";
@@ -50,7 +50,7 @@ export function crowdSplit(size: number): Record<CrowdRole, number> {
  * Visitors hold 40-50% of the Intern threshold.
  */
 function amountFor(role: CrowdRole, j: number, n: number, supply: bigint, th: Tuple4<number>): bigint {
-  const of = (bps: number, mille: number) => (supply * BigInt(bps) * BigInt(mille)) / (1000n * BigInt(BPS));
+  const of = (ppm: number, mille: number) => (supply * BigInt(ppm) * BigInt(mille)) / (1000n * BigInt(PPM));
   const spread = n > 1 ? Math.floor((300 * j) / (n - 1)) : 150;
   if (role === "visitor") return of(th[3], 400 + Math.floor(spread / 3));
   const k = TIER_NAMES.indexOf(role);
@@ -65,15 +65,15 @@ function amountFor(role: CrowdRole, j: number, n: number, supply: bigint, th: Tu
  * profiles land on every floor. Throws if the amounts don't fit the supply or a computed
  * amount misses its tier (only possible with thresholds closer than 1.15 / 0.9 apart).
  */
-export function crowdDistribution(size: number, totalSupply: bigint, thresholdsBps: Tuple4<number>): CrowdAccount[] {
+export function crowdDistribution(size: number, totalSupply: bigint, thresholdsPpm: Tuple4<number>): CrowdAccount[] {
   const split = crowdSplit(size);
   const slots = CROWD_ROLES.flatMap((role, r) =>
     Array.from({ length: split[role] }, (_, j) => ({ role, j, n: split[role], r, key: (j + 0.5) / split[role] })),
   ).sort((a, b) => a.key - b.key || a.r - b.r);
 
   const crowd = slots.map((s, index): CrowdAccount => {
-    const amount = amountFor(s.role, s.j, s.n, totalSupply, thresholdsBps);
-    const tier = tierOf(amount, totalSupply, thresholdsBps);
+    const amount = amountFor(s.role, s.j, s.n, totalSupply, thresholdsPpm);
+    const tier = tierOf(amount, totalSupply, thresholdsPpm);
     const expected = s.role === "visitor" ? null : TIER_NAMES.indexOf(s.role);
     if (tier !== expected) throw new Error(`crowd: ${s.role} #${s.j} got tier ${tier}; thresholds too close`);
     return { index, name: `c${String(index + 1).padStart(3, "0")}`, role: s.role, amount };

@@ -19,8 +19,9 @@ import { Grid, FONT5, FONT3, textWidth, outline } from "./pixmap.mjs";
 const W = 380;
 const FLOOR_H = 48; // interior, ceiling to floor
 const SLAB = 4;
-const DESK_TOP = 36; // first row of the desk top, from the ceiling
-const STATES = ["garage", "office", "tower"];
+const DESK_TOP = 38; // first row of the desk top, from the ceiling
+const DESK_H = FLOOR_H - DESK_TOP;
+const STATES = ["garage", "office", "tower", "skyscraper", "megacorp"];
 
 export const GEOM = {
   width: W,
@@ -71,7 +72,7 @@ function rng(seed) {
 // ---------------------------------------------------------------------------
 // Backdrop: flat skyline bands (spec §4.1 layer 0). Tiles horizontally.
 
-function skyline() {
+function skyline(lit = false) {
   const w = 128, h = 48;
   const g = new Grid(w, h);
   const r = rng(11);
@@ -81,8 +82,9 @@ function skyline() {
     const bh = 12 + Math.floor(r() * 30);
     g.rect(x, h - bh, bw, bh, "K");
     if (bw > 9 && r() < 0.35) g.vline(x + (bw >> 1), h - bh - 6, 6, "K");
+    // Night (W-15): the same windows, lit. The draw order is the same, so the tiles line up.
     for (let wy = h - bh + 3; wy < h - 2; wy += 4)
-      for (let wx = x + 2; wx < x + bw - 2; wx += 3) if (r() < 0.14) g.set(wx, wy, "l");
+      for (let wx = x + 2; wx < x + bw - 2; wx += 3) if (r() < 0.14) g.set(wx, wy, lit ? "L" : "l");
     x += bw + (r() < 0.25 ? 3 : 0);
   }
   return g.rows();
@@ -121,7 +123,24 @@ const SHELL = {
     slab: ["ZZZZ", "TTTT", "ZZZZ", "ZZZZ"],
     parapet: ["TTTT", "qQqq", "qqQq", "qqqQ", "qqqq", "ZZZZ"],
   },
+  // W-15 (Later): a dark curtain wall with steel mullions.
+  skyscraper: {
+    wall: ["ZqQZ", "ZqqZ", "ZqqZ", "ZTTZ", "ZqqZ", "ZQqZ", "ZqqZ", "ZTTZ"],
+    window: Array.from({ length: 24 }, (_, i) => (i % 8 === 3 ? "ZQQZ" : i % 8 === 7 ? "ZTTZ" : "ZqqZ")),
+    slab: ["ZZZZ", "tttt", "ZZZZ", "ZZZZ"],
+    parapet: ["tttt", "ZZZZ", "qQqq", "qqQq", "ZZZZ", "ZZZZ"],
+  },
+  // W-15 (Later): the flagship, light steel and blue glass.
+  megacorp: {
+    wall: ["tqQt", "tqqt", "tqqt", "tTTt", "tqqt", "tQqt", "tqqt", "tTTt"],
+    window: Array.from({ length: 24 }, (_, i) => (i % 8 === 3 ? "tQQt" : i % 8 === 7 ? "tTTt" : "tqqt")),
+    slab: ["tttt", "TTTT", "tttt", "TTTT"],
+    parapet: ["tttt", "TTTT", "qQqq", "qqQq", "TTTT", "tttt"],
+  },
 };
+
+/** Storefront frame and shade per state (the garage has none). */
+const FRONT_FRAME = { office: ["C", "z"], tower: ["T", "Z"], skyscraper: ["Z", "T"], megacorp: ["t", "T"] };
 
 /** The lobby's street front for one 72 px bay: a pier, a transom, glass. */
 function storefront(state) {
@@ -133,8 +152,7 @@ function storefront(state) {
     g.hline(0, 5, 72, "C");
     return g.rows();
   }
-  const frame = state === "office" ? "C" : "T";
-  const shade = state === "office" ? "z" : "Z";
+  const [frame, shade] = FRONT_FRAME[state];
   g.rect(3, 3, 69, FLOOR_H - 3, "~");
   // Two highlight streaks so the pane reads as glass.
   for (let i = 0; i < 9; i++) g.set(44 + i, 30 - i * 2, "^").set(45 + i, 30 - i * 2, "^");
@@ -357,54 +375,36 @@ const LAMP = ["TTTTTTTTTT", ".LLLLLLLL."];
 // (furniture outlines in Desk edge, spec §4.3 "Empty rooms"). The anchors in
 // ROOM_ANCHORS tell the renderer where the seated character and the overlays go.
 
-/** A desk front, w x 12, its top on DESK_TOP. */
+/** A desk front, w x DESK_H, its top on DESK_TOP. */
 function deskFront(w, style) {
-  const g = new Grid(w, 12);
+  const h = DESK_H;
+  const g = new Grid(w, h);
   if (style === "exec") {
-    g.rect(0, 0, w, 12, "O").hline(0, 0, w, "J").hline(0, 1, w, "O");
-    g.vline(0, 1, 11, "d").vline(w - 1, 1, 11, "d").hline(0, 11, w, "d");
-    const dx = w - 14;
-    g.box(dx, 3, 11, 4, "d").box(dx, 7, 11, 4, "d").hline(dx + 4, 5, 3, "J").hline(dx + 4, 9, 3, "J");
-    g.box(3, 3, dx - 6, 7, "d");
+    g.rect(0, 0, w, h, "O").hline(0, 0, w, "J").hline(0, 1, w, "O");
+    g.vline(0, 1, h - 1, "d").vline(w - 1, 1, h - 1, "d").hline(0, h - 1, w, "d");
+    const dx = w - 11;
+    g.box(dx, 2, 9, 4, "d").box(dx, 5, 9, 4, "d").hline(dx + 3, 3, 3, "J").hline(dx + 3, 6, 3, "J");
+    g.box(2, 2, dx - 4, 6, "d");
   } else if (style === "panel") {
-    g.rect(0, 0, w, 12, "n").hline(0, 0, w, "D").hline(0, 1, w, "D");
-    g.vline(0, 0, 12, "D").vline(w - 1, 0, 12, "D").hline(0, 11, w, "D");
-    const dx = w - 10;
-    g.vline(dx, 2, 9, "D").hline(dx + 3, 5, 4, "m");
+    g.rect(0, 0, w, h, "n").hline(0, 0, w, "D").hline(0, 1, w, "D");
+    g.vline(0, 0, h, "D").vline(w - 1, 0, h, "D").hline(0, h - 1, w, "D");
+    const dx = w - 8;
+    g.vline(dx, 2, h - 3, "D").hline(dx + 2, 4, 3, "m");
   } else if (style === "cubicle") {
-    g.rect(0, 0, w, 12, "n").hline(0, 0, w, "D").hline(0, 1, w, "D");
-    g.vline(0, 0, 12, "D").vline(w - 1, 0, 12, "D").hline(0, 11, w, "D");
+    g.rect(0, 0, w, h, "n").hline(0, 0, w, "D").hline(0, 1, w, "D");
+    g.vline(0, 0, h, "D").vline(w - 1, 0, h, "D").hline(0, h - 1, w, "D");
   } else if (style === "table") {
     // One seat of the interns' long shared table: tiles edge to edge.
-    g.rect(0, 0, w, 12, "C").hline(0, 0, w, "t").hline(0, 1, w, "T").hline(0, 11, w, "z");
-    g.vline(0, 2, 9, "z");
+    g.rect(0, 0, w, h, "C").hline(0, 0, w, "t").hline(0, 1, w, "T").hline(0, h - 1, w, "z");
+    g.vline(0, 2, h - 3, "z");
   }
   return g.rows();
 }
 
-const keyboard = (g, x) => g.hline(x, DESK_TOP - 1, 7, "Z").hline(x + 1, DESK_TOP - 1, 5, "T");
+const keyboard = (g, x) => g.hline(x, DESK_TOP - 1, 5, "Z").hline(x + 1, DESK_TOP - 1, 3, "T");
 
 function floorPlant() {
-  return [
-    "..gG.G..",
-    ".gGgGgG.",
-    "gGg.gGgG",
-    ".GgGgGg.",
-    "gGgGG.gG",
-    ".gGgGgG.",
-    "..GgGg..",
-    "gG.Gg.Gg",
-    ".gGgGgG.",
-    "...Gg...",
-    "...G....",
-    "...G....",
-    "..BBBB..",
-    ".BBBBBB.",
-    ".BBBBBB.",
-    ".bBBBBb.",
-    ".bbbbbb.",
-    "..bbbb..",
-  ];
+  return ["..gG..", ".gGgG.", "gGgGgG", ".GgGg.", "gGgGgG", ".gGgG.", "..Gg..", "..G...", ".BBBB.", "BBBBBB", ".bBBb.", ".bbbb."];
 }
 
 /** Builds one tier's tiles; `frontFn(g, empty)` draws the front or its empty outline. */
@@ -424,80 +424,83 @@ function placeDesk(g, x, w, style, empty) {
   g.blit(empty ? outline(d, "D") : d, x, DESK_TOP);
 }
 
-// Directors: private offices, 72 wide. Paneled wall with a doorway on the left,
+// The door height in the rooms: a standing employee (20 px) plus headroom.
+const DOOR_TOP = 22;
+
+// Directors: private offices, 48 wide. Paneled wall with a doorway on the left,
 // the door swung open against the back wall, a window, an executive desk, a plant.
 const DIRECTOR = room(
-  72,
+  48,
   (g) => {
-    g.blit(LAMP, 31, 0);
-    g.blit(backWindow(24, 17, 3), 42, 5);
+    g.blit(LAMP, 21, 0);
+    g.blit(backWindow(14, 13, 3), 28, 6);
     // Open door leaf against the back wall.
-    g.rect(5, 17, 13, 31, "O").box(5, 17, 13, 31, "d");
-    g.box(7, 19, 9, 11, "J").box(7, 32, 9, 13, "J").set(15, 32, "Y");
+    g.rect(5, DOOR_TOP, 10, FLOOR_H - DOOR_TOP, "O").box(5, DOOR_TOP, 10, FLOOR_H - DOOR_TOP, "d");
+    g.box(7, DOOR_TOP + 2, 6, 9, "J").box(7, DOOR_TOP + 13, 6, 10, "J").set(13, DOOR_TOP + 13, "Y");
   },
   (g, empty) => {
     // Wall header above the doorway, and the door frame.
-    g.rect(0, 0, 4, 17, "O").vline(0, 0, 17, "d").vline(3, 0, 17, "d").hline(0, 16, 4, "d");
-    g.vline(0, 17, FLOOR_H - 17, "d").vline(3, 17, FLOOR_H - 17, "d");
-    placeDesk(g, 22, 42, "exec", empty);
+    g.rect(0, 0, 4, DOOR_TOP, "O").vline(0, 0, DOOR_TOP, "d").vline(3, 0, DOOR_TOP, "d").hline(0, DOOR_TOP - 1, 4, "d");
+    g.vline(0, DOOR_TOP, FLOOR_H - DOOR_TOP, "d").vline(3, DOOR_TOP, FLOOR_H - DOOR_TOP, "d");
+    placeDesk(g, 16, 26, "exec", empty);
     const plant = floorPlant();
-    g.blit(empty ? outline(plant, "D") : plant, 64, FLOOR_H - plant.length);
-    if (!empty) keyboard(g, 42);
+    g.blit(empty ? outline(plant, "D") : plant, 42, FLOOR_H - plant.length);
+    if (!empty) keyboard(g, 28);
   },
 );
 
 // The partition alone, to close the last Directors' office against the bay.
 const DIRECTOR_WALL = (() => {
   const g = new Grid(4, FLOOR_H);
-  g.rect(0, 0, 4, 17, "O").vline(0, 0, 17, "d").vline(3, 0, 17, "d").hline(0, 16, 4, "d");
-  g.rect(0, 17, 4, FLOOR_H - 17, "O").vline(0, 17, FLOOR_H - 17, "d").vline(3, 17, FLOOR_H - 17, "d");
+  g.rect(0, 0, 4, DOOR_TOP, "O").vline(0, 0, DOOR_TOP, "d").vline(3, 0, DOOR_TOP, "d").hline(0, DOOR_TOP - 1, 4, "d");
+  g.rect(0, DOOR_TOP, 4, FLOOR_H - DOOR_TOP, "O").vline(0, DOOR_TOP, FLOOR_H - DOOR_TOP, "d").vline(3, DOOR_TOP, FLOOR_H - DOOR_TOP, "d");
   return g.rows();
 })();
 
-// Managers: glass offices, 48 wide. Glass front with a door, a whiteboard.
+// Managers: glass offices, 32 wide. Glass front with a door, a whiteboard.
 const MANAGER = room(
-  48,
+  32,
   (g) => {
-    g.blit(LAMP, 19, 0);
-    g.blit(boardSmall(), 26, 7);
+    g.blit(LAMP, 5, 0);
+    g.blit(boardSmall(), 15, 5);
   },
   (g, empty) => {
-    placeDesk(g, 6, 34, "panel", empty);
-    if (!empty) keyboard(g, 21);
+    placeDesk(g, 3, 22, "panel", empty);
+    if (!empty) keyboard(g, 13);
     // Glass front: frame on the left and top, a pane, and the door opening.
-    g.rect(3, 3, 45, FLOOR_H - 3, "~");
-    g.rect(35, 15, 11, FLOOR_H - 15, "_");
-    g.rect(0, 0, 3, FLOOR_H, "T").vline(2, 0, FLOOR_H, "Z");
-    g.rect(0, 0, 48, 3, "T").hline(0, 2, 48, "Z");
-    g.vline(34, 14, FLOOR_H - 14, "T").vline(46, 14, FLOOR_H - 14, "T").hline(34, 14, 13, "T");
-    for (let i = 0; i < 7; i++) g.set(20 + i, 28 - i * 2, "^").set(21 + i, 28 - i * 2, "^");
+    g.rect(2, 2, 30, FLOOR_H - 2, "~");
+    g.rect(26, DOOR_TOP, 5, FLOOR_H - DOOR_TOP, "_");
+    g.rect(0, 0, 2, FLOOR_H, "T").vline(1, 0, FLOOR_H, "Z");
+    g.rect(0, 0, 32, 2, "T").hline(0, 1, 32, "Z");
+    g.vline(25, DOOR_TOP - 1, FLOOR_H - DOOR_TOP + 1, "T").vline(31, DOOR_TOP - 1, FLOOR_H - DOOR_TOP + 1, "T").hline(25, DOOR_TOP - 1, 7, "T");
+    for (let i = 0; i < 5; i++) g.set(9 + i, 32 - i * 2, "^").set(10 + i, 32 - i * 2, "^");
   },
 );
 
-// Associates: cubicles, 36 wide. A fabric back panel and a low side post.
+// Associates: cubicles, 24 wide. A fabric back panel and a low side post.
 const ASSOCIATE = room(
-  36,
-  (g) => {
-    g.blit(LAMP, 13, 0);
-    g.rect(2, 22, 34, FLOOR_H - 22, "f").hline(2, 22, 34, "F").hline(2, 23, 34, "F");
-    g.vline(2, 22, FLOOR_H - 22, "F");
-  },
-  (g, empty) => {
-    placeDesk(g, 4, 32, "cubicle", empty);
-    if (!empty) keyboard(g, 16);
-    const post = ["FF", "ff", ...Array(26).fill("Ff")];
-    g.blit(empty ? outline(post, "D") : post, 0, 20);
-  },
-);
-
-// Interns: one seat of the long shared table, 24 wide. Laptops, not monitors.
-const INTERN = room(
   24,
   (g) => {
-    g.blit(LAMP.map((r) => r.slice(1, 9)), 8, 0);
+    g.blit(LAMP.map((r) => r.slice(1, 9)), 4, 0);
+    g.rect(1, 27, 23, FLOOR_H - 27, "f").hline(1, 27, 23, "F").hline(1, 28, 23, "F");
+    g.vline(1, 27, FLOOR_H - 27, "F");
   },
   (g, empty) => {
-    placeDesk(g, 0, 24, "table", empty);
+    placeDesk(g, 3, 21, "cubicle", empty);
+    if (!empty) keyboard(g, 10);
+    const post = ["FF", "ff", ...Array(FLOOR_H - 27).fill("Ff")];
+    g.blit(empty ? outline(post, "D") : post, 0, 25);
+  },
+);
+
+// Interns: one seat of the long shared table, 16 wide. Laptops, not monitors.
+const INTERN = room(
+  16,
+  (g) => {
+    g.blit(LAMP.map((r) => r.slice(2, 8)), 4, 0);
+  },
+  (g, empty) => {
+    placeDesk(g, 0, 16, "table", empty);
   },
 );
 
@@ -506,11 +509,12 @@ const INTERN = room(
 // monitor (or laptop) top-left, paper top-left, result dot top-left (floats above
 // the desk's top-right), streak number and NEW chip on the desk front's top-left,
 // nameplate centered on the desk front, laid-off box on the desk top.
+// Rooms per floor (perFloor) must match ROOMS_PER_FLOOR in packages/core/src/tower.ts.
 const ROOM_ANCHORS = {
-  directors: { w: 72, perFloor: 4, desk: { x: 22, w: 42 }, seat: 30, chair: "exec", screen: "monitor", monitor: [48, 26], paper: [55, 29], dot: [57, 19], streak: [24, 39], chip: [24, 39], plate: [43, 43], box: [39, 30] },
-  managers: { w: 48, perFloor: 6, desk: { x: 6, w: 34 }, seat: 8, chair: "standard", screen: "monitor", monitor: [27, 26], paper: [33, 29], dot: [33, 19], streak: [8, 39], chip: [8, 39], plate: [23, 43], box: [19, 30] },
-  associates: { w: 36, perFloor: 8, desk: { x: 4, w: 32 }, seat: 5, chair: "standard", screen: "monitor", monitor: [23, 26], paper: [29, 29], dot: [29, 19], streak: [6, 39], chip: [6, 39], plate: [20, 43], box: [16, 30] },
-  interns: { w: 24, perFloor: 12, desk: { x: 0, w: 24 }, seat: 2, chair: "standard", screen: "laptop", monitor: [13, 31], paper: [19, 29], dot: [18, 19], streak: [2, 39], chip: [2, 39], plate: [12, 43], box: [8, 30] },
+  directors: { w: 48, perFloor: 6, desk: { x: 16, w: 26 }, seat: 20, chair: "exec", screen: "monitor", monitor: [32, 31], paper: [37, 32], dot: [36, 22], streak: [18, 41], chip: [18, 41], plate: [29, 44], box: [22, 32] },
+  managers: { w: 32, perFloor: 9, desk: { x: 3, w: 22 }, seat: 4, chair: "standard", screen: "monitor", monitor: [16, 31], paper: [19, 32], dot: [18, 22], streak: [5, 41], chip: [5, 41], plate: [14, 44], box: [7, 32] },
+  associates: { w: 24, perFloor: 12, desk: { x: 3, w: 21 }, seat: 3, chair: "standard", screen: "monitor", monitor: [15, 31], paper: [18, 32], dot: [17, 22], streak: [4, 41], chip: [4, 41], plate: [13, 44], box: [5, 32] },
+  interns: { w: 16, perFloor: 18, desk: { x: 0, w: 16 }, seat: 1, chair: "standard", screen: "laptop", monitor: [9, 33], paper: [11, 32], dot: [9, 22], streak: [1, 41], chip: [1, 41], plate: [8, 44], box: [3, 32] },
 };
 
 // ---------------------------------------------------------------------------
@@ -859,6 +863,331 @@ function machineRoom() {
   return g.rows();
 }
 
+
+// ---------------------------------------------------------------------------
+// W-15 (Later; spec §9, §12.2, §12.3, §14.3): per-state surroundings and vault
+// art, the Skyscraper and Megacorp roofs, the construction sequence, night and
+// bankruptcy. Every decoration shows state (the building's size, the time, the
+// reserve) or gives the eye somewhere to go; there are no people in any of it.
+
+/** Nearer city blocks behind the Office tower and up (tiles horizontally). */
+function blocks(lit = false) {
+  const w = 160, h = 96;
+  const g = new Grid(w, h);
+  const r = rng(23);
+  let x = 0;
+  while (x < w) {
+    const bw = Math.min(14 + Math.floor(r() * 18), w - x);
+    const bh = 30 + Math.floor(r() * 62);
+    g.rect(x, h - bh, bw, bh, "=").hline(x, h - bh, bw, "#");
+    for (let wy = h - bh + 4; wy < h - 3; wy += 5)
+      for (let wx = x + 2; wx < x + bw - 3; wx += 4) {
+        const on = r() < 0.25;
+        g.rect(wx, wy, 2, 2, on ? (lit ? "L" : "l") : "K");
+      }
+    x += bw + 2 + Math.floor(r() * 4);
+  }
+  return g.rows();
+}
+
+/** A flat cloud: puffs on a flat base, a lighter top edge. */
+function cloud(w, seed) {
+  const g = new Grid(w, 14);
+  const r = rng(seed);
+  for (let i = 0; i < Math.floor(w / 9); i++) disc(g, 6 + Math.floor(r() * (w - 12)), 8, 3 + Math.floor(r() * 3), "l");
+  g.rect(3, 8, w - 6, 4, "l");
+  for (let y = 0; y < 14; y++) for (let x = 0; x < w; x++) if (g.get(x, y) === "l" && g.get(x, y - 1) === ".") g.set(x, y, "D");
+  return g.rows();
+}
+
+/** The Megacorp blimp: the envelope carries the boss's latest announcement on its panel. */
+function blimp() {
+  const g = new Grid(100, 34);
+  for (let y = 0; y < 25; y++)
+    for (let x = 0; x < 92; x++) {
+      const dx = (x - 46) / 46, dy = (y - 12) / 12.5;
+      if (dx * dx + dy * dy <= 1) g.set(x + 8, y, y >= 18 ? "z" : "C");
+    }
+  // Tail fins on the left.
+  for (let i = 0; i < 7; i++) g.hline(i, 2 + i, 12 - i, "z").hline(i, 22 - i, 12 - i, "z");
+  // The announcement panel (the renderer writes on it) with an accent rule: company signage.
+  g.rect(24, 5, 60, 13, "n").box(24, 5, 60, 13, "D").hline(25, 16, 58, "A");
+  // Gondola.
+  g.vline(52, 25, 2, "T").vline(62, 25, 2, "T");
+  g.rect(48, 27, 18, 6, "Z").hline(48, 27, 18, "T");
+  for (const x of [51, 55, 59]) g.rect(x, 29, 2, 2, "q");
+  return g.rows();
+}
+
+/** The empty lot beside the Garage startup: a chain-link fence (tiles horizontally). */
+function fence() {
+  const g = new Grid(16, 18);
+  for (let y = 2; y < 17; y++) for (let x = 2; x < 16; x++) if ((x + y) % 4 === 0 || (x - y + 64) % 4 === 0) g.set(x, y, "Z");
+  g.rect(0, 0, 2, 18, "T").hline(0, 1, 16, "T").hline(0, 17, 16, "T");
+  return g.rows();
+}
+
+function tree() {
+  const g = new Grid(34, 54);
+  g.rect(15, 30, 4, 24, "d").vline(16, 30, 24, "O");
+  line(g, 17, 38, 9, 30, "d");
+  line(g, 17, 36, 25, 28, "d");
+  disc(g, 17, 18, 13, "G");
+  disc(g, 9, 24, 8, "G");
+  disc(g, 25, 23, 8, "G");
+  disc(g, 15, 14, 9, "g");
+  disc(g, 22, 20, 6, "g");
+  disc(g, 8, 22, 5, "g");
+  return g.rows();
+}
+
+/** A parked car in profile for the Small office's lot. */
+function car(body, shade) {
+  const g = new Grid(30, 14);
+  g.rect(8, 1, 13, 1, body).rect(7, 2, 15, 4, body);
+  g.rect(8, 2, 6, 4, "q").rect(15, 2, 6, 4, "q").set(8, 2, body).set(20, 2, body);
+  g.set(9, 3, "Q").set(16, 3, "Q");
+  g.rect(1, 6, 28, 5, body).hline(1, 10, 28, shade);
+  g.set(28, 7, "L").set(1, 7, "b");
+  disc(g, 7, 11, 2, "Z").set(7, 11, "t");
+  disc(g, 22, 11, 2, "Z").set(22, 11, "t");
+  return g.rows();
+}
+
+function parkingSign() {
+  const g = new Grid(9, 28);
+  g.rect(0, 0, 9, 9, "c").box(0, 0, 9, 9, "D");
+  g.text("P", 3, 2, "f", FONT3);
+  g.rect(4, 9, 1, 19, "T");
+  return g.rows();
+}
+
+/** The coffee cart (nobody minds it: there are no extra people, spec §4.5). */
+function coffeeCart() {
+  const g = new Grid(36, 38);
+  for (let y = 0; y < 6; y++) {
+    const half = 3 + y * 3;
+    for (let x = 18 - half; x <= 18 + half; x++) g.set(x, y, Math.floor((x + 2) / 4) % 2 ? "B" : "c");
+  }
+  g.hline(0, 6, 36, "b");
+  g.vline(18, 7, 13, "T");
+  g.rect(22, 15, 7, 5, "t").rect(23, 16, 2, 2, "Z");
+  g.rect(8, 17, 3, 3, "c").hline(8, 17, 3, "e");
+  g.rect(4, 20, 28, 12, "O").box(4, 20, 28, 12, "d").hline(4, 20, 28, "J");
+  g.rect(12, 23, 12, 6, "n").box(12, 23, 12, 6, "D");
+  g.rect(16, 24, 3, 3, "c").set(19, 25, "c").hline(16, 27, 3, "e");
+  line(g, 32, 22, 35, 18, "T");
+  disc(g, 10, 34, 3, "Z").set(10, 34, "t");
+  disc(g, 26, 34, 3, "Z").set(26, 34, "t");
+  return g.rows();
+}
+
+/** The second Megacorp tower: one floor of its facade (tiles vertically), dark or lit. */
+function twinFacade(lit) {
+  const g = new Grid(32, FLOOR_H + SLAB);
+  g.rect(0, 0, 32, FLOOR_H + SLAB, "t");
+  for (const x of [3, 17]) {
+    g.rect(x, 6, 12, 38, "q").vline(x + 10, 6, 38, "Q");
+    if (lit) g.hline(x, 6, 12, "L").hline(x, 7, 12, "L");
+  }
+  g.vline(15, 0, FLOOR_H, "T").vline(31, 0, FLOOR_H, "T");
+  g.rect(0, FLOOR_H, 32, SLAB, "T").hline(0, FLOOR_H, 32, "t");
+  return g.rows();
+}
+
+function twinParapet() {
+  const g = new Grid(32, 8);
+  g.rect(0, 0, 32, 8, "t").hline(0, 0, 32, "T").hline(0, 7, 32, "T");
+  return g.rows();
+}
+
+/** The enclosed sky bridge between the twin towers (tiles horizontally). */
+function skyBridge() {
+  const g = new Grid(16, 14);
+  g.rect(0, 0, 16, 3, "t").rect(0, 11, 16, 3, "t");
+  g.rect(0, 3, 16, 8, "q").hline(0, 4, 16, "Q");
+  g.vline(0, 3, 8, "T");
+  g.hline(0, 2, 16, "T").hline(0, 11, 16, "T");
+  return g.rows();
+}
+
+// Roofs of the last two states.
+
+/** The ticker: an LED board reading $REORG (spec §12.2), the signage from the Skyscraper on. */
+function ticker(lines) {
+  const widths = lines.map((l) => textWidth(l, FONT5));
+  const tw = Math.max(...widths);
+  const bh = lines.length * 9 + 5;
+  const g = new Grid(tw + 14, bh + 8);
+  g.rect(0, 0, tw + 14, bh, "Z").box(0, 0, tw + 14, bh, "T");
+  g.rect(2, 2, tw + 10, bh - 4, "k");
+  for (let y = 3; y < bh - 3; y += 2) for (let x = 3; x < tw + 11; x += 2) g.set(x, y, "l");
+  lines.forEach((l, i) => g.text(l, 7 + ((tw - widths[i]) >> 1), 4 + i * 9, "A", FONT5));
+  g.rect(5, bh, 2, 8, "T").rect(tw + 7, bh, 2, 8, "T");
+  return g.rows();
+}
+
+function antenna() {
+  const g = new Grid(9, 70);
+  g.rect(3, 4, 3, 66, "T").vline(4, 4, 66, "Z");
+  for (let y = 12; y < 64; y += 10) g.hline(1, y, 7, "T");
+  line(g, 0, 69, 3, 48, "T");
+  line(g, 8, 69, 5, 48, "T");
+  g.rect(3, 0, 3, 3, "L").set(4, 3, "T");
+  return g.rows();
+}
+
+function helipad() {
+  const g = new Grid(60, 16);
+  g.rect(0, 6, 60, 3, "t").hline(0, 9, 60, "T");
+  for (let x = 2; x < 56; x += 6) g.set(x, 5, "L");
+  for (const x of [4, 28, 52]) g.rect(x, 10, 2, 6, "Z");
+  line(g, 6, 10, 26, 15, "Z");
+  line(g, 34, 15, 52, 10, "Z");
+  g.vline(58, 0, 6, "T");
+  for (let x = 51; x < 58; x++) g.set(x, 0, x % 2 ? "B" : "c").set(x, 1, x % 2 ? "B" : "c");
+  return g.rows();
+}
+
+// Vault art per state (spec §12.2); the Office tower keeps the round door.
+
+function cashBox() {
+  const g = new Grid(30, 22);
+  g.rect(0, 10, 30, 12, "O").box(0, 10, 30, 12, "d").hline(0, 15, 30, "d");
+  line(g, 1, 11, 28, 20, "d");
+  g.rect(5, 2, 20, 8, "T").box(5, 2, 20, 8, "Z").hline(5, 5, 20, "Z");
+  g.rect(13, 0, 4, 2, "Z").rect(14, 6, 2, 2, "Y");
+  return g.rows();
+}
+
+function wallSafe() {
+  const g = new Grid(30, 30);
+  g.rect(0, 0, 30, 30, "z").box(0, 0, 30, 30, "Z");
+  g.rect(3, 3, 24, 24, "T").box(3, 3, 24, 24, "Z");
+  disc(g, 15, 13, 5, "t");
+  disc(g, 15, 13, 3, "Z");
+  for (let a = 0; a < 8; a++) {
+    const t = (a / 8) * Math.PI * 2;
+    g.set(15 + Math.round(Math.cos(t) * 5), 13 + Math.round(Math.sin(t) * 5), "Z");
+  }
+  g.set(15, 13, "t").rect(19, 21, 6, 2, "t");
+  g.rect(3, 7, 2, 4, "t").rect(3, 19, 2, 4, "t");
+  return g.rows();
+}
+
+function wheel(g, cx, cy, r) {
+  disc(g, cx, cy, r, "Z");
+  disc(g, cx, cy, r - 2, "t");
+  line(g, cx - r + 2, cy, cx + r - 2, cy, "Z");
+  line(g, cx, cy - r + 2, cx, cy + r - 2, "Z");
+  disc(g, cx, cy, 1, "Z");
+}
+
+function walkIn() {
+  const g = new Grid(40, 38);
+  g.rect(0, 0, 40, 38, "Z").box(0, 0, 40, 38, "T");
+  g.rect(4, 3, 32, 35, "T").box(4, 3, 32, 35, "Z").rect(7, 6, 26, 29, "t").box(7, 6, 26, 29, "T");
+  wheel(g, 20, 18, 7);
+  for (let y = 8; y < 34; y += 6) g.set(9, y, "Z").set(30, y, "Z");
+  g.rect(36, 8, 3, 5, "t").rect(36, 26, 3, 5, "t");
+  g.rect(24, 28, 7, 2, "Z");
+  return g.rows();
+}
+
+function doubleDoors() {
+  const g = new Grid(42, 38);
+  g.rect(0, 0, 42, 38, "Z").box(0, 0, 42, 38, "T");
+  for (const x0 of [3, 21]) {
+    g.rect(x0, 3, 18, 35, "t").box(x0, 3, 18, 35, "T");
+    for (let y = 7; y < 35; y += 7) g.set(x0 + 2, y, "T").set(x0 + 15, y, "T");
+  }
+  g.vline(20, 3, 35, "Z").vline(21, 3, 35, "Z");
+  wheel(g, 21, 17, 6);
+  g.rect(15, 25, 2, 6, "Z").rect(25, 25, 2, 6, "Z");
+  return g.rows();
+}
+
+// The construction sequence (spec §12.3, §9 "Crane") and the For lease banners.
+
+function scaffold() {
+  const g = new Grid(16, 16);
+  g.vline(0, 0, 16, "T").vline(15, 0, 16, "T");
+  line(g, 1, 13, 14, 1, "Z");
+  g.rect(0, 14, 16, 2, "O").hline(0, 15, 16, "d");
+  return g.rows();
+}
+
+/** A tower crane's mast (tiles vertically), in cardboard tan so it reads as equipment, not coins. */
+function craneMast() {
+  const g = new Grid(10, 10);
+  g.vline(0, 0, 10, "B").vline(9, 0, 10, "B").hline(0, 0, 10, "b");
+  line(g, 1, 9, 8, 1, "b");
+  return g.rows();
+}
+
+function craneJib() {
+  const w = 132;
+  const g = new Grid(w, 14);
+  g.hline(0, 4, w, "B").hline(0, 12, w, "B").hline(0, 13, w, "b");
+  for (let x = 0; x < w - 4; x += 8) line(g, x, 12, x + 4, 4, "b"), line(g, x + 4, 4, x + 8, 12, "b");
+  // Counterweight on the short arm, the cab under the mast head, the apex.
+  g.rect(2, 6, 14, 7, "Z").hline(2, 6, 14, "T");
+  g.rect(26, 5, 10, 8, "B").rect(28, 7, 6, 3, "q");
+  line(g, 31, 0, 6, 4, "T");
+  line(g, 31, 0, w - 2, 4, "T");
+  g.rect(30, 0, 3, 4, "b");
+  return g.rows();
+}
+
+function craneHook() {
+  const g = new Grid(7, 9);
+  g.rect(0, 0, 7, 4, "Z").hline(0, 0, 7, "T");
+  g.vline(3, 4, 3, "T").hline(3, 7, 3, "T").set(5, 6, "T");
+  return g.rows();
+}
+
+/** A steel beam on the hook: what the crane brings when a tier gets a new floor. */
+function beam() {
+  const g = new Grid(44, 5);
+  g.rect(0, 0, 44, 5, "T").hline(0, 0, 44, "t").hline(0, 4, 44, "Z");
+  for (let x = 4; x < 44; x += 8) g.set(x, 2, "Z");
+  return g.rows();
+}
+
+/** The ribbon across the front doors, and one cut half of it. */
+function ribbon(half) {
+  const w = half ? 22 : 44;
+  const g = new Grid(w, 10);
+  g.hline(0, 3, w, "c").hline(0, 4, w, "m");
+  if (!half) {
+    disc(g, 22, 4, 3, "c");
+    g.set(22, 4, "m");
+    line(g, 21, 6, 17, 9, "c");
+    line(g, 23, 6, 27, 9, "c");
+  }
+  return g.rows();
+}
+
+function forLease() {
+  const g = new Grid(28, 22);
+  line(g, 4, 0, 1, 6, "T");
+  line(g, 23, 0, 26, 6, "T");
+  g.rect(0, 6, 28, 16, "c").box(0, 6, 28, 16, "D");
+  g.text("FOR", 9, 8, "k", FONT3);
+  g.text("LEASE", 4, 15, "k", FONT3);
+  return g.rows();
+}
+
+/** Bankruptcy (spec §14.3, Later): the sign flips to a cardboard CLOSED. */
+function signClosed() {
+  const tw = textWidth("CLOSED", FONT5);
+  const g = new Grid(tw + 10, 16);
+  g.rect(1, 0, tw + 8, 12, "B").hline(1, 11, tw + 8, "b").vline(tw + 8, 0, 12, "b");
+  g.text("CLOSED", 5, 2, "k", FONT5);
+  g.rect(3, 12, 2, 4, "d").rect(tw + 5, 12, 2, 4, "d");
+  return g.rows();
+}
+
 // ---------------------------------------------------------------------------
 // Tile table
 
@@ -879,6 +1208,40 @@ export const TILES = {
   "sign.garage": signGarage(),
   "sign.office": signOffice(),
   "sign.tower": signTower(),
+  "sign.skyscraper": ticker(["$REORG"]),
+  "sign.megacorp": ticker(["REORG INC.", "$REORG"]),
+  "sign.closed": signClosed(),
+  "roof.antenna": antenna(),
+  "roof.helipad": helipad(),
+  "sky.skyline.lit": skyline(true),
+  "sky.blocks": blocks(),
+  "sky.blocks.lit": blocks(true),
+  "sky.cloud.0": cloud(48, 5),
+  "sky.cloud.1": cloud(30, 9),
+  "sky.blimp": blimp(),
+  "surr.fence": fence(),
+  "surr.tree": tree(),
+  "surr.car.0": car("f", "F"),
+  "surr.car.1": car("C", "z"),
+  "surr.car.2": car("B", "b"),
+  "surr.parking": parkingSign(),
+  "surr.cart": coffeeCart(),
+  "twin.facade": twinFacade(false),
+  "twin.facade.lit": twinFacade(true),
+  "twin.parapet": twinParapet(),
+  "twin.bridge": skyBridge(),
+  "vault.cashbox": cashBox(),
+  "vault.safe": wallSafe(),
+  "vault.walkin": walkIn(),
+  "vault.double": doubleDoors(),
+  "build.scaffold": scaffold(),
+  "build.crane.mast": craneMast(),
+  "build.crane.jib": craneJib(),
+  "build.crane.hook": craneHook(),
+  "build.beam": beam(),
+  "build.ribbon": ribbon(false),
+  "build.ribbon.half": ribbon(true),
+  "build.forlease": forLease(),
   "roof.tank": waterTank(),
   "roof.machine": machineRoom(),
   "core.stairs": stairs(),
@@ -965,10 +1328,74 @@ export const BUILDING = {
     units: "Sprite pixels from the building's left edge (x) and each band's ceiling (y), y down.",
     geometry: GEOM,
     states: {
-      garage: { employees: [1, 10], sign: "sign.garage", doors: "lobby.rollup" },
-      office: { employees: [11, 50], sign: "sign.office", doors: "lobby.door.glass" },
-      tower: { employees: [51, 250], sign: "sign.tower", doors: "lobby.door.glass" },
+      // vault: the reserve's art per state, bottom on the basement floor (y 54) unless it hangs on the wall.
+      // roof: extra roof tiles standing on the parapet line. surroundings: what stands beside the building.
+      garage: { employees: [1, 10], sign: "sign.garage", doors: "lobby.rollup", vault: { tile: "vault.cashbox", x: 58, y: 32 }, roof: [], surroundings: "lot" },
+      office: { employees: [11, 50], sign: "sign.office", doors: "lobby.door.glass", vault: { tile: "vault.safe", x: 58, y: 12 }, roof: [], surroundings: "parking" },
+      tower: { employees: [51, 250], sign: "sign.tower", doors: "lobby.door.glass", vault: { tile: "vault.door", x: 56, y: 18 }, roof: [], surroundings: "city" },
+      skyscraper: {
+        employees: [251, 1000],
+        sign: "sign.skyscraper",
+        doors: "lobby.door.glass",
+        vault: { tile: "vault.walkin", x: 54, y: 16 },
+        roof: [{ tile: "roof.antenna", x: 60 }, { tile: "roof.helipad", x: 232 }],
+        surroundings: "clouds",
+      },
+      megacorp: {
+        employees: [1001, 2000],
+        sign: "sign.megacorp",
+        doors: "lobby.door.glass",
+        vault: { tile: "vault.double", x: 53, y: 16 },
+        roof: [{ tile: "roof.antenna", x: 60 }, { tile: "roof.helipad", x: 232 }],
+        surroundings: "skyline",
+      },
     },
+    /**
+     * W-15 (Later): what stands beside the building, per surroundings set (states[].surroundings).
+     * x is from the building's left edge (negative: left of it); props stand on the street line
+     * (the street band's top) and `w` tiles one horizontally. The layers say which sets show them.
+     */
+    surroundings: {
+      props: {
+        lot: [
+          { tile: "surr.fence", x: -236, w: 208 },
+          { tile: "surr.tree", x: -140 },
+          { tile: "surr.fence", x: 412, w: 192 },
+        ],
+        parking: [
+          { tile: "surr.car.0", x: -196 },
+          { tile: "surr.car.1", x: -160 },
+          { tile: "surr.car.2", x: -124 },
+          { tile: "surr.parking", x: -64 },
+          { tile: "surr.cart", x: 420 },
+          { tile: "surr.tree", x: 480 },
+        ],
+        city: [{ tile: "surr.cart", x: 420 }],
+        clouds: [{ tile: "surr.cart", x: 420 }],
+        skyline: [],
+      },
+      blocks: { tile: "sky.blocks", lit: "sky.blocks.lit", sets: ["city", "clouds", "skyline"], note: "nearer city blocks, tiled behind the building in front of sky.skyline" },
+      clouds: { tiles: ["sky.cloud.0", "sky.cloud.1"], speed: 4, sets: ["clouds", "skyline"], note: "drift right at speed px/s past the upper floors and wrap; still under reduced motion" },
+      blimp: { tile: "sky.blimp", panel: { x: 24, y: 5, w: 60, h: 11 }, sets: ["skyline"], note: "right of the building near the top, in front of the second tower; the panel carries the boss's latest line" },
+      twin: {
+        facade: "twin.facade",
+        lit: "twin.facade.lit",
+        parapet: "twin.parapet",
+        bridge: "twin.bridge",
+        gap: 40,
+        columns: 5,
+        sets: ["skyline"],
+        note: "a second tower right of the building, gap px away, columns × 32 px wide; it rises with the employee count (1,001 → 2,000), joined by the sky bridge two floors below its top",
+      },
+    },
+    construction: {
+      scaffold: "build.scaffold tiles up both outer walls, 16 px out, while the 4 s construction sequence plays (spec §12.3)",
+      crane: { mast: "build.crane.mast", jib: "build.crane.jib", hook: "build.crane.hook", x: 280, hookX: 120, note: "the mast stands on the roof at x; the jib's mast head is at its x 31; the hook hangs from jib x hookX on a cable" },
+      beam: "build.beam: carried on the hook to a new floor's level outside the right wall (spec §9 Crane)",
+      ribbon: { tile: "build.ribbon", half: "build.ribbon.half", x: 334, y: 30, note: "across the front doors in the lobby band; it splits into two halves that fall away" },
+      forLease: { tile: "build.forlease", note: "hung outside the outer walls on the upper floors while the building right-sizes" },
+    },
+    closed: { tile: "sign.closed", note: "bankruptcy (Later): replaces the roof sign" },
     bands: "Top to bottom: roof, penthouse, tier floors (Directors, Managers, Associates, Interns), lobby, street, basement. A floor band is floor.h tall plus a slab of floor.slab rows below it; feet stand on the slab's first row (y = floor.h).",
     shell: {
       wall: "shell.<state>.wall tiles down both outer walls (x 0 and x 376) over each band's interior; shell.<state>.window on the right wall at y 12 of every floor (the bay's window point); shell.<state>.slab where each slab meets the wall",

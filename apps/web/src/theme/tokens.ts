@@ -21,6 +21,7 @@ export const TOKENS = {
   coin: n(C.coin),
   sky: n(C.sky),
   skyline: n(C.skyline),
+  skyDay: n(C.skyDay),
   shell: n(C.shell),
   glass: n(C.glass),
   street: n(C.street),
@@ -39,6 +40,13 @@ export const TOKENS = {
   hair: SPRITE.hair.map(n),
 };
 
+/** Hex strings for the DOM sprite painter (hud/sprites.ts): tints and badge-photo backdrops. */
+export const HEX = {
+  body: C.body,
+  hair: SPRITE.hair,
+  floor: C.floor,
+};
+
 /** Writes the tokens as CSS custom properties on :root (the HUD's only color source). */
 export function installCssTokens(root: HTMLElement = document.documentElement): void {
   const vars: Record<string, string> = {
@@ -53,6 +61,12 @@ export function installCssTokens(root: HTMLElement = document.documentElement): 
     "--good": C.good,
     "--bad": C.bad,
     "--coin": C.coin,
+    "--accent-shade": SPRITE.accentShade!,
+    "--coin-shade": SPRITE.coinShade!,
+    "--shell": C.shell,
+    "--shell-light": SPRITE.shellLight!,
+    "--shell-shade": SPRITE.shellShade!,
+    "--steel-dark": SPRITE.steelDark!,
   };
   for (const [k, v] of Object.entries(vars)) root.style.setProperty(k, v);
 }

@@ -10,13 +10,17 @@ import { COPY } from "../copy";
 import { payout, plural, share, shortName, TIER_TITLES, tokens } from "../format";
 import type { DeskModel } from "../state/desk";
 import type { PlayerView, Puzzle, Snapshot } from "../state/types";
+import { recentDots } from "./card";
 import { h, render, setText } from "./dom";
+import { portrait } from "./sprites";
 
 export interface DockHandlers {
   primary(): void;
   submit(answer: string): void;
   disconnect(): void;
   goToDesk(): void;
+  /** Follow me (P1): the camera keeps the player's character centered. */
+  follow(on: boolean): void;
 }
 
 export interface DockMessage {
@@ -36,11 +40,15 @@ export interface DockModel {
   message: DockMessage | null;
   /** The building shows the simulated preview while a live chain exists. */
   previewNote: boolean;
+  /** Follow me is on. */
+  following: boolean;
 }
 
 export class RgDeskDock {
   readonly el: HTMLElement;
   private readonly name = h("div", { class: "name" });
+  private readonly photo = h("span", { class: "photo" });
+  private photoKey = "-";
   private readonly line = h("div", { class: "line", "aria-live": "polite" });
   private readonly primary = h("button", { class: "btn primary" });
   private readonly toggle = h("button", { class: "btn icon small", "aria-expanded": "true", "aria-label": "Collapse the desk" }, "▾");
@@ -68,6 +76,7 @@ export class RgDeskDock {
   private readonly note = h("p", { class: "note" });
   private readonly actions = h("div", { class: "actions" });
   private puzzleKey = "";
+  private actionsKey = "";
   private model: DockModel | null = null;
 
   constructor(private readonly handlers: DockHandlers) {
@@ -76,7 +85,7 @@ export class RgDeskDock {
     this.el = h(
       "section",
       { class: "dock surface", "aria-label": "My desk" },
-      h("div", { class: "bar" }, h("div", { class: "who" }, this.name, this.line), this.primary, this.toggle),
+      h("div", { class: "bar" }, this.photo, h("div", { class: "who" }, this.name, this.line), this.primary, this.toggle),
       this.body,
     );
     this.toggle.addEventListener("click", () => this.setCollapsed(!this.el.classList.contains("collapsed")));
@@ -119,7 +128,15 @@ export class RgDeskDock {
     this.model = m;
     const { desk, player, me, snap } = m;
     // Bar: who, status line, the one primary button.
-    setText(this.name, player ? shortName(player.wallet) + (m.walletLabel ? ` · ${m.walletLabel}` : "") : "My desk");
+    setText(this.name, player ? shortName(player.wallet) : "My desk");
+    // The wallet kind ("Demo player", "NEAR wallet"…) rides on the name's tooltip: the bar stays one line.
+    this.name.title = player ? `${player.wallet}${m.walletLabel ? ` · ${m.walletLabel}` : ""}` : "";
+    // The badge photo: your own character once you are badged in, an empty badge before.
+    const photoKey = player && !m.previewNote ? `${player.wallet}|${me?.tier ?? "v"}|${!me || me.status === "visitor"}` : "";
+    if (photoKey !== this.photoKey) {
+      this.photoKey = photoKey;
+      render(this.photo, player && !m.previewNote ? portrait(player.wallet, { tier: me?.tier ?? null, kind: !me || me.status === "visitor" ? "visitor" : "employee", scale: 2 }) : h("span", { class: "blank", "aria-hidden": "true" }, "?"));
+    }
     setText(this.line, m.previewNote ? COPY.previewDock : desk.line);
     const p = m.previewNote ? null : desk.primary;
     this.primary.hidden = !p;
@@ -149,18 +166,7 @@ export class RgDeskDock {
           : stat("Misses in a row", `${emp?.misses_in_row ?? 0} of ${c.layoff_after}`),
         stat("Total earned", payout(emp?.total_earned ?? "0")),
         stat("Claimable", payout(claimable)),
-        emp && emp.recent.length
-          ? h(
-              "div",
-              { style: "grid-column: 1 / -1" },
-              h("span", {}, "Last 7 days"),
-              h(
-                "div",
-                { class: "recent", role: "img", "aria-label": emp.recent.map((r) => `day ${r.task_id}: ${r.result}`).join(", ") },
-                ...[...emp.recent].reverse().map((r) => h("span", { class: `dot ${r.result}`, title: `Day ${r.task_id}: ${r.result}` }, r.result === "pass" ? "✓" : r.result === "pending" ? "·" : "✕")),
-              ),
-            )
-          : null,
+        emp && emp.recent.length ? h("div", { style: "grid-column: 1 / -1" }, h("span", {}, "Last 7 days"), recentDots(emp.recent)) : null,
       );
       this.stats.hidden = false;
     } else {
@@ -203,18 +209,29 @@ export class RgDeskDock {
       render(this.msg, h("span", { class: msg.tone === "good" ? "good" : msg.tone === "bad" ? "bad" : "" }, msg.text), msg.detail ? h("span", { class: "detail" }, msg.detail) : null);
     }
 
-    // Secondary actions.
-    render(
-      this.actions,
-      player && !m.previewNote ? btn("Go to my desk", () => this.handlers.goToDesk()) : null,
-      player ? btn(m.walletLabel?.includes("Simulated") ? "Leave" : "Badge out", () => this.handlers.disconnect()) : null,
-    );
+    // Secondary actions, rebuilt only when they change so keyboard focus survives the ticks.
+    const onDesk = !!player && !m.previewNote;
+    const leave = m.walletLabel?.includes("Simulated") ? "Leave" : "Badge out";
+    const actionsKey = `${!!player}|${onDesk}|${m.following}|${leave}`;
+    if (actionsKey !== this.actionsKey) {
+      const hadFocus = this.actions.contains(document.activeElement) ? (document.activeElement as HTMLElement).dataset.action : undefined;
+      this.actionsKey = actionsKey;
+      const follow = onDesk ? btn("Follow me", () => this.handlers.follow(!m.following), "follow") : null;
+      follow?.setAttribute("aria-pressed", String(m.following));
+      render(
+        this.actions,
+        onDesk ? btn("Go to my desk", () => this.handlers.goToDesk(), "desk") : null,
+        follow,
+        player ? btn(leave, () => this.handlers.disconnect(), "leave") : null,
+      );
+      if (hadFocus) this.actions.querySelector<HTMLElement>(`[data-action="${hadFocus}"]`)?.focus();
+    }
     this.actions.hidden = !player;
   }
 }
 
-function btn(label: string, fn: () => void): HTMLButtonElement {
-  const b = h("button", { class: "btn small" }, label);
+function btn(label: string, fn: () => void, action?: string): HTMLButtonElement {
+  const b = h("button", { class: "btn small", "data-action": action }, label);
   b.addEventListener("click", fn);
   return b;
 }

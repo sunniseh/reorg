@@ -25,19 +25,26 @@ export class FeedLog {
   /** Adds items (any order); keeps newest first; merges submission runs. */
   add(...items: FeedItem[]): void {
     if (items.length === 0) return;
+    // Linear in the batch: a big company's payday is thousands of lines in one call.
+    const ids = new Set(this.items.map((x) => x.id));
+    const fresh: FeedItem[] = []; // oldest first; the newest is the current top
     for (const it of items.sort((a, b) => a.at - b.at)) {
-      if (this.items.some((x) => x.id === it.id)) continue;
-      const top = this.items[0];
+      if (ids.has(it.id)) continue;
+      ids.add(it.id);
+      const top = fresh.length > 0 ? fresh[fresh.length - 1] : this.items[0];
       // Runs of submissions (or of claims) for one task merge into one counted line.
       if ((it.kind === "submission" || it.kind === "claim") && top?.kind === it.kind && top.taskId === it.taskId) {
         const count = (top.count ?? 1) + 1;
         const { wallet: _drop, ...rest } = top;
         const text = it.kind === "submission" ? `${plural(count, "answer")} filed for day ${it.taskId}.` : `${plural(count, "salary", "salaries")} collected for day ${it.taskId}.`;
-        this.items[0] = { ...rest, id: it.id, at: it.at, count, text };
+        const merged = { ...rest, id: it.id, at: it.at, count, text };
+        if (fresh.length > 0) fresh[fresh.length - 1] = merged;
+        else this.items[0] = merged;
         continue;
       }
-      this.items.unshift(it);
+      fresh.push(it);
     }
+    this.items = [...fresh.reverse(), ...this.items];
     this.items.sort((a, b) => b.at - a.at);
     if (this.items.length > MAX_ITEMS) {
       const pinned = this.items.filter((x) => x.pinned);

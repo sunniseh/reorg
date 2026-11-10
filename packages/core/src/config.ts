@@ -6,19 +6,23 @@
 import { z } from "zod";
 
 export const BPS = 10_000;
+/** Parts-per-million denominator (tier thresholds, PROTOCOL.md §6.1). */
+export const PPM = 1_000_000;
 
 const u128 = z.string().regex(/^(0|[1-9]\d*)$/, "decimal u128 string");
 const u64 = z.string().regex(/^(0|[1-9]\d*)$/, "decimal u64 string");
 const bps = z.number().int().min(0).max(BPS);
 const count = z.number().int().min(0);
 const bps4 = z.tuple([bps, bps, bps, bps]);
+const ppm = z.number().int().min(0).max(PPM);
+const ppm4 = z.tuple([ppm, ppm, ppm, ppm]);
 
 const sum = (xs: readonly number[]) => xs.reduce((a, b) => a + b, 0);
 const strictlyDescending = (xs: readonly number[]) => xs.every((x, i) => i === 0 || xs[i - 1]! > x);
 const strictlyAscending = (xs: readonly number[]) => xs.every((x, i) => i === 0 || xs[i - 1]! < x);
 
 const ConfigShape = z.strictObject({
-  tier_thresholds_bps: bps4,
+  tier_thresholds_ppm: ppm4,
   tier_bucket_bps: bps4,
   payroll_bps: bps,
   reserve_bps: bps,
@@ -39,8 +43,8 @@ const ConfigShape = z.strictObject({
 
 export const ConfigSchema = ConfigShape.superRefine((c, ctx) => {
   const fail = (path: string, message: string) => ctx.addIssue({ code: "custom", path: [path], message });
-  if (!c.tier_thresholds_bps.every((t) => t > 0) || !strictlyDescending(c.tier_thresholds_bps)) {
-    fail("tier_thresholds_bps", "must be > 0 and strictly descending");
+  if (!c.tier_thresholds_ppm.every((t) => t > 0) || !strictlyDescending(c.tier_thresholds_ppm)) {
+    fail("tier_thresholds_ppm", "must be > 0 and strictly descending");
   }
   if (sum(c.tier_bucket_bps) !== BPS) fail("tier_bucket_bps", `must sum to ${BPS}`);
   if (c.payroll_bps + c.reserve_bps + c.jackpot_bps !== BPS) {

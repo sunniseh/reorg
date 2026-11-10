@@ -58,7 +58,7 @@ interface Emp {
 
 export function testConfig(over: Partial<ContractConfig> = {}): ContractConfig {
   return {
-    tier_thresholds_bps: [300, 100, 25, 5],
+    tier_thresholds_ppm: [30_000, 10_000, 2_500, 10],
     tier_bucket_bps: [3500, 3000, 2000, 1500],
     payroll_bps: 6000,
     reserve_bps: 3000,

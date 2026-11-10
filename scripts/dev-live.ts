@@ -34,7 +34,7 @@ async function main(): Promise<void> {
   // The crowd lives under `crowd.<root>`, so the client can label it from deployment config.
   const crowdRoot = await env.createPlayer("crowd", 0n, "120");
   const config = ConfigSchema.parse(await env.provider.callFunction({ contractId: env.contractId, method: "get_config", args: {} }));
-  const dist = crowdDistribution(CROWD_SIZE, DEFAULT_SUPPLY, config.tier_thresholds_bps);
+  const dist = crowdDistribution(CROWD_SIZE, DEFAULT_SUPPLY, config.tier_thresholds_ppm);
   const publicKey = KeyPair.fromString(env.key).getPublicKey();
   const bounds = (await env.provider.callFunction({ contractId: env.tokenId, method: "storage_balance_bounds", args: {} })) as { min: string };
   const bots: { id: string; role: string; pass: number }[] = [];

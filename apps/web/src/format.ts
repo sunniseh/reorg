@@ -22,7 +22,7 @@ export function fixed(value: bigint, decimals: number, digits: number): string {
   const whole = v / scale;
   let frac = (v % scale).toString().padStart(decimals, "0").slice(0, digits);
   frac = frac.replace(/0+$/, "");
-  const w = whole.toLocaleString("en-US");
+  const w = whole.toString().replace(/\B(?=(\d{3})+$)/g, ","); // en-US grouping, without Intl (hot in a big feed)
   return `${neg ? "−" : ""}${w}${frac ? "." + frac : ""}`;
 }
 
@@ -77,6 +77,13 @@ export function countdown(ms: number): string {
 export const TIER_TITLES = ["Director", "Manager", "Associate", "Intern"] as const;
 export const TIER_PLURALS = ["Directors", "Managers", "Associates", "Interns"] as const;
 
+/** A whole count with thousands separators: 12,480. Fixed locale, so every client reads the same. */
+export function count(n: number): string {
+  const s = String(Math.round(Math.abs(n)));
+  const out = s.length > 3 ? s.replace(/\B(?=(\d{3})+$)/g, ",") : s;
+  return n < 0 ? `-${out}` : out;
+}
+
 export function plural(n: number, one: string, many = `${one}s`): string {
-  return `${n} ${n === 1 ? one : many}`;
+  return `${count(n)} ${n === 1 ? one : many}`;
 }

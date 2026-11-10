@@ -112,7 +112,7 @@ fn normalization() {
 #[test]
 fn tiers() {
     let v = vectors();
-    let thresholds: [u16; 4] = serde_json::from_value(v["tier"]["thresholds_bps"].clone()).unwrap();
+    let thresholds: [u32; 4] = serde_json::from_value(v["tier"]["thresholds_ppm"].clone()).unwrap();
     for c in v["tier"]["cases"].as_array().unwrap() {
         let got = tier_of(big(&c["balance"]), big(&c["total_supply"]), &thresholds);
         let want = c["tier"].as_u64().map(|t| t as Tier);

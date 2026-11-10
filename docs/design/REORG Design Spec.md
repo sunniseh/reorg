@@ -21,7 +21,7 @@ The app is a game, not a dashboard: a side-on cutaway of an office building wher
 3. **Movement only implies true things.** What a character is allowed to do depends on its state (§5.7). While a task is open, an employee who has not submitted stays at the desk working, so anyone away from their desk has already submitted. Idle behavior never suggests a pass, a miss, a payment or a layoff that did not happen.
 4. **Readable in one second.** A newcomer should understand "people work, get paid, get laid off" from the first screen, before reading a word.
 5. **Corporate parody, played straight.** The look is flat and tidy like an office poster. The humor lives in the boss's copy and the characters' routines, not in noisy visuals.
-6. **Scales without changing.** The same building works for 8 employees and for 2,000. More holders means more floors, never a different design.
+6. **Scales without changing.** The same building works for 8 employees and for 100,000. More holders means more floors (folded into annex towers past 6 per tier), never a different design.
 7. **Same building for everyone.** The building, its floors and every character's position are a pure function of chain state and the wall clock (§5.6). Two clients that read the same chain state at the same moment draw the same picture, no matter how long either has been open.
 
 ## 2. Brand and voice
@@ -49,13 +49,13 @@ The main screen is one full-width **stage**: the building, drawn in a PixiJS can
 | Part | What it contains | Scope |
 | --- | --- | --- |
 | **Stage** | The building (§4): rooftop sign, penthouse with the boss and the speech bubble, tier floors, the vertical core (stairs and elevator), lobby, street, basement with the vault and server room | P0 |
-| **Top bar** (48 px) | The REORG mark; day number (the task id: “day” means task, not calendar date); task status with a countdown; reserve and runway (with the LOW state); headcount; the crowd label (§12.5); the **Preview growth** toggle (§12.4); a **Go to my desk** button once a wallet is badged in | P0 |
+| **Top bar** (52 px) | The REORG mark (the lobby logo sprite); day number (the task id: “day” means task, not calendar date); task status with a countdown; reserve and runway (with the LOW state); headcount; the crowd label (§12.5); the **Preview growth** toggle (§12.4); **Badge in** (the login, §3.1) until a wallet is badged in, then the player's ID chip (badge photo and name; it opens their own card) and **Go to my desk** | P0 |
 | **Company popover** | Opens from the headcount in the top bar: headcount by tier, laid off, visitors, reserve, runway, crowd label | P0 |
-| **My-desk dock** | Bottom right, 360 px wide. The player's account, title, share of supply, streak, misses in a row out of `layoff_after` (or tasks left while laid off), total earned, claimable salary, today's puzzle, and the primary button (§3.1). Collapses to a pill that shows the status line and the primary button | P0 |
+| **My-desk dock** | Bottom right, 360 px wide. The player's badge photo and account, title, share of supply, streak, misses in a row out of `layoff_after` (or tasks left while laid off), total earned, claimable salary, today's puzzle, and the primary button (§3.1). Collapses to a pill that shows the status line and the primary button | P0 |
 | **Feed ticker** | Bottom left. Shows the newest item; expands to the last 8, newest first: contract events and the boss's announcements | P0 |
-| **Character card** | Click or tap a character, or its desk: account, title, share of supply, status, streak, badges, last 7 results, and a SIMULATED tag for crowd accounts. It is anchored next to the character and follows it while the camera pans. Hover shows a short tooltip with account, title, share, and streak | P0 |
+| **Character card** | Click or tap a character, or its desk: the character's badge photo (its sprite on its floor's color), account, title, share of supply, status, streak, badges, last 7 results, and a SIMULATED tag for crowd accounts. It is anchored next to the character and follows it while the camera pans. The player's own card is the emphasized variant (accent frame) and opens by itself right after badging in. Hover shows a short tooltip with account, title, share, and streak | P0 |
 | **Ledger** | Opens from the vault: income by tag (simulated income marked), salaries paid and forfeited, operating costs, runway. Each row links to its transaction on testnet; the local sandbox shows the transaction hash only | P0 |
-| **Employee list** | A DOM table of every character in building order. The keyboard and screen-reader path to every card (§11) | P1 |
+| **Employee list** | A list of small badge cards (photo, name, title and status, share, streak, today) for every character in building order, the player's own card pinned first. The keyboard and screen-reader path to every card (§11) | P1 |
 
 **Task status in the top bar.**
 
@@ -114,7 +114,7 @@ Every floor has the same width, like a real building:
 | Amenity bay (right): water cooler, printer and outbox, coffee machine, window | 40 |
 | **Total** | **380** |
 
-A floor is 48 tall inside (ceiling to floor) plus a 4 px slab. Standing characters are 26 tall, so a floor leaves room above their heads for the back wall's windows and posters.
+A floor is 48 tall inside (ceiling to floor) plus a 4 px slab. Standing characters are 20 tall (the boss 28), so a floor leaves room above their heads for the back wall's windows and posters.
 
 ### 4.3 Floors and rooms
 
@@ -124,10 +124,10 @@ From top to bottom:
 | --- | --- | --- |
 | Roof | The company sign (§12), a water tank | Not applicable |
 | Penthouse (64 tall) | The boss's office: big desk, window, mug. The boss lives here (§5.8) and speaks in a bubble | Not applicable |
-| Directors | Private offices with walls and a door, a plant | 4 rooms, 72 wide |
-| Managers | Glass offices with a whiteboard | 6 rooms, 48 wide |
-| Associates | Cubicles with low partitions | 8 rooms, 36 wide |
-| Interns | One long shared desk, split into seats | 12 seats, 24 wide |
+| Directors | Private offices with walls and a door, a plant | 6 rooms, 48 wide |
+| Managers | Glass offices with a whiteboard | 9 rooms, 32 wide |
+| Associates | Cubicles with low partitions | 12 rooms, 24 wide |
+| Interns | One long shared desk, split into seats | 18 seats, 16 wide |
 | Lobby | Reception counter, the HR door, the café corner, the foot of the stairs and the elevator, glass front doors | Not applicable |
 | Street | Sidewalk in front of the lobby: the visitors' queue at the glass doors, the **bench** where laid-off employees sit, a street lamp, the crowd sign (§12.5) | Not applicable |
 | Basement | Treasury vault (reserve, a fill bar, runway), the server room, the foot of the **pneumatic tube** that runs up the core to every floor | Not applicable |
@@ -135,6 +135,8 @@ From top to bottom:
 **Floor plaque.** Each floor carries a plaque on the core wall beside the elevator door: the tier name (12 px, weight 600) and its headcount as a small muted second line. It appears on the first floor of each tier.
 
 **Floors per tier.** A tier with `n` characters has `max(1, ceil(n / rooms per floor))` floors. An empty tier still gets one floor of empty rooms, so the org chart is always complete. Room order comes from `layoutTower()` in `packages/core` (tier, then balance descending, then account id), filling each floor left to right. The renderer never re-sorts.
+
+**Folded floors (scale).** A memecoin can reach tens of thousands of employees, which would be thousands of Intern floors. The headquarters draws at most 6 floors per tier (`DRAWN_FLOORS`), so it stays about 24 floors tall and a big company reads as a skyline, not one long column. The floors past that keep their numbers and order but are *folded*: a run of them is one floor-tall band in the tier's place, with the core passing through it (stairs, shaft, tube), stacked thin floor lines, a plaque such as “Interns · floors 7–8,334 · in the annexes”, the run's exact counts (employees, filed, passed, missed, laid off) and a bar of today's results. A folded floor has no characters and no desks; its people work in the annex towers (§12.2). The badged-in player's own floor is always drawn, even deep in a fold: the fold splits around it. When a floor unfolds (you badge in, or ranks shift), its people were there all along, so they appear at their desks: no hire or arrival plays (§1). Visitors are counted in full and the first 50 are drawn; the queue still shows 5 and “+n”. Laid-off employees on folded floors count toward the bench's “+n”. Idle trips never stop at a fold.
 
 **Empty rooms** show the furniture outline in the Desk edge color, with no chair, no monitor and no character.
 
@@ -168,7 +170,7 @@ Each wallet is one small pixel-art office worker, made of at most three sprites 
 
 ### 5.1 Anatomy
 
-- Standing character: 16 by 26. Seated character: 16 by 20, ending at the desk top; the chair is drawn behind and the desk front in front. Heads sit in rows 0 to 11 of every pose, so hair lines up without offsets.
+- Standing character: 12 by 20. Seated character: 12 by 15, ending at the desk top (row 38 of the floor); the chair is drawn behind and the desk front in front. Heads sit in rows 0 to 8 of every pose, so hair lines up without offsets. The boss is 18 by 28: he stands a head taller than his staff.
 - Layers: a fixed-color base (skin in the shared skin tone, face, trousers), a grayscale shirt layer tinted with the body color, and a grayscale hair layer tinted with a hair color. All share one anchor, bottom center.
 - Body color: one of 8 body tokens (§6). The index is `sha256(utf8(wallet))[0] mod 8`, computed in `packages/core` (roadmap W-04) so every client picks the same color.
 - Hair: style `sha256(utf8(wallet))[1] mod 5` (short, long, bun, curly, none) and color `sha256(utf8(wallet))[2] mod 6`. P0, because a building full of identical heads cannot be told apart at a glance.
@@ -348,7 +350,7 @@ The boss's hair is the Muted token and the boss's blazer is the Accent token.
 
 ## 7. Typography
 
-One family only: the system UI stack (`system-ui`, then the platform fonts), in the DOM and in Pixi text alike. No web font is loaded, so the app starts fast and works offline. In-canvas micro text uses a bitmap font generated at load from the same family.
+Two system stacks, no web font, so the app starts fast and works offline. Body text uses the system UI stack (`system-ui`, then the platform fonts), in the DOM and in Pixi text alike. Headings, names, numbers, buttons, chips and small labels use the system monospace stack (`ui-monospace`, then the platform monospace fonts): the signage face that echoes the building's pixel signs. Small section labels (dock stats, staff-list floors, table headers) are uppercase at 10 to 11 px. In-canvas micro text uses a bitmap font generated at load from the system UI family.
 
 | Role | Size and weight |
 | --- | --- |
@@ -368,14 +370,18 @@ Canvas text is drawn at screen size, not scaled with the camera zoom, so it stay
 
 These are the DOM components. Pixi objects are listed in §15.2.
 
-- **Primary button.** Accent fill, button-text color, 12 by 16 px padding, 6 px radius, weight 600. One per screen at a time.
-- **Secondary button.** Transparent with a 1 px line border, 8 by 12 px padding. A selected toggle uses the accent for border and text. Minimum height 44 px on phones.
-- **Card.** Panel fill, 1 px line border, 8 px radius, 12 px padding, 12 px gap below.
-- **HUD surface.** A card that floats over the stage: Panel fill, 1 px line border, 8 px radius, and the one allowed shadow level (0 2px 0 Background). It never blurs what is behind it.
+The HUD is drawn like the building (2026-11-10): square corners, a 2 px **pixel frame** whose corners are notched (four offset hard shadows, no border-radius), a 2 px inner bevel (shell light on top, shell shade below) and one hard drop shadow (0 6px 0 Background). No blur, no gradient, no rounded corner.
+
+- **Primary button.** Accent fill with an accent-shade bottom bevel, button-text color, monospace weight 800, 12 by 16 px padding, Background pixel frame. Pressed moves it down 2 px and flattens the bevel. One per screen at a time.
+- **Secondary button.** Shell fill with the shell bevel, Background pixel frame, 8 by 12 px padding. A selected toggle uses the accent-shade fill. Minimum height 44 px on phones.
+- **Card.** Panel fill, pixel frame in Line, 12 px padding. The emphasized variant (the player's own) frames in Accent.
+- **HUD surface.** A card that floats over the stage, with the drop shadow. It never blurs what is behind it.
+- **Badge photo.** The character's front standing sprite, tinted from the wallet hash like the building's, on its floor's color (lobby for visitors, who show the outline), framed 2 px. Painted from the same atlas at a whole-number scale with pixelated sampling (`hud/sprites.ts`). On the character card, the dock, the top bar's ID chip and every staff-list card.
+- **Icons.** Only atlas frames (coin, pass and miss dots, the lobby logo), never an icon font.
 - **Speech bubble.** Panel fill, 1 px accent border, 8 px radius. Used only by the boss, and drawn in Pixi.
-- **Text input.** 150 px wide, line border, uppercase transform, `autocapitalize="characters"`, `autocomplete="off"`, `spellcheck="false"`. Enter submits. The contract normalizes case and maps 0 to O and 1 to I, so the input does not need to.
+- **Text input.** 160 px wide, Background fill, Line pixel frame (Accent on focus, Bad when invalid), monospace, uppercase transform, `autocapitalize="characters"`, `autocomplete="off"`, `spellcheck="false"`. Enter submits. The contract normalizes case and maps 0 to O and 1 to I, so the input does not need to.
 - **Feed.** An unstyled list with 1 px dividers. It is a polite live region so screen readers announce new items.
-- **Focus ring.** A 3 px ink outline with 2 px offset on every interactive DOM element.
+- **Focus ring.** A 2 px ink outline with 3 px offset on every interactive DOM element.
 
 ## 9. Motion
 
@@ -390,7 +396,7 @@ These are the DOM components. Pixi objects are listed in §15.2.
 | Cheer and slump | 2 frames, 0.6 s, once, at results | P0 |
 | Crane | A crane lowers a new floor into place when a tier fills | Later |
 | Lights out | Floors go dark one by one on bankruptcy | Later |
-| Day and night | Sky and windows follow the clock | Later |
+| Day and night | Sky and windows follow the clock: UTC, so every client draws the same sky (§1 principle 7); dusk 18–20 h, dawn 5–7 h | Later (built, W-15) |
 
 Reduced motion is defined once, in §14.5.
 
@@ -398,7 +404,9 @@ Reduced motion is defined once, in §14.5.
 
 **Zoom.** The camera draws sprite pixels at a whole-number zoom: the largest zoom at which the building's 380 px width fits the stage, at least 2× on a laptop. When even 1× does not fit (phones), the camera fits the width with linear filtering. The building never scrolls sideways at the default zoom.
 
-**Panning.** When the building is taller than the stage, dragging or scrolling on the stage pans vertically; otherwise the page does not scroll. Pinch or Ctrl+scroll zooms (P1). On load the camera shows the whole building if it fits, otherwise the player's desk if badged in, otherwise the top floors. **Go to my desk** jumps the camera to the player's character (it pans in 300 ms; under reduced motion it jumps). There is no continuous follow; a **Follow me** toggle is P1.
+**Overview.** When there is more to see than the default zoom shows (a tall building, annex towers beside it), a camera button at the top center reads **Overview**: it zooms out until the headquarters, its annexes and the antenna all fit the free area, centered (never below 0.2×). There it reads **Back to building**; after zooming in it reads **Zoom out**. Ctrl+scroll and pinch step through the same ladder: the overview, ½× when the overview is far below it, the phone fit, then 1× to 6×. With annex towers the client **opens on the overview**, so every building is in view, and opens it again when the skyline gains or loses a tower (unless the player is zoomed in or following). At every zoom the camera may pan sideways across the whole skyline, not just the headquarters; **Back to building** recenters on the headquarters; screen-size labels shrink with the building below 0.6× so plaques never overlap, and annex signs keep their screen size up to the width of their tower. **Go to my desk** from the overview returns to the default zoom first.
+
+**Panning.** When the building is taller than the stage, dragging or scrolling on the stage pans vertically; otherwise the page does not scroll. Pinch or Ctrl+scroll zooms (P1). On load the camera shows the whole skyline when there are annex towers, else the whole building if it fits, otherwise the player's desk if badged in, otherwise the top floors. **Go to my desk** jumps the camera to the player's character (it pans in 300 ms; under reduced motion it jumps). There is no continuous follow; a **Follow me** toggle is P1.
 
 | Width | Change |
 | --- | --- |
@@ -416,13 +424,13 @@ The canvas fills the stage, follows its size, and caps the device pixel ratio at
 - The canvas has `role="img"` and an `aria-label` summary, refreshed on each `task_opened` and `task_finalized`. Example: “Reorg Inc. 18 employees. Task 5 is open, 12 submitted.”
 - The feed announces items politely. The dock exposes the player's own state as text.
 - Focus rings are always visible on DOM controls, and the puzzle input submits with Enter.
-- Characters inside the canvas are not keyboard-reachable. The employee list (P1) is the keyboard and screen-reader path to every card. Until it ships, the dock and the feed carry the same information. The README lists this as a known gap.
+- Characters inside the canvas are not keyboard-reachable. The employee list (P1, shipped as roadmap W-18) is the keyboard and screen-reader path to every card: "Staff list" in the top bar (the company popover on narrow screens) opens it, the player's own card is first, each card opens the character card and centers the camera, and focus returns to the row.
 - Nothing flashes more than three times per second.
 - Reduced motion: §14.5.
 
 ## 12. Building states from holder count
 
-The building has five named states, each with its own shell, surroundings, and camera, chosen by the current employee count: characters with a tier, excluding visitors and excluded accounts, as computed by `packages/core`. At the default thresholds the company cannot exceed 2,000 employees; the cap follows the lowest tier threshold.
+The building has seven named states, each with its own shell, surroundings, and camera, chosen by the current employee count: characters with a tier, excluding visitors and excluded accounts, as computed by `packages/core`. At the default thresholds (Interns from 0.001% of supply) the company cannot exceed 100,000 employees; the cap follows the lowest tier threshold.
 
 The accent color marks the company signage at every state: a cardboard sign, a painted sign, a rooftop sign, a ticker, and finally a blimp.
 
@@ -433,7 +441,7 @@ The accent color marks the company signage at every state: a cardboard sign, a p
 - **Tier fill** adds floors inside a state, as described in §4.
 - **Reserve level**, not holder count, drives lighting: the vault shows its low state when the reserve is below `reserve_low`, and floors go dark on bankruptcy (Later).
 
-### 12.2 The five states
+### 12.2 The seven states
 
 | State | Employees | Shell and sign (P0) | Surroundings | Vault |
 | --- | --- | --- | --- | --- |
@@ -441,9 +449,15 @@ The accent color marks the company signage at every state: a cardboard sign, a p
 | Small office | 11 to 50 | Concrete shell with painted window frames, a painted sign | Later: a parking lot and a coffee cart | Wall safe (Later) |
 | Office tower | 51 to 250 | Glass curtain-wall shell, a lit rooftop sign | Later: city blocks behind | Round door (P0 default) |
 | Skyscraper | 251 to 1,000 | Tall tower with an antenna, a helipad, and a ticker sign reading $REORG | Clouds drift past the upper floors | Bank-style walk-in |
-| Megacorp | 1,001 to 2,000 | Twin towers joined by a sky bridge, the second rising as the first fills | Full skyline and a blimp carrying the boss's latest announcement | Double doors |
+| Megacorp | 1,001 to 5,000 | Twin towers joined by a sky bridge; the second is Annex A, as tall as its folded floors; a second annex once the twin is full | Full skyline and a blimp carrying the boss's latest announcement | Double doors |
+| Campus | 5,001 to 25,000 | The Megacorp headquarters with up to 6 annexes, alternating right and left | As Megacorp | Double doors |
+| Conglomerate | 25,001 and up | The Megacorp headquarters with up to 12 annexes: a skyline of company towers | As Megacorp | Double doors |
 
 In every state the number of floors comes from tier fill (§4), so even Garage startup has one floor per tier. The interior (rooms, core, lobby, street, basement) is the same in every state.
+
+**Annexes.** The annex towers hold the folded floors (§4.3), split evenly between them (the first take the remainder), each at least 2 floors tall and at most as tall as the headquarters, with a sign over the entrance: “ANNEX B · 1,240 FLOORS” (an empty twin reads “OPENING SOON”). Their count is a function of the state and the folded floors (`annexesOf`, client display constants), so every client draws the same skyline. Any folded floor gets at least one annex, even below Megacorp.
+
+**Big companies, live.** Past 2,000 holders the client stops paging through every holder: it draws the boss service's shared layout (`GET /api/tower?you=`, refreshed every 15 s) and still reads the player's own balance, record and submission from the chain.
 
 **Scope.** P0 draws the full interior in every state, plus the shell tiles and sign of the first three states. Per-state surroundings, per-state vault art, Skyscraper and Megacorp are Later.
 
@@ -455,7 +469,7 @@ In every state the number of floors comes from tier fill (§4), so even Garage s
 
 ### 12.4 Growth preview
 
-Live data stays within the first two states (≤ 50 employees, roadmap D18). A **Preview growth** toggle in the top bar switches the client's state source to a seeded simulation with 8, 24, or 60 employees, covering the first three states. The simulation runs the same life system and plays the same signature moments on a timer, so the preview looks like a working company.
+Live data stays within the first two states (≤ 50 employees, roadmap D18). A **Preview growth** toggle in the top bar switches the client's state source to a seeded simulation, with one size button per state: 8, 24, 60, 400, 2k, 10k and 50k holders (about 10% of them visitors) open a Garage startup, Small office, Office tower, Skyscraper, Megacorp, Campus and Conglomerate. Each button's tooltip names its state; the two largest take a few seconds to open (roadmap D22). The simulation runs the same life system and plays the same signature moments on a timer, so the preview looks like a working company.
 
 - While the preview is on, a full-width **SIMULATED PREVIEW** banner sits across the top of the stage, with the same text in the top bar. It cannot be dismissed.
 - Simulated and live characters never share a screen. Turning the toggle off returns to live state.
@@ -478,10 +492,10 @@ REORG parodies office life, so its look has to come from that world. The product
 1. **Everything comes from the office.** Visuals are built from desks, memos, org charts, HR forms, sticky notes, water coolers, and fire-exit signs. If an element could sit unchanged in any crypto dashboard, redraw it.
 2. **No default AI or crypto look.** Banned: purple-to-blue gradients, glowing orbs, frosted-glass cards, neon on black, sparkle or magic-wand icons, brain or circuit motifs, floating 3D coins, and stock robot faces.
 3. **The boss is a character, not an icon.** A flat figure with a tie, a lanyard, and a mug, whose expression changes with the day's results and who walks the building. Never a glowing head or a chat-bot avatar.
-4. **Flat and hard-edged.** Solid fills, 1 to 2 px outlines, small radii, at most one subtle shadow level, and no gradients or blur.
+4. **Flat and hard-edged.** Solid fills, 2 px pixel frames with notched corners, square corners, one hard drop shadow, and no gradients or blur. The HUD looks like part of the building, not a web dashboard laid over it.
 5. **All art is made, not generated.** Characters, props, and the building are pixel art built from code and a hand-drawn kit. No stock photos, no AI-generated images or faces, and no icon pack used without redrawing it in the house style.
-6. **Hierarchy through size and weight.** One type family, no decorative display fonts, no giant gradient headline, and no tracked all-caps everywhere. The SIMULATED labels are the one deliberate all-caps exception.
-7. **The building is the screen.** The stage dominates and the HUD is plain and utilitarian. No row of three equal cards with icons, no uniform pill buttons, no centered hero.
+6. **Hierarchy through size and weight.** The system UI and system monospace stacks only, no decorative display fonts, no giant gradient headline, and no tracked all-caps everywhere. The SIMULATED labels and the small section labels (§7) are the only all-caps.
+7. **The building is the screen.** The stage dominates and the HUD is utilitarian, drawn in the building's pixel style. No row of three equal cards with icons, no uniform pill buttons, no centered hero.
 8. **Copy has a point of view.** Write in the boss's voice or plain office language. In interface copy, the README, and posts, these words are banned: unlock, supercharge, revolutionize, seamless, elevate, leverage, next-generation, and “welcome to the future.” The boss's own lines may use any corporate buzzword, “leverage” and “synergy” included, because the parody is the point. No decorative emoji, and no exclamation marks outside the boss's passive-aggressive cheer.
 9. **Errors and empty states are jokes with a job.** They say what happened and what to do, in voice.
 10. **Every decoration earns its place.** It either shows state, delivers a joke, or gives a character somewhere to go. If it does none of these, remove it.
@@ -617,8 +631,8 @@ The design system is a small, strict kit. Every screen is built from these parts
 | --- | --- |
 | Color | Only the tokens in §6. No raw hex values inside components |
 | Spacing | 4, 8, 12, 16, 24, and 32 px |
-| Radius | 4 px for chips, 6 px for buttons and inputs, 8 px for cards, HUD surfaces and bubbles |
-| Borders | 1 px for dividers and 2 px for emphasis |
+| Radius | None in the HUD: square corners and notched 2 px pixel frames (§8). The boss's speech bubble (Pixi) keeps 8 px |
+| Borders | 2 px: dividers, pixel frames, bevels |
 | Type | The scale in §7 |
 | Themes | Dark only. There is no light theme or theme toggle |
 
@@ -628,18 +642,18 @@ The design system is a small, strict kit. Every screen is built from these parts
 | --- | --- | --- | --- | --- |
 | `RgButton` | DOM | Primary, secondary; sizes medium and small | Default, hover, focus, pressed, disabled, loading | One primary per view (§3.1). The loading label is in voice, for example “Filing…”. Disabled is 50% opacity with no pointer cursor |
 | `RgInput` | DOM | Text | Default, focus, error, disabled | Error text is in the boss's voice and says what to do |
-| `RgCard` | DOM | Default, emphasized (accent border) | Default | Header and body slots |
+| `RgCard` | DOM | Default, emphasized (accent frame) | Default | Header and body slots |
 | `RgTopBar` | DOM | Wide, compact (≤ 820 px) | Default, preview | §3. Holds the company popover trigger and Go to my desk |
 | `RgDeskDock` | DOM | Dock, bottom sheet (≤ 820 px) | Expanded, collapsed | Holds `RgTaskPanel`. Collapsed shows the status line and the primary button |
 | `RgTaskPanel` | DOM | One per task type | Idle, open, reapply, pending, submitted, rejected, closed, passed, missed, claimable, claim pending, claimed, claim blocked, forfeited, provable (P1) | Puzzle, input, and the primary button in one card. Rejected shows the mapped copy from §13.2 |
 | `RgFeed` | DOM | Ticker, expanded | Default, empty | Polite live region. Item types: task, submission, payroll, claim, forfeit, layoff, rehire, promotion, new hire, streak, income, system |
-| `RgBadge` | DOM and Pixi | Streak, tier, status, new hire, simulated | Default | A 4 px radius chip. Text plus color, never color alone |
+| `RgBadge` | DOM and Pixi | Streak, tier, status, new hire, simulated | Default | A square chip with a 2 px bottom bevel. Text plus color, never color alone |
 | `RgTooltip` | DOM over the canvas | Character, vault | Hidden, shown | Appears on hover. Contents are plain text |
-| `RgCharacterCard` | DOM over the canvas | Default | Open, closed | §3. Follows its character. Closes on Escape and on a tap outside |
+| `RgCharacterCard` | DOM over the canvas | Default, yours (emphasized) | Open, closed | §3. Badge photo in the header. Follows its character. Closes on Escape and on a tap outside |
 | `RgToast` | DOM | Boss message | Shown, dismissed | One at a time, 4 seconds, never used for errors that need action |
-| `RgDialog` | DOM | Wallet connect (including the demo burner), claim confirmation, ledger | Open, closed | Traps focus, closes on Escape, returns focus to the trigger |
+| `RgDialog` | DOM | Badge in (the login: a blank visitor badge, then one choice per wallet, including the demo burner and, in the standalone preview, the simulated player), claim confirmation, ledger | Open, closed | Traps focus, closes on Escape, returns focus to the trigger |
 | `RgSimBanner` | DOM | Preview banner | Shown | §12.4. Cannot be dismissed |
-| `RgEmployeeList` | DOM | Default | Default, empty | P1. Building order; each row opens the card |
+| `RgEmployeeList` | DOM | Default | Default, empty | P1. Badge cards in building order, the player's own pinned first in a “You” group; each card opens the character card |
 | `RgBuilding` | Pixi | The five states in §12 | Normal, preview, low reserve; upgrading and bankrupt (Later) | Shell, roof sign, street, and the stack of floors. Draws only visible floors |
 | `RgFloor` | Pixi | One per tier, plus penthouse, lobby and basement | Default; dark for lease or bankruptcy (Later) | Back wall in the room tint, plaque on the first floor of a tier, rooms, amenity bay, its slice of the core. Static layers cached |
 | `RgRoom` | Pixi | Private office, glass office, cubicle, shared seat | Empty, occupied, laid off | Holds one desk. Carries the desk overlays (§5.4). Empty rooms are outlines in Desk edge |
@@ -687,12 +701,13 @@ The design system is a small, strict kit. Every screen is built from these parts
 
 1. **The boss's face reflects the day's pass rate.** The pass rate is `passed / submitted` from the latest `task_finalized`. One sprite with three expressions: smug at 90% or more, a forced smile from 50% to 89%, and twitchy below 50% or when nobody submitted. The cut-offs are client display constants that match the difficulty defaults in product spec §4.4. The code picks the face from the real pass rate, never the LLM. Layoff announcements reuse the twitchy face.
 2. **Appearance is purely cosmetic.** Body color and hair come from the wallet hash and imply nothing about the contract. Badges can appear later as desk items instead, such as a plant for a long streak or a gold hard hat for Employee of the Day.
-3. **The camera fits the building's width and pans vertically** (§10). On load it shows the whole building if it fits, else the player's desk, else the top floors. Go to my desk is always available once badged in. There is no continuous follow in P0. Under reduced motion every camera move is a jump. On phones, tap-to-zoom applies (§10).
+3. **The camera fits the building's width and pans vertically** (§10). On load it shows the whole skyline when there are annex towers, else the whole building if it fits, else the player's desk, else the top floors. Go to my desk is always available once badged in. There is no continuous follow in P0. Under reduced motion every camera move is a jump. On phones, tap-to-zoom applies (§10).
 4. **The building has no memory.** Building state and floors are pure functions of current state (§4, §12.3).
 5. **Pixi for the building, DOM for everything else** (2026-11-08).
 6. **A living building, not a desk grid** (2026-11-09). Characters walk, work and idle inside a layered cutaway; the desk carries the state (§1, §5.5). Desks per floor are 4/6/8/12 so every floor has the same width. The stage is full width with a HUD. P0.
 7. **Idle behavior is deterministic** (2026-11-09). It is a closed-form function of wallet, task id and wall-clock slot, so every client shows the same building and needs no simulation history (§5.6).
 8. **No extra people** (2026-11-09). Every character except the boss is a wallet, so every figure on screen means something.
+9. **Smaller characters, more desks** (2026-11-10, ROADMAP D23). Employees are 12 px wide instead of 16, so floors hold 6/9/12/18 desks instead of 4/6/8/12 at the same width; a big company is a third shorter. The boss keeps his size.
 
 ### Palette
 

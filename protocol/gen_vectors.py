@@ -23,6 +23,7 @@ VECTORS_PATH = HERE / "vectors.json"
 CONFIG_PATH = HERE / "config.default.json"
 
 BPS = 10_000
+PPM = 1_000_000
 CONSONANTS = "BDFGKLMNPRSTVZ"  # 14
 VOWELS = "AEIOU"  # 5
 ASCII_WS = " \t\n\r\x0b\x0c"
@@ -64,10 +65,10 @@ def answer_hash(normalized_answer: str, wallet: str) -> bytes:
     return sha256(normalized_answer.encode("utf-8") + b"\x00" + wallet.encode("utf-8"))
 
 
-def tier_of(balance: int, total_supply: int, thresholds_bps):
+def tier_of(balance: int, total_supply: int, thresholds_ppm):
     assert total_supply > 0
-    for k, t in enumerate(thresholds_bps):
-        if balance * BPS >= t * total_supply:
+    for k, t in enumerate(thresholds_ppm):
+        if balance * PPM >= t * total_supply:
             return k
     return None
 
@@ -285,8 +286,12 @@ def tier_vectors(thresholds):
         (S // 100 - 1, S, "1% minus one unit"),
         (S * 25 // 10_000, S, "exactly 0.25%"),
         (S * 25 // 10_000 - 1, S, "0.25% minus one unit"),
-        (S * 5 // 10_000, S, "exactly 0.05%"),
-        (S * 5 // 10_000 - 1, S, "0.05% minus one unit (visitor)"),
+        (S * 5 // 10_000, S, "0.05%: an Intern"),
+        (S // 100_000, S, "exactly 0.001%"),
+        (S // 100_000 - 1, S, "0.001% minus one unit (visitor)"),
+        # 10 ppm of (S+7) is fractional: the boundary rounds up.
+        (S // 100_000, S + 7, "supply S+7: 0.001% boundary rounds up (visitor)"),
+        (S // 100_000 + 1, S + 7, "supply S+7: first Intern balance"),
         (0, S, "zero"),
         # 3% of (S+1) is fractional, so S*3/100 is one unit short.
         (S * 3 // 100, S + 1, "supply S+1: 3% boundary rounds up"),
@@ -522,8 +527,8 @@ def build():
         "crypto": crypto_vectors(),
         "wallet_binding": wallet_binding_vectors(),
         "normalization": normalization_vectors(),
-        "tier": {"thresholds_bps": cfg["tier_thresholds_bps"],
-                 "cases": tier_vectors(cfg["tier_thresholds_bps"])},
+        "tier": {"thresholds_ppm": cfg["tier_thresholds_ppm"],
+                 "cases": tier_vectors(cfg["tier_thresholds_ppm"])},
         "multiplier": multiplier_vectors(cfg),
         "layoff": layoff_vectors(cfg),
         "status": status_vectors(cfg),

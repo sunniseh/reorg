@@ -9,3 +9,4 @@ export * from "./chain";
 export * from "./puzzle";
 export * from "./identity";
 export * from "./tower";
+export * from "./tower-wire";

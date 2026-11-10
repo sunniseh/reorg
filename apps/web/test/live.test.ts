@@ -1,5 +1,7 @@
 import {
+  buildTower,
   ConfigSchema,
+  encodeTower,
   type ContractInfo,
   type EmployeeView,
   type HolderEntry,
@@ -11,10 +13,12 @@ import {
 } from "@reorg/core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import defaultConfig from "../../../protocol/config.default.json";
-import { LiveSource } from "../src/state/live";
+import type { BossClient } from "../src/state/boss";
+import { FULL_READ_MAX, LiveSource } from "../src/state/live";
 
 const SUPPLY = 1_000_000_000n * 10n ** 18n;
 const INTERN = ((SUPPLY * 6n) / 10_000n).toString();
+const CONFIG_FOR_TOWER = ConfigSchema.parse(defaultConfig);
 
 function task(id: number, status: TaskView["status"]): TaskView {
   return {
@@ -75,6 +79,7 @@ class FakeReader implements TowerReader {
   }
   async getEvents(since: number, limit: number) { this.guard(); return this.events.filter((e) => e.seq > since).slice(0, limit); }
   async listHolders(from: number, limit: number) { this.guard(); return this.holders.slice(from, from + limit); }
+  async holdersCount() { this.guard(); return this.holders.length; }
   async holderInfo(w: string) { this.guard(); const h = this.holders.find((x) => x.account_id === w); return { balance: h?.balance ?? "0", last_received_at: "0" }; }
   async getEmployee(w: string) { this.guard(); return this.employees.find((e) => e.account_id === w) ?? null; }
   async getSubmission(id: number, w: string) { this.guard(); return this.subs.get(`${id}|${w}`) ?? null; }
@@ -98,6 +103,33 @@ async function boot(r: FakeReader) {
 }
 
 describe("LiveSource (W-12)", () => {
+  it("past FULL_READ_MAX holders it draws the boss's tower, asks for the player's floor, and skips the full read", async () => {
+    const r = new FakeReader();
+    r.holders = Array.from({ length: FULL_READ_MAX + 1 }, (_, i) => ({ account_id: `h${i}.test`, balance: "1", last_received_at: "0" }));
+    let pages = 0;
+    const list = r.listHolders.bind(r);
+    r.listHolders = async (f: number, l: number) => (pages++, list(f, l));
+    const asked: (string | null)[] = [];
+    const layout = buildTower({ config: CONFIG_FOR_TOWER, totalSupply: SUPPLY, holders: [{ account_id: "x.test", balance: SUPPLY.toString() }], employees: [], task: null, submissions: [] });
+    const boss = {
+      tower: async (you: string | null) => (asked.push(you), { at: 1, task_id: 2, tower: encodeTower(layout) }),
+      currentTask: async () => null,
+      feed: async () => [],
+      stream: () => () => undefined,
+      health: async () => null,
+    } as unknown as BossClient;
+    src = new LiveSource({ reader: r, boss, network: "sandbox", crowdRoot: "crowd.test", pollMs: 1000, fullRefreshMs: 10_000, staleAfterMs: 3000 });
+    src.start();
+    await vi.advanceTimersByTimeAsync(10);
+    const s = src.snapshot()!;
+    expect(s.tower?.employees).toBe(1);
+    expect(s.holders).toEqual([]);
+    expect(pages).toBe(0);
+    src.focus("me.test");
+    await vi.advanceTimersByTimeAsync(10);
+    expect(asked.at(-1)).toBe("me.test");
+  });
+
   it("reads every view into one snapshot; history fills the feed and ledger but never animates", async () => {
     const r = new FakeReader();
     const { src, events } = await boot(r);

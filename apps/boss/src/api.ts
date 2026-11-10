@@ -16,6 +16,8 @@ export interface ApiOptions {
   network?: string;
   /** Demo faucet (D-09): `POST /api/faucet {public_key}` creates and funds a burner. Off when absent. */
   faucet?: { faucet: Faucet; perIpPerHour: number };
+  /** The big-company tower (`GET /api/tower?you=`, tower.ts). Off when absent. */
+  tower?: { get(you: string | null): unknown };
 }
 
 const LIVE_STATES = new Set(["OPEN", "CLOSED", "FINALIZING", "FINALIZED"]);
@@ -180,6 +182,15 @@ export function createApi(opts: ApiOptions): Server {
         task_text: row.task_text,
         closes_at: row.closes_at,
       });
+    },
+
+    "/api/tower": (url, _req, res) => {
+      if (!opts.tower) return fail(res, 404, "the tower route is off on this boss");
+      const you = url.searchParams.get("you");
+      if (you !== null && !validWallet(you)) return fail(res, 400, "you must be 1-128 printable characters");
+      const snap = opts.tower.get(you);
+      if (!snap) return fail(res, 503, "the tower has not been read yet");
+      send(res, 200, snap);
     },
 
     "/api/feed": (url, _req, res) => {
