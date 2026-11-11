@@ -12,7 +12,7 @@ import { BossClient } from "./state/boss";
 import { LiveSource } from "./state/live";
 
 const RPC: Record<string, string> = {
-  testnet: "https://rpc.testnet.near.org",
+  testnet: "https://test.rpc.fastnear.com",
   sandbox: "http://127.0.0.1:3030",
 };
 

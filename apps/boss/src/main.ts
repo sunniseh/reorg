@@ -40,6 +40,7 @@ async function main(): Promise<void> {
           tokenAmount: env.faucet.tokenAmount,
         }),
         perIpPerHour: env.faucet.perIpPerHour,
+        maxAccounts: env.faucet.maxAccounts,
       }
     : undefined;
   // Big companies: one chain read per refresh serves every client's tower (tower.ts).

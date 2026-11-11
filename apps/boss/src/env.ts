@@ -39,6 +39,7 @@ const EnvSchema = z.object({
   FAUCET_NEAR_AMOUNT: z.string().regex(/^\d+$/).default("2000000000000000000000000"),
   FAUCET_TOKEN_AMOUNT: z.string().regex(/^\d+$/).default("600000000000000000000000"),
   FAUCET_RATE_LIMIT_PER_IP: num(5).pipe(z.number().int().min(1)),
+  FAUCET_MAX_ACCOUNTS: opt,
   TOWER_REFRESH_SECONDS: num(15).pipe(z.number().min(0)),
 });
 
@@ -55,7 +56,7 @@ export interface BossEnv {
   scheduler: SchedulerConfig;
   llm: { apiKey: string; baseUrl: string; model: string } | null;
   /** Demo faucet (D-09); null when off. */
-  faucet: { accountId: string; key: string; nativeAmount: bigint; tokenAmount: bigint; perIpPerHour: number } | null;
+  faucet: { accountId: string; key: string; nativeAmount: bigint; tokenAmount: bigint; perIpPerHour: number; maxAccounts: number } | null;
   /** `GET /api/tower` re-reads the chain this often (ms); 0 turns the route off. */
   towerRefreshMs: number;
 }
@@ -122,5 +123,7 @@ function faucetOf(e: z.infer<typeof EnvSchema>): BossEnv["faucet"] {
     nativeAmount: BigInt(e.FAUCET_NEAR_AMOUNT),
     tokenAmount: BigInt(e.FAUCET_TOKEN_AMOUNT),
     perIpPerHour: e.FAUCET_RATE_LIMIT_PER_IP,
+    // the pool cap: testnet funds come from a finite float, the sandbox's are free
+    maxAccounts: e.FAUCET_MAX_ACCOUNTS !== undefined ? Math.max(0, Math.floor(Number(e.FAUCET_MAX_ACCOUNTS)) || 0) : e.NETWORK === "testnet" ? 25 : 0,
   };
 }

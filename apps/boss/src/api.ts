@@ -15,7 +15,7 @@ export interface ApiOptions {
   now?: () => number;
   network?: string;
   /** Demo faucet (D-09): `POST /api/faucet {public_key}` creates and funds a burner. Off when absent. */
-  faucet?: { faucet: Faucet; perIpPerHour: number };
+  faucet?: { faucet: Faucet; perIpPerHour: number; /** Lifetime cap on burners this process creates (the testnet pool cap); 0 = none. */ maxAccounts?: number };
   /** The big-company tower (`GET /api/tower?you=`, tower.ts). Off when absent. */
   tower?: { get(you: string | null): unknown };
 }
@@ -127,11 +127,15 @@ export function createApi(opts: ApiOptions): Server {
     grants.set(ip, mine);
     return true;
   };
+  let granted = 0;
+  let pending = 0;
   const faucet = (req: IncomingMessage, res: ServerResponse) => {
     const f = opts.faucet;
     if (!f) return fail(res, 404, "not found");
     // Behind a proxy every client shares one address; put the faucet behind per-client limits there.
     const ip = req.socket.remoteAddress ?? "?";
+    const cap = f.maxAccounts ?? 0;
+    if (cap > 0 && granted + pending >= cap) return fail(res, 429, "the faucet pool is empty");
     if (!takeQuota(ip, f.perIpPerHour)) return fail(res, 429, "the faucet is resting; try again later");
     let body = "";
     req.setEncoding("utf8");
@@ -147,11 +151,18 @@ export function createApi(opts: ApiOptions): Server {
         return fail(res, 400, "expected JSON {public_key}");
       }
       if (typeof key !== "string") return fail(res, 400, "expected JSON {public_key}");
+      if (cap > 0 && granted + pending >= cap) return fail(res, 429, "the faucet pool is empty");
+      pending++;
       const job = fundQueue.then(() => f.faucet.fund(key as string, ip));
       fundQueue = job.catch(() => undefined);
       job
-        .then((g) => send(res, 200, g))
+        .then((g) => {
+          pending--;
+          granted++;
+          send(res, 200, g);
+        })
         .catch((e: unknown) => {
+          pending--;
           console.warn(JSON.stringify({ level: "warn", msg: "faucet failed", error: e instanceof Error ? e.message.slice(0, 300) : String(e) }));
           fail(res, 502, "the faucet could not fund an account; try again later");
         });

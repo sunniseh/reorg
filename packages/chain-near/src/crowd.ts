@@ -41,6 +41,22 @@ class Lane {
   }
 }
 
+/**
+ * Spaces the *start* of transactions at least `minMs` apart across every account that shares it, so ~20
+ * bots do not hit a public RPC at once (roadmap R-12, D-07). Transactions already in flight overlap as usual.
+ */
+export class Throttle {
+  private next = 0;
+  constructor(private readonly minMs: number) {}
+  async wait(): Promise<void> {
+    if (this.minMs <= 0) return;
+    const now = Date.now();
+    const at = Math.max(now, this.next);
+    this.next = at + this.minMs;
+    if (at > now) await new Promise((r) => setTimeout(r, at - now));
+  }
+}
+
 const provider = (rpcUrl: string, headers?: Record<string, string>) =>
   new JsonRpcProvider({ url: rpcUrl, ...(headers ? { headers } : {}) }, { retries: 3, wait: 500, backoff: 2 });
 
@@ -54,6 +70,8 @@ export interface NearCrowdOptions {
   /** Account name prefix per index (`c001`, …), from `crowdDistribution`. */
   names: readonly string[];
   seed: string;
+  /** Shared by the signer and the operator on a public RPC (testnet); omitted locally. */
+  throttle?: Throttle;
 }
 
 export class NearCrowdSigner implements CrowdSigner {
@@ -78,7 +96,10 @@ export class NearCrowdSigner implements CrowdSigner {
       this.accounts.set(index, m);
     }
     const { account, lane } = m;
-    return lane.run(() => fn(account));
+    return lane.run(async () => {
+      await this.opts.throttle?.wait();
+      return fn(account);
+    });
   }
 
   async submit(index: number, taskId: TaskId, answerHashB64: string): Promise<SubmitOutcome> {
@@ -105,6 +126,7 @@ export interface NearOperatorOptions {
   accountId: string;
   /** `ed25519:…`, read from the environment by the caller. */
   key: string;
+  throttle?: Throttle;
 }
 
 export class NearDemoOperator implements DemoOperator {
@@ -118,13 +140,17 @@ export class NearDemoOperator implements DemoOperator {
   }
 
   async depositIncome(amount: bigint, tag: IncomeTag): Promise<void> {
-    await this.lane.run(() =>
-      this.account.callFunction({ contractId: this.opts.contractId, methodName: REORG_METHODS.depositIncome, args: { tag }, deposit: amount }),
-    );
+    await this.lane.run(async () => {
+      await this.opts.throttle?.wait();
+      return this.account.callFunction({ contractId: this.opts.contractId, methodName: REORG_METHODS.depositIncome, args: { tag }, deposit: amount });
+    });
   }
 
   async sendTokens(to: WalletId, amount: bigint): Promise<void> {
     const args = { receiver_id: to, amount: amount.toString() };
-    await this.lane.run(() => this.account.callFunction({ contractId: this.opts.tokenId, methodName: "ft_transfer", args, deposit: 1n }));
+    await this.lane.run(async () => {
+      await this.opts.throttle?.wait();
+      return this.account.callFunction({ contractId: this.opts.tokenId, methodName: "ft_transfer", args, deposit: 1n });
+    });
   }
 }

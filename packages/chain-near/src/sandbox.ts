@@ -1,38 +1,16 @@
 // Local near-sandbox harness: deploys the real token and REORG contract and creates funded
 // player accounts. Used by the boss end-to-end test and by `npm run demo` / `npm run e2e` (D-01, D-04).
 // Throwaway keys only: everything here lives on a local chain that is deleted on tearDown.
-import { readFileSync } from "node:fs";
 import { ConfigSchema, crowdDistribution, type ContractConfig, type CrowdAccount, type SubmitOutcome, type TaskId } from "@reorg/core";
 import { Account, JsonRpcProvider, KeyPair, nearToYocto, teraToGas, type KeyPairString } from "near-api-js";
 import { DEFAULT_ACCOUNT_ID, DEFAULT_PRIVATE_KEY, Sandbox } from "near-sandbox";
+import { DEFAULT_SUPPLY, ONE_TOKEN, TOKEN_DECIMALS, defaultContractConfig, wasm } from "./artifacts";
 import { crowdPublicKey } from "./crowd";
 
-const REPO = new URL("../../../", import.meta.url);
-const TOKEN_DECIMALS = 18n;
-export const ONE_TOKEN = 10n ** TOKEN_DECIMALS;
-export const DEFAULT_SUPPLY = 1_000_000_000n * ONE_TOKEN;
+const TOKEN_METADATA_DECIMALS = Number(TOKEN_DECIMALS);
 const USER_GAS = teraToGas("100");
 
-/**
- * A fresh local build (`npm run contracts:build`) wins; otherwise the prebuilt copy in
- * `contracts/res/` (refreshed by every build), so a clone without Rust still runs the demo.
- */
-function wasm(name: string): Uint8Array {
-  const built = new URL(`contracts/target/near/${name}/${name}.wasm`, REPO);
-  const prebuilt = new URL(`contracts/res/${name}.wasm`, REPO);
-  for (const url of [built, prebuilt]) {
-    try {
-      return readFileSync(url);
-    } catch {
-      /* try the next */
-    }
-  }
-  throw new Error(`${name}.wasm missing (${built.pathname} or ${prebuilt.pathname}): run \`npm run contracts:build\` first`);
-}
-
-export function defaultContractConfig(): ContractConfig {
-  return ConfigSchema.parse(JSON.parse(readFileSync(new URL("protocol/config.default.json", REPO), "utf8")));
-}
+export { ONE_TOKEN, DEFAULT_SUPPLY, defaultContractConfig };
 
 export interface SandboxEnv {
   sandbox: Sandbox;
@@ -97,7 +75,7 @@ async function setup(sandbox: Sandbox, opts: SandboxOptions): Promise<SandboxEnv
     args: {
       owner_id: deployerId,
       total_supply: supply.toString(),
-      metadata: { spec: "ft-1.0.0", name: "REORG", symbol: "REORG", decimals: Number(TOKEN_DECIMALS) },
+      metadata: { spec: "ft-1.0.0", name: "REORG", symbol: "REORG", decimals: TOKEN_METADATA_DECIMALS },
     },
   });
 

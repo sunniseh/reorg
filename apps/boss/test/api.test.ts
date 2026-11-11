@@ -199,7 +199,7 @@ describe("CORS and health (B-12)", () => {
 });
 
 describe("demo faucet (D-09)", () => {
-  async function bootFaucet(perIpPerHour: number) {
+  async function bootFaucet(perIpPerHour: number, maxAccounts?: number) {
     world = makeWorld();
     const funded: string[] = [];
     server = createApi({
@@ -209,6 +209,7 @@ describe("demo faucet (D-09)", () => {
       now: world.clock.now,
       faucet: {
         perIpPerHour,
+        ...(maxAccounts !== undefined ? { maxAccounts } : {}),
         faucet: {
           async fund(pk) {
             funded.push(pk);
@@ -236,6 +237,15 @@ describe("demo faucet (D-09)", () => {
     expect((await post(JSON.stringify({ public_key: "ed25519:jkl" }))).status).toBe(200);
     expect(funded).toHaveLength(3);
     expect((await json("/healthz")).faucet).toBe(true);
+  });
+
+  it("stops at the lifetime pool cap, counting requests still in flight", async () => {
+    const funded = await bootFaucet(10, 3);
+    const res = await Promise.all(Array.from({ length: 6 }, (_, i) => post(JSON.stringify({ public_key: `ed25519:p${i}` }))));
+    expect(res.map((r) => r.status).sort()).toEqual([200, 200, 200, 429, 429, 429]);
+    expect(funded).toHaveLength(3);
+    world.clock.advance(3_600_001);
+    expect((await post(JSON.stringify({ public_key: "ed25519:later" }))).status).toBe(429);
   });
 
   it("takes the quota before any await, so parallel requests cannot beat it", async () => {

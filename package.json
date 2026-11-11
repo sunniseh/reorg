@@ -14,7 +14,7 @@
   "scripts": {
     "vectors": "python3 -I protocol/gen_vectors.py",
     "vectors:check": "python3 -I protocol/gen_vectors.py --check",
-    "typecheck": "npm run typecheck --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present && tsc --noEmit -p scripts",
     "test": "npm run vectors:check && npm run typecheck && npm test --workspaces --if-present && npm run contracts:test",
     "contracts:build": "sh scripts/contracts.sh build",
     "contracts:test": "sh scripts/contracts.sh test",
@@ -25,7 +25,11 @@
     "art": "node art/build.mjs",
     "demo": "npm run start -w @reorg/demo",
     "e2e": "npm run e2e -w @reorg/demo",
-    "web": "npm run dev -w @reorg/web"
+    "web": "npm run dev -w @reorg/web",
+    "testnet:deploy": "tsx scripts/deploy-testnet.ts",
+    "testnet:seed": "tsx scripts/crowd-seed.ts",
+    "testnet:boss": "cd apps/boss && tsx --env-file-if-exists=../../.env.testnet src/main.ts",
+    "testnet:crowd": "tsx --env-file-if-exists=.env.testnet apps/demo/src/testnet.ts"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",
