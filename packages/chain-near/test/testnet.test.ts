@@ -19,7 +19,7 @@ import {
   totals,
   type ChainReader,
   type DeployOptions,
-} from "../src";
+} from "../src/node";
 
 const key = () => KeyPair.fromRandom("ed25519").toString() as KeyPairString;
 const pubOf = (k: string) => KeyPair.fromString(k as KeyPairString).getPublicKey().toString();

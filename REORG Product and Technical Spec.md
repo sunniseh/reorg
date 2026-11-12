@@ -111,7 +111,7 @@ The treasury only receives money from outside. Nothing is printed.
 
 The payroll pool is split across the four tier buckets (section 3). Inside a tier:
 
-`your pay = tier bucket x your weight / sum of weights of all passers in the tier`
+`your pay = tier bucket x your weight / sum of weights of everyone in the tier who submitted`
 
 `weight = balance at submission x streak multiplier`
 
@@ -119,12 +119,15 @@ The payroll pool is split across the four tier buckets (section 3). Inside a tie
 
 - Pay is proportional to balance within a tier, so splitting holdings across wallets earns the same total.
 - The shares of employees who failed or skipped are not redistributed to other workers. They go to the reserve. Missing a day costs you money and extends the company's runway.
+- The denominator counts every submitter in the tier, pass or fail (reapplications excluded), fixed at submission time. Employees who never submitted do not dilute it. So each passer's pay does not depend on who else passed, and a tier with a single submitter takes its whole bucket if they pass (amended: ROADMAP D1, `docs/PROTOCOL.md` §7.3).
 
-**Worked example.** Income is 20 NEAR. Payroll is 12 NEAR and the Intern bucket is 15%, so 1.8 NEAR. Three interns hold 100k, 50k, and 50k tokens, all at streak zero. If all pass, they receive 0.9, 0.45, and 0.45 NEAR. If the second intern misses, they receive nothing, and 0.45 NEAR moves to the reserve.
+**Worked example.** Income is 20 NEAR. Payroll is 12 NEAR and the Intern bucket is 15%, so 1.8 NEAR. Three interns hold 100k, 50k, and 50k tokens, all at streak zero. If all pass, they receive 0.9, 0.45, and 0.45 NEAR. If the second intern submits a wrong answer, they receive nothing, and 0.45 NEAR moves to the reserve. If the second intern does not submit at all, the other two split the bucket by weight: 1.2 and 0.6 NEAR.
 
 ### 5.4 Anti-dump rule
 
 Because weight is snapshotted at submission, someone could submit and then sell. To prevent this, a salary claim requires the claimant's current balance to be at least 90% of the snapshotted balance. Otherwise the share is forfeited to the reserve.
+
+**Anti-recycling (added: ROADMAP D15).** The 90% check does not stop one bag from being counted twice: wallet A submits, sends its tokens to B, B submits, and the tokens go back to A before claims. So the token records when each account last received tokens, and a submission is rejected if the wallet received any at or after the task opened. Someone who buys during a task's window starts with the next task.
 
 ### 5.5 Layoffs
 
@@ -278,7 +281,7 @@ The tower scales with the number of employees. At the default thresholds the com
 | Campus | 5,001 to 25,000 | A row of annex towers |
 | Conglomerate | 25,001 and up | A skyline of annex towers |
 
-Floors are added when a tier's desks are full. They are never removed during a day: vacated desks go dark and fill again as new holders join.
+Floors are added when a tier's desks are full and removed when they empty. The tower has no memory: its floors and stage are a pure function of the current holders, so every client, fresh or long-running, draws the same building (amended: ROADMAP D20). Every tier always keeps at least one floor.
 
 ### 9.4 Company life: events become visuals
 

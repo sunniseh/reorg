@@ -19,7 +19,7 @@ import {
   parseNear,
   planDeploy,
   runSteps,
-} from "@reorg/chain-near";
+} from "@reorg/chain-near/node";
 import { ENV_FILE, confirm, explorer, guardNetwork, keyFromEnvOrNew, loadEnv, parseArgs, requireEnv, requireKey, rpcHeaders, upsertEnv } from "./testnet-lib";
 
 async function main(): Promise<void> {

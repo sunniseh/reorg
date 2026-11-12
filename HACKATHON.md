@@ -28,6 +28,7 @@ Instructions for the AI coding agent helping a team take part in NEAR HACKATHON.
 | Example prompts for each track | https://github.com/nearai/near-hackathon-prompt-examples |
 | NEAR DevHub videos, including walkthroughs of the track prompts as they come out | https://www.youtube.com/channel/UCq0iWZQuXhvP8yQzDZsmWfQ |
 | NEAR AI credits and API key (see Q-000) | https://cloud.near.ai |
+| Claim $10 of NEAR AI credits, a separate API key (see Q-000) | https://nearbuilders.org/dashboard |
 | More ecosystem resources | https://nearbuilders.org/build |
 | NEAR Discord | https://discord.gg/nearprotocol |
 | NEAR builders chat on Telegram | https://t.me/nearbuilderschat |
@@ -61,7 +62,7 @@ Collect these before submitting. Do not guess, generate or fill in placeholders 
 
 ## Rules
 
-**Q-000. NEAR AI credits?** Buy with crypto or card in the NEAR AI Cloud dashboard (https://cloud.near.ai), or claim $10 by joining NEAR Builders (https://nearbuilders.org/join). Generate the API key in the dashboard.
+**Q-000. NEAR AI credits?** Buy with crypto or card in the NEAR AI Cloud dashboard (https://cloud.near.ai) and generate the API key there. Or claim $10 by joining NEAR Builders (https://nearbuilders.org/join): the credits are claimed in the NEAR Builders dashboard (https://nearbuilders.org/dashboard). You get a separate API key with a $10 balance. It is not applied to your cloud.near.ai account, so the credits won't appear in that dashboard.
 
 **Q-001. Code before 2026-11-01?** Yes, from the announcement on 2026-10-19 (https://x.com/nearprotocol/status/2112257967818997891). The window runs from then to 2026-11-14. Earlier commits are baseline.
 

@@ -10,7 +10,8 @@
 // INCOME_BOT_ACCOUNT_ID (deployer.<root>), INCOME_BOT_AMOUNT in yoctoNEAR (default 0.2 NEAR per task:
 // the demo's 2 NEAR would burn ~100 NEAR a day at a 30 min epoch), RPC_MIN_INTERVAL_MS (default 400).
 import { ConfigSchema, crowdDistribution, crowdProfiles } from "@reorg/core";
-import { NearChainReader, NearCrowdSigner, NearDemoOperator, NearReader, Throttle, accountNames, formatNear } from "@reorg/chain-near";
+import { NearCrowdSigner, NearDemoOperator, NearReader, Throttle } from "@reorg/chain-near";
+import { NearChainReader, accountNames, formatNear } from "@reorg/chain-near/node";
 import { CrowdRunner, httpBoss } from "./runner";
 
 const t0 = Date.now();

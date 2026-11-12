@@ -103,13 +103,18 @@ function canBind(port: number, host: string): Promise<boolean> {
 }
 
 /**
- * First port at or after `from` that is free on both 127.0.0.1 and ::1 ("localhost" is ::1 on
- * macOS, so a dev server already there would otherwise answer our readiness check).
+ * First port at or after `from` that is free on 127.0.0.1, ::1 and the wildcards ("localhost" is
+ * ::1 on macOS, so a dev server already there would otherwise answer our readiness check; and
+ * macOS lets a loopback bind succeed beside a server listening on `*:port`, which the boss, a
+ * wildcard listener itself, could not then bind).
  */
 export async function freePort(from: number, skip: readonly number[] = []): Promise<number> {
+  const hosts = ["127.0.0.1", "::1", "0.0.0.0", "::"];
   for (let port = from; port < from + 50; port++) {
     if (skip.includes(port)) continue;
-    if ((await canBind(port, "127.0.0.1")) && (await canBind(port, "::1"))) return port;
+    let free = true;
+    for (const host of hosts) if (free) free = await canBind(port, host);
+    if (free) return port;
   }
   throw new Error(`no free port in ${from}…${from + 49}`);
 }

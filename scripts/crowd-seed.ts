@@ -9,7 +9,7 @@
 // on a real run and saved to .env.testnet (it must not change afterwards: it is what derives the keys).
 // CROWD_SIZE (default 20). Idempotent and resumable: a balance that has moved since seeding is never topped up.
 import { KeyPair } from "near-api-js";
-import { NearChainReader, accountNames, formatCrowd, formatNear, formatPlan, parseNear, planCrowdSeed, runSteps } from "@reorg/chain-near";
+import { NearChainReader, accountNames, formatCrowd, formatNear, formatPlan, parseNear, planCrowdSeed, runSteps } from "@reorg/chain-near/node";
 import { ENV_FILE, confirm, guardNetwork, loadEnv, parseArgs, requireEnv, requireKey, rpcHeaders, upsertEnv } from "./testnet-lib";
 
 async function main(): Promise<void> {
