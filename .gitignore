@@ -35,3 +35,4 @@ sandbox-data/
 .vscode/
 *.log
 __pycache__/
+.vercel

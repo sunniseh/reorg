@@ -11,6 +11,7 @@ Built for NEAR HACKATHON (2026-11-01 → 2026-11-14). Tracks: `memecoins`, `game
 - **Tower client:** PixiJS 8 + TypeScript. A read-only renderer of contract state.
 - **One-command local demo:** a fresh `near-sandbox` with the real contracts and a labeled simulated crowd.
 - **Testnet deployment:** live under `reorg-root.testnet`, see [Testnet](#testnet).
+- **Hosted client:** https://reorg-seven.vercel.app (read-only view of the testnet company, on Vercel).
 
 ---
 
@@ -114,7 +115,7 @@ The same contracts are deployed on **NEAR testnet** under `reorg-root.testnet`. 
 | [`deployer.reorg-root.testnet`](https://testnet.nearblocks.io/address/deployer.reorg-root.testnet) | Token owner and income bot (excluded from the company) |
 | `c001…c020.reorg-root.testnet` | The 20 simulated bot holders |
 
-The boss and crowd run from the developer's machine; there is no hosted web client yet. To watch the testnet company read-only in the local client:
+The web client is hosted at **https://reorg-seven.vercel.app**: it reads the testnet company straight from chain views (no boss URL is configured there yet, so the boss feed and the demo faucet are off). The boss and crowd still run from the developer's machine. To watch the same view in a local client:
 
 ```sh
 VITE_NETWORK=testnet VITE_REORG_CONTRACT_ID=reorg.reorg-root.testnet \
@@ -216,7 +217,7 @@ It reads `get_task` and checks `sha256(day_secret) == commit_hash` (the commitme
 - **`prove_pass` has no client button** yet; it is callable on the contract.
 - **Storage grows** by ≈ 250 bytes per submission (pruning is not built). The contract refuses `submit` when its storage float is below 0.05 NEAR; a plain transfer tops it up.
 - **Placeholder art.** Sprites, tiles and brand are code-generated pixel maps (`art/*.mjs`), kept so final art can replace them frame for frame.
-- **Testnet** runs from one machine on a free, rate-limited RPC; a restart in the middle of a task re-deposits that task's income and drops its pending claims. There is no hosted client.
+- **Testnet** runs from one machine on a free, rate-limited RPC; a restart in the middle of a task re-deposits that task's income and drops its pending claims. The hosted client is a static build with no boss API behind it yet.
 
 ## Libraries and tools
 
